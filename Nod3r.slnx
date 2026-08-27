@@ -1,0 +1,5 @@
+<Solution>
+    <Project Path="src/Nod3r.Common/Nod3r.Common.csproj" />
+    <Project Path="src/Nod3r.CoreSim/Nod3r.CoreSim.csproj" />
+    <Project Path="src/Nod3r.API/Nod3r.API.csproj" />
+</Solution>
