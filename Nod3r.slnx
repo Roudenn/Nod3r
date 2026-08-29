@@ -1,5 +1,20 @@
 <Solution>
-    <Project Path="src/Nod3r.Common/Nod3r.Common.csproj" />
-    <Project Path="src/Nod3r.CoreSim/Nod3r.CoreSim.csproj" />
     <Project Path="src/Nod3r.API/Nod3r.API.csproj" />
+    <Project Path="src/Nod3r.Common/Nod3r.Common.csproj" />
+    <Project Path="src/Nod3r.Examples/Nod3r.Examples.csproj" />
+    <Project Path="src/Nod3r.Solver/Nod3r.Solver.csproj" />
+    
+    <Folder Name="/Benchmarks/">
+        <Project Path="bench/Nod3r.Solver.Benchmarks/Nod3r.Solver.Benchmarks.csproj" />
+        <Project Path="bench/Nod3r.Common.Benchmarks/Nod3r.Common.Benchmarks.csproj" />
+    </Folder>
+    
+    <Folder Name="/Tests/">
+        <Project Path="tests/Nod3r.API.Tests/Nod3r.API.Tests.csproj" />
+        <Project Path="tests/Nod3r.Common.Tests/Nod3r.Common.Tests.csproj" />
+        <Project Path="tests/Nod3r.Examples.Tests/Nod3r.Examples.Tests.csproj" />
+        <Project Path="tests/Nod3r.Solver.Tests/Nod3r.Solver.Tests.csproj" />
+        <Project Path="tests/Nod3r.Solver.IntegrationTests/Nod3r.Solver.IntegrationTests.csproj" />
+    </Folder>
+    
 </Solution>
