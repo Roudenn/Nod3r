@@ -12,3 +12,6 @@ riderModule.iml
 !.vscode/tasks.json
 
 imgui.ini
+
+# JetBrains Rider
+.idea/
