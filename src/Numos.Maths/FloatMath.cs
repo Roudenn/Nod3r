@@ -1,4 +1,4 @@
-namespace Nod3r.Common.Maths;
+namespace Numos.Maths;
 
 /// <summary>
 ///     Common operations for finite <see cref="float" /> values.

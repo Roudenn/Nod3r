@@ -1,6 +1,4 @@
-using System.Collections.Immutable;
-
-namespace Nod3r.Common.Maths;
+namespace Numos.Maths;
 
 /// <summary>
 ///     3D integer datatype.
@@ -17,8 +15,6 @@ public struct Int3(int x, int y, int z) : IEquatable<Int3>
     public readonly static Int3 PosY = new(0, 1, 0);
     public readonly static Int3 NegZ = new(0, 0, -1);
     public readonly static Int3 PosZ = new(0, 0, 1);
-    
-    public readonly static ImmutableArray<Int3> CardinalOffsets = [PosX, NegX, PosY, NegY, PosZ, NegZ];
 
     public override bool Equals(object? obj)
     {
@@ -89,9 +85,12 @@ public struct Int3(int x, int y, int z) : IEquatable<Int3>
     /// <returns><see langword="true" /> when every coordinate is within its corresponding bounds.</returns>
     public readonly bool IsWithin(Int3 minInclusive, Int3 maxExclusive)
     {
-        return X >= minInclusive.X && X < maxExclusive.X &&
-               Y >= minInclusive.Y && Y < maxExclusive.Y &&
-               Z >= minInclusive.Z && Z < maxExclusive.Z;
+        return X >= minInclusive.X &&
+               X < maxExclusive.X &&
+               Y >= minInclusive.Y &&
+               Y < maxExclusive.Y &&
+               Z >= minInclusive.Z &&
+               Z < maxExclusive.Z;
     }
 
     public override string ToString()

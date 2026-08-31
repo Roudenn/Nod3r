@@ -1,12 +1,16 @@
 <Solution>
+    <!-- TODO replace with a package import when Numos is released -->
+    <Project Path="src/Numos.Collections/Numos.Collections.csproj" />
+    <Project Path="src/Numos.Maths/Numos.Maths.csproj" />
+    
     <Project Path="src/Nod3r.API/Nod3r.API.csproj" />
-    <Project Path="src/Nod3r.Common/Nod3r.Common.csproj" />
+    <Project Path="src/Nod3r.Collections/Nod3r.Collections.csproj" />
     <Project Path="src/Nod3r.Examples/Nod3r.Examples.csproj" />
     <Project Path="src/Nod3r.Solver/Nod3r.Solver.csproj" />
     
     <Folder Name="/Benchmarks/">
-        <Project Path="bench/Nod3r.Solver.Benchmarks/Nod3r.Solver.Benchmarks.csproj" />
-        <Project Path="bench/Nod3r.Common.Benchmarks/Nod3r.Common.Benchmarks.csproj" />
+        <Project Path="bench/Nod3r.Benchmarks/Nod3r.Benchmarks.csproj" />
+        <Project Path="bench/Nod3r.Examples.Benchmarks/Nod3r.Examples.Benchmarks.csproj" />
     </Folder>
     
     <Folder Name="/Tests/">
