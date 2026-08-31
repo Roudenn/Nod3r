@@ -15,10 +15,9 @@
     
     <Folder Name="/Tests/">
         <Project Path="tests/Nod3r.API.Tests/Nod3r.API.Tests.csproj" />
-        <Project Path="tests/Nod3r.Common.Tests/Nod3r.Common.Tests.csproj" />
+        <Project Path="tests/Nod3r.Collections.Tests/Nod3r.Collections.Tests.csproj" />
         <Project Path="tests/Nod3r.Examples.Tests/Nod3r.Examples.Tests.csproj" />
         <Project Path="tests/Nod3r.Solver.Tests/Nod3r.Solver.Tests.csproj" />
-        <Project Path="tests/Nod3r.Solver.IntegrationTests/Nod3r.Solver.IntegrationTests.csproj" />
     </Folder>
     
 </Solution>
