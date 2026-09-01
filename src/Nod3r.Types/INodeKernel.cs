@@ -4,10 +4,10 @@ using Numos.Maths;
 namespace Nod3r.Types;
 
 /// <summary>
-/// Interface that contains public API to interact with the node solver kernel.
-/// Used for <see cref="INodeRule"/>s to access the kernel publicly.
+/// Interface that contains public API to read information from the node kernel.
+/// Used for <see cref="INodeRule"/>s to access the kernel data publicly.
 /// </summary>
-public interface INodeSolverKernel
+public interface INodeKernel
 {
     /// <summary>
     /// Attempts to get a node at a specified voxel.
@@ -28,7 +28,7 @@ public interface INodeSolverKernel
     /// <param name="node">The found node.</param>
     /// <typeparam name="T">Type of the node.</typeparam>
     /// <returns>True if the node was found.</returns>
-    bool TryGetNode<T>(Int3 chunk, Int3 pos, NodeIdx type, int layer, [NotNullWhen(true)] out T? node) where T : INode;
+    bool TryGetNode<T>(NodeChunkHandle chunk, Int3 pos, NodeIdx type, int layer, [NotNullWhen(true)] out T? node) where T : INode;
     
     /// <summary>
     /// Gets a node voxel of a certain type that is relative

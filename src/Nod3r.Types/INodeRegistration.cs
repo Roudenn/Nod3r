@@ -12,16 +12,25 @@ public interface INodeRegistration
     int NodeTypeCount { get; }
 
     /// <summary>
-    /// All registered network types ordered by the node registration.
+    /// All registered node network types ordered by <see cref="NodeIdx"/>.
     /// </summary>
     List<Type> RegisteredNetworks { get; }
-    
+
     /// <summary>
     /// Registers a node, its connection rule with other nodes, and a network it creates.
     /// </summary>
     /// <param name="rule">An instance of <see cref="TRule"/> node rule.</param>
-    /// <typeparam name="TNode"></typeparam>
-    /// <typeparam name="TRule"></typeparam>
-    /// <typeparam name="TNet"></typeparam>
-    void Register<TNode, TRule, TNet>(TRule rule) where TNode : INode where TRule : INodeRule where TNet : INodeNet;
+    /// <param name="layerCapacity">
+    /// Default layer capacity for node type <see cref="TNode"/>.
+    /// If multiple nodes are going to be placed frequently in a single voxel,
+    /// it's recommended to set this value to the most common and large amount of nodes
+    /// that a single voxel may have to avoid automatic array resizes.
+    /// </param>
+    /// <typeparam name="TNode">Type of the registered node.</typeparam>
+    /// <typeparam name="TRule">Type of the registered rule that controls <see cref="TNode"/>.</typeparam>
+    /// <typeparam name="TNet">Type of the registered node network that control type <see cref="TNode"/>.</typeparam>
+    void Register<TNode, TRule, TNet>(TRule rule, byte layerCapacity = 1)
+        where TNode : INode
+        where TRule : INodeRule
+        where TNet : INodeNet;
 }

@@ -5,7 +5,7 @@ namespace Nod3r.Types;
 /// </summary>
 public interface INodeRule
 {
-    IEnumerable<NodeVoxel> Evaluate(INodeSolverKernel solver, NodeVoxel node);
+    IEnumerable<NodeVoxel> Evaluate(INodeKernel solver, NodeVoxel node);
 }
 
 /// <inheritdoc/>
@@ -15,7 +15,7 @@ public interface INodeRule
 /// <typeparam name="T">Type of node this rule controls.</typeparam>
 public abstract class NodeRule<T> : INodeRule where T : INode
 {
-    public IEnumerable<NodeVoxel> Evaluate(INodeSolverKernel solver, NodeVoxel node)
+    public IEnumerable<NodeVoxel> Evaluate(INodeKernel solver, NodeVoxel node)
     {
         if (!solver.TryGetNode<T>(node, out var nodeData))
             return [];
@@ -23,5 +23,5 @@ public abstract class NodeRule<T> : INodeRule where T : INode
         return EvaluateType(solver, node, nodeData);
     }
 
-    protected abstract IEnumerable<NodeVoxel> EvaluateType(INodeSolverKernel solver, NodeVoxel nodePos, T node);
+    protected abstract IEnumerable<NodeVoxel> EvaluateType(INodeKernel solver, NodeVoxel nodePos, T node);
 }

@@ -6,7 +6,7 @@ namespace Nod3r.Types;
 /// Represents a network of connected <see cref="INode"/>s.
 /// </summary>
 /// <para>
-/// Node networks are the final result of produced by the <see cref="INodeSolverKernel"/>.
+/// Node networks are the final result of produced by the <see cref="INodeKernel"/>.
 /// They contain references to all nodes that are connected between each other according to the specified <see cref="INodeRule"/>s.
 /// Each network contains the data that is shared between all nodes.
 /// </para>
@@ -20,7 +20,7 @@ public interface INodeNet
     /// <summary>
     /// References to nodes that are connected to this node network.
     /// </summary>
-    HashSet<GenId> Nodes { get; }
+    HashSet<StackGenId> Nodes { get; }
     
     /// <summary>
     /// Initialize function that is called after this node group was properly set up.
@@ -49,4 +49,9 @@ public interface INodeNet
     /// that was split from the <see cref="parent"/> network.
     /// </summary>
     void Split(INodeNet parent);
+
+    /// <summary>
+    /// Method that returns a proper reference to a node that also includes its generation.
+    /// </summary>
+    StackGenId GetStackId(GenIdx idx, int layer);
 }

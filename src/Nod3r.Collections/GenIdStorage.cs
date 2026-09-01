@@ -81,6 +81,8 @@ public sealed class GenIdStorage<T>
         
         for (int i = 0; i < capacity; i++)
         {
+            // Build linked list chain for newly allocated segment.
+            _nextSlots[i] = i == capacity - 1 ? _nextFree : i + 1;
             // Every slot starts at generation 1.
             _generations[i] = 1;
         }
@@ -242,6 +244,8 @@ public sealed class GenIdStorage<T>
 public readonly record struct GenId(int Index, int Generation)
 {
     public readonly static GenId Invalid = new(0, 0);
+    
+    public bool IsValid() => Generation > 0;
     
     public override string ToString()
     {
