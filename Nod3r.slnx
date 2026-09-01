@@ -7,6 +7,7 @@
     <Project Path="src/Nod3r.Collections/Nod3r.Collections.csproj" />
     <Project Path="src/Nod3r.Examples/Nod3r.Examples.csproj" />
     <Project Path="src/Nod3r.Solver/Nod3r.Solver.csproj" />
+    <Project Path="src/Nod3r.Types/Nod3r.Types.csproj" />
     
     <Folder Name="/Benchmarks/">
         <Project Path="bench/Nod3r.Benchmarks/Nod3r.Benchmarks.csproj" />
