@@ -130,7 +130,7 @@ public sealed class Gen2DStorage<T>
     /// Returns the data stored at a specific <see cref="LayerId"/> -
     /// specific column, layer, and with a specific generation.
     /// </summary>
-    public ref T this[LayerId id]
+    public T this[LayerId id]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
@@ -140,22 +140,22 @@ public sealed class Gen2DStorage<T>
             
             if ((uint)id.Layer >= (uint)_layerCapacities[id.Index])
                 ThrowKeyNotFound();
-            
-            ref var value = ref _data[id.Index][id.Layer];
+
             if (_generations[id.Index][id.Layer] != id.Generation || _nextSlotLayers[id.Index][id.Layer] >= 0)
                 ThrowKeyNotFound();
 
-            return ref value;
+            return _data[id.Index][id.Layer];
         }
     }
 
     /// <summary>
-    /// Allocates an entire new column in the storage.
+    /// Allocates an entire new column in the storage and adds the first element.
     /// </summary>
+    /// <param name="value">The value to add into the new slot at <see cref="startLayer"/>.</param>
     /// <param name="id">ID of the element at the <see cref="startLayer"/>.</param>
     /// <param name="startLayer">The layer to allocate the first element on.</param>
     /// <returns>A reference to the element at a specified layer (first by default).</returns>
-    public ref T AllocateColumn(out LayerId id, int startLayer = 0)
+    public void AddColumn(T value, out LayerId id, int startLayer = 0)
     {
         if ((uint)_nextFree >= (uint)_data.Length)
             ReAllocate();
@@ -191,16 +191,17 @@ public sealed class Gen2DStorage<T>
         _nextSlotLayers[idx][startLayer] = -1;
 
         id = new LayerId(idx, startLayer, _generations[idx][startLayer]);
-        return ref _data[idx][startLayer];
+        _data[idx][startLayer] = value;
     }
-    
+
     /// <summary>
-    /// Allocates an element on top of a specific index.
+    /// Adds an element on top of a specific index.
     /// </summary>
+    /// <param name="value"></param>
     /// <param name="index">Index of the column to allocate the element in.</param>
     /// <param name="id"><see cref="LayerId"/> of the allocated element.</param>
     /// <returns>The reference to the allocated element.</returns>
-    public ref T Allocate(ColumnHandle index, out LayerId id)
+    public void Add(T value, ColumnHandle index, out LayerId id)
     {
         var idx = index.Index;
         if ((uint)idx >= (uint)_data.Length || _nextSlots[idx] >= 0)
@@ -220,7 +221,7 @@ public sealed class Gen2DStorage<T>
         Count += 1;
 
         id = new LayerId(idx, layer, _generations[idx][layer]);
-        return ref _data[idx][layer];
+        _data[idx][layer] = value;
     }
 
     /// <summary>

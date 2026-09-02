@@ -53,7 +53,7 @@ public sealed class NodeSolver
     
     public void SetNode<T>(T node, NodeVoxel voxel, bool dirty = true) where T : INode
     {
-        _kernel.SetNode(ref node, voxel);
+        _kernel.SetNode(node, voxel);
         if (dirty)
             _kernel.DirtyNode(voxel);
     }
