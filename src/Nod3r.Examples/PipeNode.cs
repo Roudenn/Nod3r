@@ -97,7 +97,30 @@ public sealed class PipeNodeRule : NodeRule<PipeNode>
     }
 }
 
-public sealed class PipeNodeNetwork : NodeNet<PipeNode>
+public record struct PipeNodeNetwork() : INodeNet, INodeNetCreator<AdjacentNodeNet>
 {
     public float TotalCapacity = 0f;
+    
+    public NodeNetHandler Net { get; set; }
+    
+    public void Initialize()
+    {
+    }
+
+    public void Shutdown()
+    {
+    }
+
+    public void Merge(IReadOnlySet<NodeNetHandler> nets)
+    {
+    }
+
+    public void Split(NodeNetHandler parent)
+    {
+    }
+
+    public static AdjacentNodeNet CreateNet()
+    {
+        return new AdjacentNodeNet();
+    }
 }

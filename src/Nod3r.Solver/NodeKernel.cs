@@ -14,7 +14,6 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
     public NodeKernel(NodeConfig config)
     {
         config.RegistrationDelegate.Invoke(this);
-        _nodeFactory = config.Factory;
     }
     
     /// <summary>
@@ -25,12 +24,12 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
     /// <summary>
     /// All currently living networks mapped by <see cref="NodeIdx"/>.
     /// </summary>
-    private readonly List<INodeNet>[] _nets = [];
+    private readonly List<NodeNetHandler>[] _nets = [];
     
     /// <summary>
     /// A factory that creates <see cref="INodeNet"/> objects from <see cref="NodeIdx"/>.
     /// </summary>
-    private readonly INodeNetworkFactory _nodeFactory;
+    private readonly List<NodeNetFactory> _nodeFactories = new();
     
     private readonly ConcurrentDictionary<Int3, NodeChunk[]> _chunkMap = new();
     
@@ -81,23 +80,24 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
             while (FloodFill(buffer, netNodes, new Stack<NodeVoxel>(), out var start))
             {
                 // Create the node network instance.
-                var network = _nodeFactory.Create(start.TypeId);
+                var network = _nodeFactories[start.TypeId.Value].Create();
 
                 int typeIdx = start.TypeId.Value;
                 
                 // First find all already assigned node groups
                 // TODO performance
-                var networks = new HashSet<INodeNet>();
+                var networks = new HashSet<NodeNetHandler>();
                 foreach (var voxel in netNodes)
                 {
                     var genId = GetId(voxel);
                     foreach (var net in _nets[typeIdx])
                     {
-                        if (net.Nodes.Contains(net.GetStackId(genId, voxel.Layer)))
+                        if (net.Nodes.Contains(net.GetLayerId(this, genId, voxel.Layer)))
                             networks.Add(net);
                     }
                 }
 
+                network.Allocate();
                 network.Initialize();
                 network.Merge(networks);
 

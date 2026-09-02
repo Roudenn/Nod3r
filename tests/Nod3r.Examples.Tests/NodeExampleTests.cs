@@ -10,11 +10,10 @@ public sealed class NodeExampleTests
     [Test]
     public void TestAdjacentNode()
     {
-        var factory = new ActivatorNodeNetworkFactory();
         var config = new NodeConfig(reg =>
         {
-            reg.Register<AdjacentNode, AdjacentNodeRule, AdjacentNodeNetwork>(new());
-        }, factory);
+            reg.Register<AdjacentNode, AdjacentNodeNet, AdjacentNodeRule>(new());
+        });
         var solver = new NodeSolver(config);
 
         var chunk = solver.EnsureChunk(default);

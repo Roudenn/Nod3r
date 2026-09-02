@@ -1,5 +1,4 @@
 using Nod3r.API;
-using Nod3r.Solver;
 using Nod3r.Types;
 
 namespace Nod3r.Examples;
@@ -24,7 +23,30 @@ public sealed class AdjacentNodeRule : NodeRule<AdjacentNode>
     }
 }
 
-public sealed class AdjacentNodeNetwork : NodeNet<AdjacentNode>
+public record struct AdjacentNodeNet() : INodeNet, INodeNetCreator<AdjacentNodeNet>
 {
     public float TotalCapacity = 0f;
+    
+    public NodeNetHandler Net { get; set; }
+    
+    public void Initialize()
+    {
+    }
+
+    public void Shutdown()
+    {
+    }
+
+    public void Merge(IReadOnlySet<NodeNetHandler> nets)
+    {
+    }
+
+    public void Split(NodeNetHandler parent)
+    {
+    }
+
+    public static AdjacentNodeNet CreateNet()
+    {
+        return new AdjacentNodeNet();
+    }
 }

@@ -19,8 +19,8 @@ public interface INodeRegistration
     /// <typeparam name="TNode">Type of the registered node.</typeparam>
     /// <typeparam name="TRule">Type of the registered rule that controls <see cref="TNode"/>.</typeparam>
     /// <typeparam name="TNet">Type of the registered node network that control type <see cref="TNode"/>.</typeparam>
-    void Register<TNode, TRule, TNet>(TRule rule, byte layerCapacity = 1)
+    void Register<TNode, TNet, TRule>(TRule rule, byte layerCapacity = 1)
         where TNode : INode
-        where TRule : INodeRule
-        where TNet : INodeNet;
+        where TNet : INodeNet, INodeNetCreator<TNet>
+        where TRule : class, INodeRule;
 }

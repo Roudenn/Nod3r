@@ -16,7 +16,7 @@ public static class NodeIdxStorage
     /// <summary>
     /// List of all networks placed at indexes that are equal to
     /// <see cref="NodeIdx"/> of the node type that creates them.
-    /// Useful for <see cref="INodeNetworkFactory"/> implementations.
+    /// Useful for <see cref="NodeNetFactory"/> implementations.
     /// </summary>
     private static readonly List<Type> NetworkTypes = new();
 

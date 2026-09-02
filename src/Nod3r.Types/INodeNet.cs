@@ -17,10 +17,7 @@ namespace Nod3r.Types;
 /// </para>
 public interface INodeNet
 {
-    /// <summary>
-    /// References to nodes that are connected to this node network.
-    /// </summary>
-    HashSet<LayerId> Nodes { get; }
+    NodeNetHandler Net { get; internal set; }
     
     /// <summary>
     /// Initialize function that is called after this node group was properly set up.
@@ -35,23 +32,16 @@ public interface INodeNet
     void Shutdown();
     
     /// <summary>
-    /// <para>
     /// Merges a set of node networks into this network.
-    /// </para>
     /// <para>
     /// This method is called right before Shutdown and release of every network in the set.
     /// </para>
     /// </summary>
-    void Merge(IReadOnlySet<INodeNet> nets);
+    void Merge(IReadOnlySet<NodeNetHandler> nets);
 
     /// <summary>
     /// Called on a newly created node network after its initialization
     /// that was split from the <see cref="parent"/> network.
     /// </summary>
-    void Split(INodeNet parent);
-
-    /// <summary>
-    /// Method that returns a proper reference to a node that also includes its generation.
-    /// </summary>
-    LayerId GetStackId(ColumnHandle idx, int layer);
+    void Split(NodeNetHandler parent);
 }

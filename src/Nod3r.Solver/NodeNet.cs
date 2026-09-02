@@ -3,24 +3,43 @@ using Nod3r.Types;
 
 namespace Nod3r.Solver;
 
-/// <summary>
-/// Base class for node groups that control a certain node type.
-/// </summary>
-/// <typeparam name="T">The controlled node type.</typeparam>
-public abstract class NodeNet<T> : INodeNet where T : INode
+public sealed class NodeNet<TNode, TNet> : NodeNetHandler where TNode : INode where TNet : INodeNet
 {
-    public HashSet<LayerId> Nodes { get; protected set; } = new();
-    
-    public virtual void Initialize() { }
+    private readonly TNet _netImpl;
 
-    public virtual void Shutdown() { }
-
-    public virtual void Merge(IReadOnlySet<INodeNet> nets) { }
-
-    public virtual void Split(INodeNet parent) { }
-
-    public LayerId GetStackId(ColumnHandle idx, int layer)
+    public NodeNet(TNet netImpl)
     {
-        return NodeStorage<T>.GetLayerId(idx, layer);
+        _netImpl = netImpl;
+        netImpl.Net = this;
+    }
+
+    public override void Allocate()
+    {
+        GenId = NodeNetStorage<TNet>.Add(_netImpl);
+    }
+    
+    public override LayerId GetLayerId(INodeKernel kernel, ColumnHandle idx, int layer)
+    {
+        return NodeStorage<TNode>.GetLayerId(idx, layer);
+    }
+
+    public override void Initialize()
+    {
+        _netImpl.Initialize();
+    }
+
+    public override void Shutdown()
+    {
+        _netImpl.Shutdown();
+    }
+
+    public override void Merge(IReadOnlySet<NodeNetHandler> nets)
+    {
+        _netImpl.Merge(nets);
+    }
+
+    public override void Split(NodeNetHandler parent)
+    {
+        _netImpl.Split(parent);
     }
 }
