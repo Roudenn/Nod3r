@@ -17,9 +17,6 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
         _nodeFactory = config.Factory;
     }
     
-    // TODO think of a better solution
-    private readonly Dictionary<Type, NodeIdx> _nodeTypeIdx = new();
-    
     /// <summary>
     /// <see cref="INodeRule"/>s mapped by the <see cref="NodeIdx"/>.
     /// </summary>
@@ -207,7 +204,7 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
     
     public void CreateChunk(Int3 position, int width, int height, int depth)
     {
-        var chunks = new NodeChunk[NodeTypeCount];
+        var chunks = new NodeChunk[NodeIdxStorage.Count];
         Array.Fill(chunks, new NodeChunk(width, height, depth));
         _chunkMap.TryAdd(position, chunks);
     }
@@ -240,9 +237,7 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
         return TryGetId(voxel.Chunk, voxel.Pos, voxel.TypeId, out id);
     }
     
-    internal NodeIdx TypeToIdx(Type node) => _nodeTypeIdx[node];
-    
-    internal NodeIdx TypeToIdx<T>() where T : INode => _nodeTypeIdx[typeof(T)];
+    public NodeIdx TypeToIdx<T>() where T : INode => NodeIdxStorage.Get<T>();
     
     private NodeChunk GetChunk(NodeChunkHandle chunk, NodeIdx typeId) => _chunkMap[chunk.Pos][typeId.Value];
     

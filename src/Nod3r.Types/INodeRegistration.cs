@@ -7,11 +7,6 @@ namespace Nod3r.Types;
 public interface INodeRegistration
 {
     /// <summary>
-    /// Amount of node types registered in this solver instance.
-    /// </summary>
-    int NodeTypeCount { get; }
-
-    /// <summary>
     /// All registered node network types ordered by <see cref="NodeIdx"/>.
     /// </summary>
     List<Type> RegisteredNetworks { get; }
