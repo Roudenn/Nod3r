@@ -37,7 +37,7 @@ public sealed class NodeSolver
     }
     
     /// <summary>
-    /// General function that updates all node groups in this solver instance.
+    /// General function that updates all node networks in this solver instance.
     /// </summary>
     public void Rebuild()
     {

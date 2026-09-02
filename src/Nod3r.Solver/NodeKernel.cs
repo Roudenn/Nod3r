@@ -77,65 +77,36 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
         {
             // Start from any new node, flood fill until it makes a network,
             // then remove all nodes from the buffer and repeat until every node is flood filled
-            while (true)
+            var netNodes = new HashSet<NodeVoxel>();
+            while (FloodFill(buffer, netNodes, new Stack<NodeVoxel>(), out var start))
             {
-                NodeVoxel start = default;
-                for (int i = 0; i < count; i++)
-                {
-                    var voxel = buffer[i];
-                    if (voxel == default)
-                        continue;
-
-                    start = voxel;
-                    break;
-                }
-
-                if (start == default)
-                    break;
-
-                // Start making a node network by using flood fill
-                var netNodes = new HashSet<NodeVoxel> { start };
-                var stack = new Stack<NodeVoxel>();
-                stack.Push(start);
-                int typeId = start.TypeId.Value;
-
-                while (stack.TryPop(out var fillVoxel))
-                {
-                    var neighbours = _rules[start.TypeId.Value].Evaluate(this, fillVoxel);
-                    var array = neighbours.ToArray();
-                    foreach (var voxel in array)
-                    {
-                        if (!netNodes.Add(voxel))
-                            continue; // An already found node, don't push it again
-
-                        stack.Push(voxel);
-                    }
-                }
-
                 // Create the node network instance.
-
                 var network = _nodeFactory.Create(start.TypeId);
 
+                int typeIdx = start.TypeId.Value;
+                
                 // First find all already assigned node groups
                 // TODO performance
                 var networks = new HashSet<INodeNet>();
                 foreach (var voxel in netNodes)
                 {
                     var genId = GetId(voxel);
-                    foreach (var net in _nets[typeId])
+                    foreach (var net in _nets[typeIdx])
                     {
                         if (net.Nodes.Contains(net.GetStackId(genId, voxel.Layer)))
                             networks.Add(net);
                     }
                 }
 
+                network.Initialize();
                 network.Merge(networks);
 
-                _nets[typeId].Add(network);
+                _nets[typeIdx].Add(network);
                 
                 foreach (var net in networks)
                 {
-                    _nets[typeId].Remove(net);
+                    net.Shutdown();
+                    _nets[typeIdx].Remove(net);
                 }
 
                 // Skip the added nodes from the buffer since they already have a group
@@ -149,6 +120,45 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
         {
             ArrayPool<NodeVoxel>.Shared.Return(buffer);
         }
+    }
+
+    /// <summary>
+    /// Runs a single iteration of flood fill on a buffer of changed nodes. Returns a constructed network on every iteration.
+    /// </summary>
+    /// <returns>True if flood fill wasn't done on every node in the <see cref="buffer"/> yet, False if the last node was processed.</returns>
+    private bool FloodFill(NodeVoxel[] buffer, HashSet<NodeVoxel> netNodes, Stack<NodeVoxel> stack, out NodeVoxel start)
+    {
+        start = default;
+        foreach (var voxel in buffer)
+        {
+            if (voxel == default)
+                continue;
+
+            start = voxel;
+            break;
+        }
+
+        if (start == default)
+            return true;
+
+        // Start making a node network by using flood fill
+        netNodes.Add(start);
+        stack.Push(start);
+
+        while (stack.TryPop(out var fillVoxel))
+        {
+            var neighbours = _rules[start.TypeId.Value].Evaluate(this, fillVoxel);
+            var array = neighbours.ToArray();
+            foreach (var voxel in array)
+            {
+                if (!netNodes.Add(voxel))
+                    continue; // An already found node, don't push it again
+
+                stack.Push(voxel);
+            }
+        }
+
+        return false;
     }
 
     public void SetNode<T>(T node, NodeVoxel voxel) where T : INode
