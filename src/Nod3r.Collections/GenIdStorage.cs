@@ -124,6 +124,12 @@ public sealed class GenIdStorage<T>
         _data[idx] = value;
     }
 
+    public GenId Add(T value)
+    {
+        Add(value, out var id);
+        return id;
+    }
+
     public void Free(GenId id)
     {
         if ((uint)id.Index >= (uint)_data.Length)
