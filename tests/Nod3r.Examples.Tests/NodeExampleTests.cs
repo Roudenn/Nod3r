@@ -14,7 +14,6 @@ public sealed class NodeExampleTests
         var config = new NodeConfig(reg =>
         {
             reg.Register<AdjacentNode, AdjacentNodeRule, AdjacentNodeNetwork>(new());
-            factory.NetworkTypes = reg.RegisteredNetworks.ToArray();
         }, factory);
         var solver = new NodeSolver(config);
 

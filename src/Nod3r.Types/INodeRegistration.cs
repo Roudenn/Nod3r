@@ -7,11 +7,6 @@ namespace Nod3r.Types;
 public interface INodeRegistration
 {
     /// <summary>
-    /// All registered node network types ordered by <see cref="NodeIdx"/>.
-    /// </summary>
-    List<Type> RegisteredNetworks { get; }
-
-    /// <summary>
     /// Registers a node, its connection rule with other nodes, and a network it creates.
     /// </summary>
     /// <param name="rule">An instance of <see cref="TRule"/> node rule.</param>

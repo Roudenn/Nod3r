@@ -60,9 +60,8 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
     /// </summary>
     private void SplitNetworks()
     {
-        
         // Start from any changed node, flood fill through neighbors,
-        // 
+        // compare to their original networks, split new networks from the parents
     }
     
     /// <summary>
@@ -152,15 +151,23 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
         }
     }
 
-    public void SetNode<T>(ref T node, NodeVoxel voxel) where T : INode
+    public void SetNode<T>(T node, NodeVoxel voxel) where T : INode
     {
         var chunk = GetChunk(voxel);
         var oldGenId = chunk.Chunk[voxel.Pos];
+        LayerId id;
         if (oldGenId.IsValid)
+        {
+            // Overwrite the existing layer if it is specified
             NodeStorage<T>.Free(oldGenId, voxel.Layer);
+            NodeStorage<T>.Add(node, oldGenId, out id);
+        }
+        else
+        {
+            NodeStorage<T>.Add(node, voxel.Layer, out id);
+        }
         
-        NodeStorage<T>.Allocate(voxel.Layer, out var slot) = node;
-        chunk.Chunk[voxel.Pos] = slot.ColumnHandle;
+        chunk.Chunk[voxel.Pos] = id.ColumnHandle;
         _newNodes.Add(voxel);
         _changedChunks.Add(voxel.Chunk);
     }

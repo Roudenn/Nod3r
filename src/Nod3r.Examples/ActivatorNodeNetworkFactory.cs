@@ -1,3 +1,4 @@
+using Nod3r.Solver;
 using Nod3r.Types;
 
 namespace Nod3r.Examples;
@@ -9,14 +10,8 @@ namespace Nod3r.Examples;
 /// </summary>
 public sealed class ActivatorNodeNetworkFactory : INodeNetworkFactory
 {
-    /// <summary>
-    /// /// An array where each <see cref="INodeNet"/>
-    /// type is placed at a <see cref="NodeIdx"/> it will be created from.
-    /// </summary>
-    public Type[] NetworkTypes = [];
-    
     public INodeNet Create(NodeIdx node)
     {
-        return (INodeNet)Activator.CreateInstance(NetworkTypes[node.Value])!;
+        return (INodeNet)Activator.CreateInstance(NodeIdxStorage.GetNetworkType(node))!;
     }
 }
