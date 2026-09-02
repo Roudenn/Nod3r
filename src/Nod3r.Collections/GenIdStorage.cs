@@ -8,7 +8,7 @@ namespace Nod3r.Collections;
 /// <summary>
 /// An implementation of a generational ID storage.
 /// </summary>
-/// <typeparam name="T">The type of data to store.</typeparam>
+/// <remarks>
 /// <para>
 /// This is a very basic implementation that has the ability to automatically expand the internal array,
 /// return direct references to its elements by indexing and during enumeration,
@@ -22,6 +22,8 @@ namespace Nod3r.Collections;
 /// When freeing a slot, instead of removing the data it is only marked as deleted,
 /// allowing the next allocation to overwrite an already existing spot in memory.
 /// </para>
+/// </remarks>
+/// <typeparam name="T">The type of data to store.</typeparam>
 public sealed class GenIdStorage<T>
 {
     /// <summary>
@@ -90,23 +92,22 @@ public sealed class GenIdStorage<T>
         _nextFree = 0;
     }
     
-    public ref T this[GenId id]
+    public T this[GenId id]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             if ((uint)id.Index >= (uint)_data.Length)
                 ThrowKeyNotFound();
-            
-            ref var value = ref _data[id.Index];
+   
             if (_generations[id.Index] != id.Generation)
                 ThrowKeyNotFound();
 
-            return ref value;
+            return _data[id.Index];
         }
     }
     
-    public ref T Allocate(out GenId id)
+    public void Add(T value, out GenId id)
     {
         if ((uint)_nextFree >= (uint)_data.Length)
             ReAllocate();
@@ -120,7 +121,7 @@ public sealed class GenIdStorage<T>
         _nextSlots[idx] = -1; // Means filled
 
         id = new GenId(idx, _generations[idx]);
-        return ref _data[idx];
+        _data[idx] = value;
     }
 
     public void Free(GenId id)
@@ -217,6 +218,7 @@ public sealed class GenIdStorage<T>
 
     /// <summary>
     /// A custom enumerator that returns direct references to stored objects.
+    /// TODO reconsider if this even needed
     /// </summary>
     public ref struct Enumerator(GenIdStorage<T> owner)
     {

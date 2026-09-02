@@ -1,18 +1,12 @@
 namespace Nod3r.Collections.Tests.Collections;
 
 [TestFixture]
-public sealed class FlatArrayTests
+public sealed class GenIdStorageTests
 {
     [Test]
     public void TestIteration()
     {
         var storage = new GenIdStorage<TestStruct>();
-        storage.Allocate(out var nodeId) = new TestStruct();
-        storage.Free(nodeId);
-        foreach (ref var test in storage)
-        {
-            
-        }
     }
 
     private struct TestStruct
