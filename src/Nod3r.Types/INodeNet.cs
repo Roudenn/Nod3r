@@ -20,7 +20,7 @@ public interface INodeNet
     /// <summary>
     /// References to nodes that are connected to this node network.
     /// </summary>
-    HashSet<StackGenId> Nodes { get; }
+    HashSet<LayerId> Nodes { get; }
     
     /// <summary>
     /// Initialize function that is called after this node group was properly set up.
@@ -53,5 +53,5 @@ public interface INodeNet
     /// <summary>
     /// Method that returns a proper reference to a node that also includes its generation.
     /// </summary>
-    StackGenId GetStackId(GenIdx idx, int layer);
+    LayerId GetStackId(ColumnHandle idx, int layer);
 }

@@ -3,9 +3,13 @@ using Nod3r.Types;
 
 namespace Nod3r.Solver;
 
+/// <summary>
+/// Base class for node groups that control a certain node type.
+/// </summary>
+/// <typeparam name="T">The controlled node type.</typeparam>
 public abstract class NodeNet<T> : INodeNet where T : INode
 {
-    public HashSet<StackGenId> Nodes { get; protected set; } = new();
+    public HashSet<LayerId> Nodes { get; protected set; } = new();
     
     public virtual void Initialize() { }
 
@@ -15,8 +19,8 @@ public abstract class NodeNet<T> : INodeNet where T : INode
 
     public virtual void Split(INodeNet parent) { }
 
-    public StackGenId GetStackId(GenIdx idx, int layer)
+    public LayerId GetStackId(ColumnHandle idx, int layer)
     {
-        return NodeStorage<T>.GetStackId(idx, layer);
+        return NodeStorage<T>.GetLayerId(idx, layer);
     }
 }

@@ -11,14 +11,17 @@ internal sealed class NodeChunk
     /// Array that stores <see cref="GenId"/>s that reference a node
     /// of a certain type in the <see cref="NodeStorage{T}"/>.
     /// </summary>
-    public FlatArray<GenIdx> Chunk;
+    public FlatArray<ColumnHandle> Chunk;
 
     /// <summary>
     /// Dimensions of this chunk.
     /// </summary>
     public Int3 Dimensions;
-    
-    
+
+    /// <summary>
+    /// Position of this chunk in the chunk grid.
+    /// </summary>
+    public Int3 GridPosition;
     
     public NodeChunk(
         int width = NodeChunkConstants.DefaultWidth,
@@ -26,8 +29,8 @@ internal sealed class NodeChunk
         int depth = NodeChunkConstants.DefaultDepth)
     {
         Dimensions = new Int3(width, height, depth);
-        var array = new GenIdx[width * height * depth];
-        Array.Fill(array, GenIdx.Invalid);
-        Chunk = new FlatArray<GenIdx>(array, Dimensions);
+        var array = new ColumnHandle[width * height * depth];
+        Array.Fill(array, ColumnHandle.Invalid);
+        Chunk = new FlatArray<ColumnHandle>(array, Dimensions);
     }
 }

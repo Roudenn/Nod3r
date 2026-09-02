@@ -16,7 +16,7 @@ namespace Nod3r.Collections;
 /// </summary>
 /// <typeparam name="T">The type of data to store.</typeparam>
 /// <seealso cref="GenIdStorage{T}"/>
-public sealed class StackIdStorage<T>
+public sealed class Gen2DStorage<T>
 {
     /// <summary>
     /// Index of the next free slot.
@@ -77,37 +77,49 @@ public sealed class StackIdStorage<T>
     /// </summary>
     public int LayerCapacity { get; private set; }
 
-    public StackIdStorage(int capacity = 16, byte layerCapacity = 1)
+    public Gen2DStorage(int capacity = 16, byte layerCapacity = 1)
     {
         ColumnCount = 0;
+        Count = 0;
         Length = capacity;
         LayerCapacity = layerCapacity;
         
         InitArray(capacity, layerCapacity, out _data);
         InitArray(capacity, layerCapacity, out _generations);
+        InitArray(capacity, layerCapacity, out _nextSlotLayers);
         
+        _nextSlots = new int[capacity];
         _nextFreeLayers = new int[capacity];
+        _layerCapacities = new int[capacity];
+        
+        for (int i = 0; i < capacity; i++)
+        {
+            _layerCapacities[i] = layerCapacity;
+            _nextSlots[i] = i == capacity - 1 ? int.MaxValue : i + 1;
+            _nextFreeLayers[i] = 0;
+            
+            for (int j = 0; j < layerCapacity; j++)
+            {
+                _nextSlotLayers[i][j] = j == layerCapacity - 1 ? int.MaxValue : j + 1;
+                _generations[i][j] = 1;
+            }
+        }
+        
         _nextFree = 0;
     }
 
-    /// <summary>
-    /// Helper method to initialize a nested array.
-    /// </summary>
     private static void InitArray<TArray>(int capacity, int layerCapacity, out TArray[][] array)
     {
-        array = new TArray[][capacity];
+        array = new TArray[capacity][];
         for (int i = 0; i < capacity; i++)
         {
             array[i] = new TArray[layerCapacity];
         }
     }
     
-    /// <summary>
-    /// Helper method to extend the size of a nested array.
-    /// </summary>
     private void ResizeCapacity<TArray>(ref TArray[][] array, int capacity)
     {
-        array = new TArray[][capacity];
+        Array.Resize(ref array, capacity);
         for (int i = Length; i < capacity; i++)
         {
             array[i] = new TArray[LayerCapacity];
@@ -115,10 +127,10 @@ public sealed class StackIdStorage<T>
     }
     
     /// <summary>
-    /// Returns the data stored at a specific <see cref="StackGenId"/> -
+    /// Returns the data stored at a specific <see cref="LayerId"/> -
     /// specific column, layer, and with a specific generation.
     /// </summary>
-    public ref T this[StackGenId id]
+    public ref T this[LayerId id]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
@@ -126,8 +138,11 @@ public sealed class StackIdStorage<T>
             if ((uint)id.Index >= (uint)_data.Length)
                 ThrowKeyNotFound();
             
+            if ((uint)id.Layer >= (uint)_layerCapacities[id.Index])
+                ThrowKeyNotFound();
+            
             ref var value = ref _data[id.Index][id.Layer];
-            if (_generations[id.Index][id.Layer] != id.Generation)
+            if (_generations[id.Index][id.Layer] != id.Generation || _nextSlotLayers[id.Index][id.Layer] >= 0)
                 ThrowKeyNotFound();
 
             return ref value;
@@ -135,24 +150,47 @@ public sealed class StackIdStorage<T>
     }
 
     /// <summary>
-    /// Allocates an entire new column in the storage and returns
-    /// a reference to the element at a specified layer (first by default).
+    /// Allocates an entire new column in the storage.
     /// </summary>
     /// <param name="id">ID of the element at the <see cref="startLayer"/>.</param>
     /// <param name="startLayer">The layer to allocate the first element on.</param>
-    /// <returns></returns>
-    public ref T AllocateColumn(out StackGenId id, int startLayer = 0)
+    /// <returns>A reference to the element at a specified layer (first by default).</returns>
+    public ref T AllocateColumn(out LayerId id, int startLayer = 0)
     {
         if ((uint)_nextFree >= (uint)_data.Length)
             ReAllocate();
 
         var idx = _nextFree;
+        _nextFree = _nextSlots[idx];
+        _nextSlots[idx] = -1; 
         
         ColumnCount += 1;
-        _nextFree = _nextSlots[idx];
-        _nextSlots[idx] = -1; // Means filled
+        Count += 1;
+        
+        if (startLayer >= _layerCapacities[idx])
+        {
+            EnsureColumnLayerCapacity(idx, startLayer + 1);
+        }
 
-        id = new StackGenId(idx, startLayer, _generations[idx][startLayer]);
+        int prev = -1;
+        int curr = _nextFreeLayers[idx];
+        while (curr != int.MaxValue && curr != startLayer)
+        {
+            prev = curr;
+            curr = _nextSlotLayers[idx][curr];
+        }
+
+        if (curr == startLayer)
+        {
+            if (prev == -1) 
+                _nextFreeLayers[idx] = _nextSlotLayers[idx][curr];
+            else 
+                _nextSlotLayers[idx][prev] = _nextSlotLayers[idx][curr];
+        }
+        
+        _nextSlotLayers[idx][startLayer] = -1;
+
+        id = new LayerId(idx, startLayer, _generations[idx][startLayer]);
         return ref _data[idx][startLayer];
     }
     
@@ -160,21 +198,29 @@ public sealed class StackIdStorage<T>
     /// Allocates an element on top of a specific index.
     /// </summary>
     /// <param name="index">Index of the column to allocate the element in.</param>
-    /// <param name="id"><see cref="StackGenId"/> of the allocated element.</param>
-    /// <returns></returns>
-    public ref T Allocate(GenIdx index, out StackGenId id)
+    /// <param name="id"><see cref="LayerId"/> of the allocated element.</param>
+    /// <returns>The reference to the allocated element.</returns>
+    public ref T Allocate(ColumnHandle index, out LayerId id)
     {
-        if ((uint)_nextFree >= (uint)_data.Length)
-            ReAllocate();
+        var idx = index.Index;
+        if ((uint)idx >= (uint)_data.Length || _nextSlots[idx] >= 0)
+            ThrowKeyNotFound();
 
-        var idx = _nextFree;
+        int layer = _nextFreeLayers[idx];
+        if (layer == int.MaxValue)
+        {
+            int newCap = Math.Max(_layerCapacities[idx], 2) * 2;
+            EnsureColumnLayerCapacity(idx, newCap);
+            layer = _nextFreeLayers[idx];
+        }
+
+        _nextFreeLayers[idx] = _nextSlotLayers[idx][layer];
+        _nextSlotLayers[idx][layer] = -1;
 
         Count += 1;
-        _nextFree = _nextSlots[idx];
-        _nextSlots[idx] = -1; // Means filled
 
-        id = new StackGenId(idx, 0, _generations[idx][0]);
-        return ref _data[idx][0];
+        id = new LayerId(idx, layer, _generations[idx][layer]);
+        return ref _data[idx][layer];
     }
 
     /// <summary>
@@ -182,28 +228,33 @@ public sealed class StackIdStorage<T>
     /// and allowing it to be overwritten by another element.
     /// </summary>
     /// <param name="id">The target index to free from the storage.</param>
-    public void Free(StackGenId id)
+    public void Free(LayerId id)
     {
         if ((uint)id.Index >= (uint)_data.Length)
             ThrowKeyNotFound();
         
-        if (_generations[id.Index][id.Layer] != id.Generation || _nextSlots[id.Index] >= 0)
+        if ((uint)id.Layer >= (uint)_layerCapacities[id.Index])
+            ThrowKeyNotFound();
+            
+        if (_generations[id.Index][id.Layer] != id.Generation || _nextSlots[id.Index] >= 0 || _nextSlotLayers[id.Index][id.Layer] >= 0)
             ThrowKeyNotFound();
 
         if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
             _data[id.Index][id.Layer] = default!;
         
-        ColumnCount -= 1;
+        Count -= 1;
         _generations[id.Index][id.Layer] += 1;
-        _nextSlots[id.Index] = _nextFree;
-        _nextFree = id.Index;
+        
+        _nextSlotLayers[id.Index][id.Layer] = _nextFreeLayers[id.Index];
+        _nextFreeLayers[id.Index] = id.Layer;
     }
 
     /// <summary>
     /// Frees the entire column of elements.
     /// </summary>
     /// <param name="id">The index of the column to free from the storage.</param>
-    public void Free(GenIdx id)
+    // TODO implement column generations to make column removal O(1) instead of O(n)
+    public void Free(ColumnHandle id)
     {
         if ((uint)id.Index >= (uint)_data.Length)
             ThrowKeyNotFound();
@@ -211,16 +262,26 @@ public sealed class StackIdStorage<T>
         if (_nextSlots[id.Index] >= 0)
             ThrowKeyNotFound();
 
-        // TODO iterate only through filled layers
-        for (int i = 0; i < _data[id.Index].Length; i++)
+        int freedElements = 0;
+        int cap = _layerCapacities[id.Index];
+
+        for (int i = 0; i < cap; i++)
         {
-            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
-                _data[id.Index][i] = default!;
+            if (_nextSlotLayers[id.Index][i] < 0)
+            {
+                if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+                    _data[id.Index][i] = default!;
+                
+                _generations[id.Index][i] += 1;
+                freedElements++;
+            }
             
-            _generations[id.Index][i] += 1;
+            _nextSlotLayers[id.Index][i] = i == cap - 1 ? int.MaxValue : i + 1;
         }
         
+        Count -= freedElements;
         ColumnCount -= 1;
+        _nextFreeLayers[id.Index] = 0;
         
         _nextSlots[id.Index] = _nextFree;
         _nextFree = id.Index;
@@ -228,26 +289,34 @@ public sealed class StackIdStorage<T>
 
     /// <summary>
     /// Gets a proper generation ID of the element at a specific index and layer.
-    /// This allows to convert the unsafe pair of <see cref="GenIdx"/> and integer layer
-    /// to a safe <see cref="StackGenId"/> that also includes the generation.
+    /// This allows to convert the unsafe pair of <see cref="ColumnHandle"/> and integer layer
+    /// to a safe <see cref="LayerId"/> that also includes the generation.
     /// </summary>
     /// <param name="idx">Index of the column.</param>
     /// <param name="layer">Layer of the element in the column.</param>
     /// <returns>A safe reference to an element that is stored on the specified position.</returns>
-    public StackGenId GetStackId(GenIdx idx, int layer)
+    public LayerId GetLayerId(ColumnHandle idx, int layer)
     {
-        // TODO validate that indexes are in range
-        return new StackGenId(idx.Index, layer, _generations[idx.Index][layer]);
+        if ((uint)idx.Index >= (uint)_data.Length || _nextSlots[idx.Index] >= 0)
+            ThrowKeyNotFound();
+            
+        if ((uint)layer >= (uint)_layerCapacities[idx.Index])
+            ThrowKeyNotFound();
+
+        return new LayerId(idx.Index, layer, _generations[idx.Index][layer]);
     }
 
     /// <summary>
     /// Returns the first free layer in a specified slot.
     /// </summary>
-    public int GetFreeLayer(GenIdx idx)
+    public int GetFreeLayer(ColumnHandle idx)
     {
-        // TODO
-    }
+        if ((uint)idx.Index >= (uint)_data.Length || _nextSlots[idx.Index] >= 0)
+            ThrowKeyNotFound();
 
+        return _nextFreeLayers[idx.Index];
+    }
+    
     /// <summary>
     /// Ensures that the capacity of this storage is at least the specified <paramref name="capacity"/>.
     /// If the current capacity is less than <paramref name="capacity"/>,
@@ -255,7 +324,7 @@ public sealed class StackIdStorage<T>
     /// </summary>
     /// <param name="capacity">The minimum column capacity to ensure.</param>
     /// <returns>The new capacity of this storage.</returns>
-    public int EnsureCapacity(int capacity,)
+    public int EnsureCapacity(int capacity)
     {
         if ((uint)capacity < (uint)Length)
             return Length;
@@ -272,7 +341,32 @@ public sealed class StackIdStorage<T>
     /// <param name="layerCapacity">The minimum layer capacity to ensure on each column.</param>
     public void EnsureLayerCapacity(int layerCapacity)
     {
-        // TODO
+        if (layerCapacity <= LayerCapacity) return;
+
+        for (int i = 0; i < Length; i++)
+        {
+            EnsureColumnLayerCapacity(i, layerCapacity);
+        }
+        LayerCapacity = layerCapacity;
+    }
+
+    private void EnsureColumnLayerCapacity(int idx, int newCap)
+    {
+        int oldCap = _layerCapacities[idx];
+        if (newCap <= oldCap) return;
+
+        Array.Resize(ref _data[idx], newCap);
+        Array.Resize(ref _generations[idx], newCap);
+        Array.Resize(ref _nextSlotLayers[idx], newCap);
+
+        for (int j = oldCap; j < newCap; j++)
+        {
+            _nextSlotLayers[idx][j] = j == newCap - 1 ? _nextFreeLayers[idx] : j + 1;
+            _generations[idx][j] = 1;
+        }
+        
+        _nextFreeLayers[idx] = oldCap;
+        _layerCapacities[idx] = newCap;
     }
 
     /// <summary>
@@ -296,26 +390,27 @@ public sealed class StackIdStorage<T>
     {
         int oldLength = Length;
         Debug.Assert(newSize >= oldLength, "Cannot shrink GenIdStorage");
+        if (newSize == oldLength) return;
         
         Length = newSize;
         
         ResizeCapacity(ref _data, newSize);
         ResizeCapacity(ref _generations, newSize);
+        ResizeCapacity(ref _nextSlotLayers, newSize);
         
         Array.Resize(ref _nextSlots, newSize);
-        
-        Array.Resize(ref _nextFreeLayers, LayerCapacity);
-        Array.Resize(ref _nextSlotLayers, LayerCapacity);
+        Array.Resize(ref _nextFreeLayers, newSize);
+        Array.Resize(ref _layerCapacities, newSize);
 
         for (int i = oldLength; i < newSize; i++)
         {
-            // Build linked list chain for newly allocated segment.
-            _nextSlots[i] = i == newSize - 1 ? _nextFree : i + 1;
+            _layerCapacities[i] = LayerCapacity;
+            _nextSlots[i] = (i == newSize - 1) ? _nextFree : i + 1;
+            _nextFreeLayers[i] = 0;
             
             for (int j = 0; j < LayerCapacity; j++)
             {
-                _nextSlotLayers[i][j] = j == newSize - 1 ? _nextFreeLayers[i] : j + 1;
-                // Every new slot starts at generation 1.
+                _nextSlotLayers[i][j] = j == LayerCapacity - 1 ? int.MaxValue : j + 1;
                 _generations[i][j] = 1;
             }
         }
@@ -331,40 +426,25 @@ public sealed class StackIdStorage<T>
 }
 
 /// <summary>
-/// Index to get data from data stored in <see cref="StackIdStorage{T}"/>.
+/// A generational identifier that uniquely references a specific element in the storage.
 /// </summary>
-/// <remarks>
-/// This is safe to use for the API, since this struct
-/// also contains the generation of the referenced element.
-/// </remarks>
-/// <param name="Index">Index of the column.</param>
-/// <param name="Layer">Layer inside the column.</param>
-/// <param name="Generation">Generation of the slot.</param>
-public readonly record struct StackGenId(int Index, int Layer, int Generation)
+public readonly record struct LayerId(int Index, int Layer, int Generation)
 {
-    public readonly static StackGenId Invalid = new(0, 0, 0);
+    public static readonly LayerId Invalid = new(-1, -1, 0);
 
-    public GenIdx Idx => new(Index);
+    public ColumnHandle ColumnHandle => new(Index);
     
-    public bool IsValid() => Generation > 0;
-    
-    public override string ToString()
-    {
-        return $"{Index} (G{Generation})";
-    }
+    public bool IsValid => Generation > 0 && Index >= 0 && Layer >= 0;
+
+    public override string ToString() => $"[Col: {Index}, Layer: {Layer}, Gen: {Generation}]";
 }
 
 /// <summary>
-/// Represents a column in the <see cref="StackIdStorage{T}"/>.
+/// Represents a reference to a specific column without layer or generation validation.
 /// </summary>
-/// <remarks>
-/// Doesn't contain the data about the generation,
-/// therefore it's not recommended to expose this to API methods.
-/// </remarks>
-/// <param name="Index">Index in the internal array. Negative values are treated as invalid.</param>
-public readonly record struct GenIdx(int Index)
+public readonly record struct ColumnHandle(int Index)
 {
-    public readonly static GenIdx Invalid = new(-1);
+    public static readonly ColumnHandle Invalid = new(-1);
     
-    public bool IsValid() => Index >= 0;
+    public bool IsValid => Index >= 0;
 }

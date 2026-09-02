@@ -13,7 +13,7 @@ internal sealed partial class NodeKernel
     {
         node = default;
         var genId = GetId(chunk, pos, type);
-        if (!genId.IsValid())
+        if (!genId.IsValid)
             return false;
         
         node = NodeStorage<T>.Get(genId, layer);

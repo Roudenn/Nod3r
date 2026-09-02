@@ -17,6 +17,9 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
         _nodeFactory = config.Factory;
     }
     
+    // TODO think of a better solution
+    private readonly Dictionary<Type, NodeIdx> _nodeTypeIdx = new();
+    
     /// <summary>
     /// <see cref="INodeRule"/>s mapped by the <see cref="NodeIdx"/>.
     /// </summary>
@@ -156,11 +159,11 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
     {
         var chunk = GetChunk(voxel);
         var oldGenId = chunk.Chunk[voxel.Pos];
-        if (oldGenId.IsValid())
+        if (oldGenId.IsValid)
             NodeStorage<T>.Free(oldGenId, voxel.Layer);
         
         NodeStorage<T>.Allocate(voxel.Layer, out var slot) = node;
-        chunk.Chunk[voxel.Pos] = slot.Idx;
+        chunk.Chunk[voxel.Pos] = slot.ColumnHandle;
         _newNodes.Add(voxel);
         _changedChunks.Add(voxel.Chunk);
     }
@@ -170,16 +173,21 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
     /// </summary>
     /// <param name="voxel">Node voxel to remove.</param>
     /// <typeparam name="T">Type of the node to remove.</typeparam>
-    public void RemoveNode<T>(NodeVoxel voxel) where T : INode
+    public bool RemoveNode<T>(NodeVoxel voxel) where T : INode
     {
-        NodeStorage<T>.Free(GetId(voxel), voxel.Layer);
-        GetChunk(voxel).Chunk[voxel.Pos] = GenIdx.Invalid;
+        if (!TryGetId(voxel, out var id))
+            return false;
+        
+        NodeStorage<T>.Free(id, voxel.Layer);
+        GetChunk(voxel).Chunk[voxel.Pos] = ColumnHandle.Invalid;
         _changedChunks.Add(voxel.Chunk);
         var neighbors = _rules[voxel.TypeId.Value].Evaluate(this, voxel);
         foreach (var nearVoxel in neighbors)
         {
             _changedNodes.Add(nearVoxel);
         }
+
+        return true;
     }
     
     /// <summary>
@@ -189,7 +197,19 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
     /// <param name="voxel"></param>
     public void DirtyNode(NodeVoxel voxel)
     {
-        
+        _changedNodes.Add(voxel);
+    }
+
+    public bool HasChunk(Int3 position)
+    {
+        return _chunkMap.ContainsKey(position);
+    }
+    
+    public void CreateChunk(Int3 position, int width, int height, int depth)
+    {
+        var chunks = new NodeChunk[NodeTypeCount];
+        Array.Fill(chunks, new NodeChunk(width, height, depth));
+        _chunkMap.TryAdd(position, chunks);
     }
 
     /// <summary>
@@ -200,14 +220,29 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
     /// <param name="chunk">Coordinates of the chunk.</param>
     /// <param name="typeId">Node type index.</param>
     /// <returns><see cref="GenId"/> that can be used in the <see cref="NodeStorage{T}"/> to get the node data.</returns>
-    public GenIdx GetId(NodeChunkHandle chunk, Int3 pos, NodeIdx typeId) => _chunkMap[chunk.Pos][typeId.Value].Chunk[pos];
+    public ColumnHandle GetId(NodeChunkHandle chunk, Int3 pos, NodeIdx typeId) => _chunkMap[chunk.Pos][typeId.Value].Chunk[pos];
     
     /// <summary>
     /// Gets the <see cref="GenId"/> for <see cref="NodeStorage{T}"/> from a <see cref="NodeVoxel"/>.
     /// </summary>
     /// <param name="voxel">The target node voxel.</param>
     /// <returns><see cref="GenId"/> that can be used in the <see cref="NodeStorage{T}"/> to get the node data.</returns>
-    public GenIdx GetId(NodeVoxel voxel) => GetId(voxel.Chunk, voxel.Pos, voxel.TypeId);
+    public ColumnHandle GetId(NodeVoxel voxel) => GetId(voxel.Chunk, voxel.Pos, voxel.TypeId);
+
+    public bool TryGetId(NodeChunkHandle chunk, Int3 pos, NodeIdx typeId, out ColumnHandle id)
+    {
+        id = GetId(chunk, pos, typeId);
+        return id != ColumnHandle.Invalid;
+    }
+    
+    public bool TryGetId(NodeVoxel voxel, out ColumnHandle id)
+    {
+        return TryGetId(voxel.Chunk, voxel.Pos, voxel.TypeId, out id);
+    }
+    
+    internal NodeIdx TypeToIdx(Type node) => _nodeTypeIdx[node];
+    
+    internal NodeIdx TypeToIdx<T>() where T : INode => _nodeTypeIdx[typeof(T)];
     
     private NodeChunk GetChunk(NodeChunkHandle chunk, NodeIdx typeId) => _chunkMap[chunk.Pos][typeId.Value];
     

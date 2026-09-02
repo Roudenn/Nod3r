@@ -13,6 +13,7 @@ internal sealed partial class NodeKernel
         where TNet : INodeNet
     {
         RegisteredNetworks.Add(typeof(TNet));
+        _nodeTypeIdx.Add(typeof(TNode), new NodeIdx(NodeTypeCount));
         NodeTypeCount++;
         _rules.Add(rule);
         //NodeStorage<TNode>.EnsureLayer(layerCapacity);
