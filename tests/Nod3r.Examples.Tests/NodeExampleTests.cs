@@ -12,7 +12,7 @@ public sealed class NodeExampleTests
     {
         var config = new NodeConfig(reg =>
         {
-            reg.Register<AdjacentNode, AdjacentNodeNet, AdjacentNodeRule>(new());
+            reg.Register<AdjacentNode, AdjacentNodeNet, AdjacentNodeRule<AdjacentNode>>(new());
         });
         var solver = new NodeSolver(config);
 

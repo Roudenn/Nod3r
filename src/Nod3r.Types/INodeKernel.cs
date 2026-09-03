@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using Nod3r.Collections;
 using Numos.Maths;
 
 namespace Nod3r.Types;

@@ -17,19 +17,19 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
     }
     
     /// <summary>
-    /// <see cref="INodeRule"/>s mapped by the <see cref="NodeIdx"/>.
-    /// </summary>
-    private readonly List<INodeRule> _rules = new();
-    
-    /// <summary>
     /// All currently living networks mapped by <see cref="NodeIdx"/>.
     /// </summary>
     private readonly List<NodeNetHandler>[] _nets = [];
     
     /// <summary>
-    /// A factory that creates <see cref="INodeNet"/> objects from <see cref="NodeIdx"/>.
+    /// Factories that create <see cref="INodeNet"/>s instances from <see cref="NodeIdx"/>.
     /// </summary>
     private readonly List<NodeNetFactory> _nodeFactories = new();
+    
+    /// <summary>
+    /// Factories that create <see cref="INodeRule"/>s instances from <see cref="NodeIdx"/>.
+    /// </summary>
+    private readonly List<NodeRuleFactory> _ruleFactories = new();
     
     private readonly ConcurrentDictionary<Int3, NodeChunk[]> _chunkMap = new();
     
@@ -147,7 +147,7 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
 
         while (stack.TryPop(out var fillVoxel))
         {
-            var neighbours = _rules[start.TypeId.Value].Evaluate(this, fillVoxel);
+            var neighbours = _ruleFactories[start.TypeId.Value].Create().Evaluate(this, fillVoxel);
             var array = neighbours.ToArray();
             foreach (var voxel in array)
             {
@@ -195,7 +195,7 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
         NodeStorage<T>.Free(id, voxel.Layer);
         GetChunk(voxel).Chunk[voxel.Pos] = ColumnHandle.Invalid;
         _changedChunks.Add(voxel.Chunk);
-        var neighbors = _rules[voxel.TypeId.Value].Evaluate(this, voxel);
+        var neighbors = _ruleFactories[voxel.TypeId.Value].Create().Evaluate(this, voxel);
         foreach (var nearVoxel in neighbors)
         {
             _changedNodes.Add(nearVoxel);

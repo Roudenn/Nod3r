@@ -9,7 +9,6 @@ public interface INodeRegistration
     /// <summary>
     /// Registers a node, its connection rule with other nodes, and a network it creates.
     /// </summary>
-    /// <param name="rule">An instance of <see cref="TRule"/> node rule.</param>
     /// <param name="layerCapacity">
     /// Default layer capacity for node type <see cref="TNode"/>.
     /// If multiple nodes are going to be placed frequently in a single voxel,
@@ -19,8 +18,8 @@ public interface INodeRegistration
     /// <typeparam name="TNode">Type of the registered node.</typeparam>
     /// <typeparam name="TRule">Type of the registered rule that controls <see cref="TNode"/>.</typeparam>
     /// <typeparam name="TNet">Type of the registered node network that control type <see cref="TNode"/>.</typeparam>
-    void Register<TNode, TNet, TRule>(TRule rule, byte layerCapacity = 1)
+    void Register<TNode, TNet, TRule>(byte layerCapacity = 1)
         where TNode : INode
         where TNet : INodeNet, INodeNetCreator<TNet>
-        where TRule : class, INodeRule;
+        where TRule : INodeRule<TNode>, INodeRuleCreator<TRule>;
 }

@@ -1,5 +1,3 @@
-using Nod3r.Collections;
-using Nod3r.Solver;
 using Numos.Maths;
 using Nod3r.Types;
 
@@ -77,11 +75,11 @@ public static class PipeDirectionExtensions
     }
 }
 
-public sealed class PipeNodeRule : NodeRule<PipeNode>
+public sealed class PipeNodeRule : INodeRule<PipeNode>
 {
-    protected override IEnumerable<NodeVoxel> EvaluateType(INodeKernel solver, NodeVoxel voxel, PipeNode nodeData)
+    public IEnumerable<NodeVoxel> Evaluate(INodeKernel solver, NodeVoxel voxel, PipeNode node)
     {
-        foreach (var (offset, dir) in nodeData.Directions.ToInt3())
+        foreach (var (offset, dir) in node.Directions.ToInt3())
         {
             if (!solver.TryGetRelative(voxel, offset, voxel.TypeId, out var nearVoxel))
                 continue;
