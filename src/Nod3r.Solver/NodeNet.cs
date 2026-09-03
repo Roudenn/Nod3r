@@ -3,7 +3,7 @@ using Nod3r.Types;
 
 namespace Nod3r.Solver;
 
-public sealed class NodeNet<TNode, TNet> : NodeNetHandler where TNode : INode where TNet : INodeNet
+public sealed class NodeNet<TNode, TNet> : NodeNetInternal where TNode : INode where TNet : INodeNet
 {
     private readonly TNet _netImpl;
 
@@ -33,12 +33,12 @@ public sealed class NodeNet<TNode, TNet> : NodeNetHandler where TNode : INode wh
         _netImpl.Shutdown();
     }
 
-    public override void Merge(IReadOnlySet<NodeNetHandler> nets)
+    public override void Merge(IReadOnlySet<NodeNetInternal> nets)
     {
         _netImpl.Merge(nets);
     }
 
-    public override void Split(NodeNetHandler parent)
+    public override void Split(NodeNetInternal parent)
     {
         _netImpl.Split(parent);
     }

@@ -5,7 +5,7 @@ namespace Nod3r.Types;
 /// <summary>
 /// A wrapper around a node network that allows to access it in abstract context.
 /// </summary>
-public abstract class NodeNetHandler
+public abstract class NodeNetInternal
 {
     /// <summary>
     /// References to nodes that are connected to this node network.
@@ -41,11 +41,11 @@ public abstract class NodeNetHandler
     /// This method is called right before Shutdown and release of every network in the set.
     /// </para>
     /// </summary>
-    public abstract void Merge(IReadOnlySet<NodeNetHandler> nets);
+    public abstract void Merge(IReadOnlySet<NodeNetInternal> nets);
 
     /// <summary>
     /// Called on a newly created node network after its initialization
     /// that was split from the <see cref="parent"/> network.
     /// </summary>
-    public abstract void Split(NodeNetHandler parent);
+    public abstract void Split(NodeNetInternal parent);
 }

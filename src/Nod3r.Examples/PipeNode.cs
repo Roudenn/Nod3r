@@ -99,7 +99,7 @@ public record struct PipeNodeNetwork() : INodeNet, INodeNetCreator<AdjacentNodeN
 {
     public float TotalCapacity = 0f;
     
-    public NodeNetHandler Net { get; set; }
+    public NodeNetInternal Net { get; set; }
     
     public void Initialize()
     {
@@ -109,11 +109,11 @@ public record struct PipeNodeNetwork() : INodeNet, INodeNetCreator<AdjacentNodeN
     {
     }
 
-    public void Merge(IReadOnlySet<NodeNetHandler> nets)
+    public void Merge(IReadOnlySet<NodeNetInternal> nets)
     {
     }
 
-    public void Split(NodeNetHandler parent)
+    public void Split(NodeNetInternal parent)
     {
     }
 

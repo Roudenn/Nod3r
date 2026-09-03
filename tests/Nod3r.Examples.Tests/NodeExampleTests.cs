@@ -12,7 +12,7 @@ public sealed class NodeExampleTests
     {
         var config = new NodeConfig(reg =>
         {
-            reg.Register<AdjacentNode, AdjacentNodeNet, AdjacentNodeRule<AdjacentNode>>(new());
+            reg.Register<AdjacentNode, AdjacentNodeNet, AdjacentNodeRule<AdjacentNode>>();
         });
         var solver = new NodeSolver(config);
 
@@ -30,5 +30,8 @@ public sealed class NodeExampleTests
         solver.SetNode(node, chunk, new Int3(2, 2, 0), 0);
         
         solver.Rebuild();
+
+        var nets = solver.GetAllNetworks<AdjacentNodeNet>();
+        Assert.That(nets, Has.Count.EqualTo(1));
     }
 }

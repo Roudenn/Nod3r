@@ -7,14 +7,14 @@ namespace Nod3r.Solver;
 /// </summary>
 public abstract class NodeRuleFactory
 {
-    public abstract NodeRuleHandle Create();
+    public abstract NodeRuleInternal Create();
 }
 
 public sealed class NodeRuleFactory<TNode, TRule> : NodeRuleFactory
     where TNode : INode
     where TRule : INodeRule<TNode>, INodeRuleCreator<TRule>
 {
-    public override NodeRuleHandle Create()
+    public override NodeRuleInternal Create()
     {
         return new NodeRule<TNode, TRule>();
     }

@@ -5,7 +5,7 @@ namespace Nod3r.Solver;
 /// <summary>
 /// Shared storage for all <see cref="NodeIdx"/>.
 /// </summary>
-// TODO consider whether this should be exposed or not
+// TODO consider whether this should be public or not
 public static class NodeIdxStorage
 {
     /// <summary>
@@ -21,6 +21,7 @@ public static class NodeIdxStorage
     internal static void Register<TNode, TNet>() where TNode : INode  where TNet : INodeNet
     {
         Storage<TNode>.Index = new NodeIdx(Count);
+        StorageNet<TNet>.Index = new NodeIdx(Count);
         Count++;
     }
 
@@ -39,10 +40,37 @@ public static class NodeIdxStorage
     }
     
     /// <summary>
+    /// Gets the <see cref="NodeIdx"/> of a node type controlled by the network.
+    /// </summary>
+    /// <typeparam name="T">Type of node.</typeparam>
+    /// <returns><see cref="NodeIdx"/> representing this type.</returns>
+    /// <exception cref="InvalidOperationException">The specified type wasn't registered in the program.</exception>
+    public static NodeIdx GetNet<T>() where T : INodeNet
+    {
+        var idx = StorageNet<T>.Index;
+        return idx == NodeIdx.Invalid
+            ? throw new InvalidOperationException($"Tried to get a {nameof(NodeIdx)} for a node type that wasn't registered!")
+            : idx;
+    }
+    
+    /// <summary>
     /// A helper static class automatically creates a separate static instance for each registered node type.
     /// </summary>
-    /// <typeparam name="TNode">The controlled node type.</typeparam>
-    private static class Storage<TNode> where TNode : INode
+    /// <typeparam name="T">The controlled node type.</typeparam>
+    private static class Storage<T> where T : INode
+    {
+        // Analyzer suppression is intentional, because here we actually want this field
+        // to be different for different generated node types.
+        
+        // ReSharper disable once StaticMemberInGenericType
+        public static NodeIdx Index = NodeIdx.Invalid;
+    }
+    
+    /// <summary>
+    /// A helper static class automatically creates a separate static instance for each registered node netrowk type.
+    /// </summary>
+    /// <typeparam name="T">The controlled node network type.</typeparam>
+    private static class StorageNet<T> where T : INodeNet
     {
         // Analyzer suppression is intentional, because here we actually want this field
         // to be different for different generated node types.

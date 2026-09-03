@@ -7,14 +7,14 @@ namespace Nod3r.Solver;
 /// </summary>
 public abstract class NodeNetFactory
 {
-    public abstract NodeNetHandler Create();
+    public abstract NodeNetInternal Create();
 }
 
 public sealed class NodeNetFactory<TNode, TNet> : NodeNetFactory
     where TNode : INode
     where TNet : INodeNet, INodeNetCreator<TNet>
 {
-    public override NodeNetHandler Create()
+    public override NodeNetInternal Create()
     {
         return new NodeNet<TNode, TNet>(TNet.CreateNet());
     }
