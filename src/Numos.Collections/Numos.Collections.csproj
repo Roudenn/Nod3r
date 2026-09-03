@@ -13,7 +13,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Numos.Maths\Numos.Maths.csproj" />
+        <PackageReference Include="Numos.Maths" Version="0.1.0-alpha.1" />
     </ItemGroup>
     
 </Project>

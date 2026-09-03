@@ -5,12 +5,11 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
-
+    
     <ItemGroup>
         <ProjectReference Include="..\Nod3r.Collections\Nod3r.Collections.csproj"/>
         <ProjectReference Include="..\Nod3r.Types\Nod3r.Types.csproj"/>
         <ProjectReference Include="..\Numos.Collections\Numos.Collections.csproj"/>
-        <ProjectReference Include="..\Numos.Maths\Numos.Maths.csproj"/>
     </ItemGroup>
     
 </Project>

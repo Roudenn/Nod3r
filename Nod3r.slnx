@@ -1,7 +1,6 @@
 <Solution>
     <!-- TODO replace with a package import when Numos is released -->
     <Project Path="src/Numos.Collections/Numos.Collections.csproj" />
-    <Project Path="src/Numos.Maths/Numos.Maths.csproj" />
     
     <Project Path="src/Nod3r.API/Nod3r.API.csproj" />
     <Project Path="src/Nod3r.Collections/Nod3r.Collections.csproj" />

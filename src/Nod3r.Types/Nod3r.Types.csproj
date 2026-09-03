@@ -9,7 +9,6 @@
     <ItemGroup>
         <ProjectReference Include="..\Nod3r.Collections\Nod3r.Collections.csproj"/>
         <ProjectReference Include="..\Numos.Collections\Numos.Collections.csproj"/>
-        <ProjectReference Include="..\Numos.Maths\Numos.Maths.csproj"/>
     </ItemGroup>
     
 </Project>
