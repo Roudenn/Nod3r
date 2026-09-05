@@ -95,7 +95,7 @@ public sealed class PipeNodeRule : INodeRule<PipeNode>
     }
 }
 
-public record struct PipeNodeNetwork() : INodeNet, INodeNetCreator<AdjacentNodeNet>
+public struct PipeNodeNetwork : INodeNet, INodeNetCreator<PipeNodeNetwork>
 {
     public float TotalCapacity = 0f;
     
@@ -117,8 +117,13 @@ public record struct PipeNodeNetwork() : INodeNet, INodeNetCreator<AdjacentNodeN
     {
     }
 
-    public static AdjacentNodeNet CreateNet()
+    private PipeNodeNetwork(NodeNetInternal net)
     {
-        return new AdjacentNodeNet();
+        Net = net;
+    }
+
+    public static PipeNodeNetwork CreateNet(NodeNetInternal net)
+    {
+        return new PipeNodeNetwork(net);
     }
 }

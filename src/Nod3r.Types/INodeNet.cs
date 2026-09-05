@@ -1,5 +1,3 @@
-using Nod3r.Collections;
-
 namespace Nod3r.Types;
 
 /// <summary>
@@ -17,7 +15,7 @@ namespace Nod3r.Types;
 /// </para>
 public interface INodeNet
 {
-    NodeNetInternal Net { get; internal set; }
+    NodeNetInternal Net { get; set; }
     
     /// <summary>
     /// Initialize function that is called after this node group was properly set up.

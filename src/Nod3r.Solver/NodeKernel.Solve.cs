@@ -75,6 +75,8 @@ internal sealed partial class NodeKernel
                 {
                     buffer.AsSpan().Replace(voxel, default);
                 }
+                
+                netNodes.Clear();
             }
         }
         finally

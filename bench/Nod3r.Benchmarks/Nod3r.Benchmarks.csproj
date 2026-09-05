@@ -15,7 +15,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\Nod3r.API\Nod3r.API.csproj"/>
-        <ProjectReference Include="..\..\src\Nod3r.Common\Nod3r.Common.csproj"/>
+        <ProjectReference Include="..\..\src\Nod3r.Collections\Nod3r.Collections.csproj"/>
         <ProjectReference Include="..\..\src\Nod3r.Examples\Nod3r.Examples.csproj"/>
         <ProjectReference Include="..\..\src\Nod3r.Solver\Nod3r.Solver.csproj"/>
     </ItemGroup>

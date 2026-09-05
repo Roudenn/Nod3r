@@ -3,14 +3,13 @@ using Nod3r.Types;
 
 namespace Nod3r.Solver;
 
-public sealed class NodeNet<TNode, TNet> : NodeNetInternal where TNode : INode where TNet : INodeNet
+public sealed class NodeNet<TNode, TNet> : NodeNetInternal where TNode : INode where TNet : INodeNet, INodeNetCreator<TNet>
 {
     private readonly TNet _netImpl;
 
-    public NodeNet(TNet netImpl)
+    public NodeNet()
     {
-        _netImpl = netImpl;
-        netImpl.Net = this;
+        _netImpl = TNet.CreateNet(this);
     }
 
     public override void Allocate()

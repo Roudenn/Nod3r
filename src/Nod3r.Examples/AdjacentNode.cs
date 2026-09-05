@@ -11,7 +11,7 @@ public record struct AdjacentNode() : INode
     public float Capacity = 1f;
 }
 
-public record struct AdjacentNodeNet() : INodeNet, INodeNetCreator<AdjacentNodeNet>
+public record struct AdjacentNodeNet : INodeNet, INodeNetCreator<AdjacentNodeNet>
 {
     public float TotalCapacity = 0f;
     
@@ -33,9 +33,14 @@ public record struct AdjacentNodeNet() : INodeNet, INodeNetCreator<AdjacentNodeN
     {
     }
 
-    public static AdjacentNodeNet CreateNet()
+    private AdjacentNodeNet(NodeNetInternal net)
     {
-        return new AdjacentNodeNet();
+        Net = net;
+    }
+
+    public static AdjacentNodeNet CreateNet(NodeNetInternal net)
+    {
+        return new AdjacentNodeNet(net);
     }
 }
 

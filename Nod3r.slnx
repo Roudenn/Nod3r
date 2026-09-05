@@ -1,5 +1,5 @@
 <Solution>
-    <!-- TODO replace with a package import when Numos is released -->
+    <!-- TODO replace with a package import when on the next Numos release -->
     <Project Path="src/Numos.Collections/Numos.Collections.csproj" />
     
     <Project Path="src/Nod3r.API/Nod3r.API.csproj" />
@@ -10,7 +10,6 @@
     
     <Folder Name="/Benchmarks/">
         <Project Path="bench/Nod3r.Benchmarks/Nod3r.Benchmarks.csproj" />
-        <Project Path="bench/Nod3r.Examples.Benchmarks/Nod3r.Examples.Benchmarks.csproj" />
     </Folder>
     
     <Folder Name="/Tests/">

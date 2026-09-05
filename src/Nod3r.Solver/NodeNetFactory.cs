@@ -16,6 +16,6 @@ public sealed class NodeNetFactory<TNode, TNet> : NodeNetFactory
 {
     public override NodeNetInternal Create()
     {
-        return new NodeNet<TNode, TNet>(TNet.CreateNet());
+        return new NodeNet<TNode, TNet>();
     }
 }
