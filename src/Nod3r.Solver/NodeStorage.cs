@@ -3,62 +3,75 @@ using Nod3r.Types;
 
 namespace Nod3r.Solver;
 
+internal abstract class NodeStorage
+{
+    public abstract int GetFreeLayer(ColumnHandle id);
+
+    public abstract LayerId GetLayerId(ColumnHandle idx, int layer);
+
+    public abstract void Free(LayerId id);
+
+    public abstract void Free(ColumnHandle id, int layer);
+
+    public abstract void EnsureLayerCapacity(int capacity);
+}
+
 /// <summary>
 /// A shared <see cref="GenIdStorage{T}"/> for every <see cref="INode"/> type for every layer.
 /// </summary>
 /// <typeparam name="T">Node type of this storage.</typeparam>
-internal static class NodeStorage<T> where T : INode
+internal sealed class NodeStorage<T> : NodeStorage where T : INode
 {
-    private readonly static Gen2DStorage<T> Storage = new();
+    private readonly Gen2DStorage<T> _storage = new();
 
-    public static T Get(LayerId id)
+    public T Get(LayerId id)
     {
-        return Storage[id];
+        return _storage[id];
     }
     
-    public static T Get(ColumnHandle id, int layer)
+    public T Get(ColumnHandle id, int layer)
     {
-        return Storage[GetLayerId(id, layer)];
+        return _storage[GetLayerId(id, layer)];
     }
     
-    public static int GetFreeLayer(ColumnHandle id)
+    public override int GetFreeLayer(ColumnHandle id)
     {
-        return Storage.GetFreeLayer(id);
+        return _storage.GetFreeLayer(id);
     }
 
-    public static LayerId GetLayerId(ColumnHandle idx, int layer)
+    public override LayerId GetLayerId(ColumnHandle idx, int layer)
     {
-        return Storage.GetLayerId(idx, layer);
+        return _storage.GetLayerId(idx, layer);
     }
 
     /// <summary>
     /// Allocates a new column and returns a reference to the target layer inside.
     /// </summary>
-    public static void Add(T value, int layer, out LayerId id)
+    public void Add(T value, int layer, out LayerId id)
     {
-        Storage.AddColumn(value, out id, layer);
+        _storage.AddColumn(value, out id, layer);
     }
     
     /// <summary>
     /// Adds new space in a specific layer.
     /// </summary>
-    public static void Add(T value, ColumnHandle idx, out LayerId id)
+    public void Add(T value, ColumnHandle idx, out LayerId id)
     {
-        Storage.Add(value, idx, out id);
+        _storage.Add(value, idx, out id);
     }
 
-    public static void Free(LayerId id)
+    public override void Free(LayerId id)
     {
-        Storage.Free(id);
+        _storage.Free(id);
     }
     
-    public static void Free(ColumnHandle id, int layer)
+    public override void Free(ColumnHandle id, int layer)
     {
-        Storage.Free(GetLayerId(id, layer));
+        _storage.Free(GetLayerId(id, layer));
     }
 
-    public static void EnsureLayerCapacity(int capacity)
+    public override void EnsureLayerCapacity(int capacity)
     {
-        Storage.EnsureLayerCapacity(capacity);
+        _storage.EnsureLayerCapacity(capacity);
     }
 }

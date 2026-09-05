@@ -41,31 +41,32 @@ internal sealed partial class NodeKernel
             while (FloodFill(buffer, netNodes, new Stack<NodeVoxel>(), out var start))
             {
                 // Create the node network instance.
-                var network = _nodeFactories[start.TypeId.Value].Create();
+                var network = (NodeNetInternal) _nodeFactories[start.TypeId.Value].Create();
 
                 int typeIdx = start.TypeId.Value;
                 
                 // First find all already assigned node groups
                 // TODO performance
-                var networks = new HashSet<NodeNetInternal>();
+                var networks = new HashSet<INodeNetInternal>();
                 foreach (var voxel in netNodes)
                 {
                     var genId = GetId(voxel);
                     foreach (var net in _nets[typeIdx])
                     {
-                        if (net.Nodes.Contains(net.GetLayerId(this, genId, voxel.Layer)))
+                        if (net.Nodes.Contains(GetLayerId(start.TypeId, genId, voxel.Layer)))
                             networks.Add(net);
                     }
                 }
 
-                network.Allocate();
+                network.Allocate(this);
                 network.Initialize();
                 network.Merge(networks);
 
                 _nets[typeIdx].Add(network);
                 
-                foreach (var net in networks)
+                foreach (var iNet in networks)
                 {
+                    var net = (NodeNetInternal) iNet;
                     net.Shutdown();
                     _nets[typeIdx].Remove(net);
                 }

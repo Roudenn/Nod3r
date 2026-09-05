@@ -11,15 +11,16 @@ internal sealed partial class NodeKernel
         var chunk = GetChunk(voxel);
         var oldGenId = chunk.Chunk[voxel.Pos];
         LayerId id;
+        var storage = GetStorageTyped<T>();
         if (oldGenId.IsValid)
         {
             // Overwrite the existing layer if it is specified
-            NodeStorage<T>.Free(oldGenId, voxel.Layer);
-            NodeStorage<T>.Add(node, oldGenId, out id);
+            storage.Free(oldGenId, voxel.Layer);
+            storage.Add(node, oldGenId, out id);
         }
         else
         {
-            NodeStorage<T>.Add(node, voxel.Layer, out id);
+            storage.Add(node, voxel.Layer, out id);
         }
         
         chunk.Chunk[voxel.Pos] = id.ColumnHandle;
@@ -37,7 +38,7 @@ internal sealed partial class NodeKernel
         if (!TryGetId(voxel, out var id))
             return false;
         
-        NodeStorage<T>.Free(id, voxel.Layer);
+        GetStorage<T>().Free(id, voxel.Layer);
         GetChunk(voxel).Chunk[voxel.Pos] = ColumnHandle.Invalid;
         _changedChunks.Add(voxel.Chunk);
         var neighbors = _ruleFactories[voxel.TypeId.Value].Create().Evaluate(this, voxel);

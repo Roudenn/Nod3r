@@ -6,5 +6,5 @@ namespace Nod3r.Types;
 /// <typeparam name="T">Type of node network, must be the same as the implemented type.</typeparam>
 public interface INodeNetCreator<out T> where T : INodeNet
 {
-    abstract static T CreateNet(NodeNetInternal net);
+    abstract static T CreateNet(INodeNetInternal net);
 }

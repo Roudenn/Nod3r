@@ -15,7 +15,7 @@ public record struct AdjacentNodeNet : INodeNet, INodeNetCreator<AdjacentNodeNet
 {
     public float TotalCapacity = 0f;
     
-    public NodeNetInternal Net { get; set; }
+    public INodeNetInternal Net { get; set; }
     
     public void Initialize()
     {
@@ -25,20 +25,20 @@ public record struct AdjacentNodeNet : INodeNet, INodeNetCreator<AdjacentNodeNet
     {
     }
 
-    public void Merge(IReadOnlySet<NodeNetInternal> nets)
+    public void Merge(IReadOnlySet<INodeNetInternal> nets)
     {
     }
 
-    public void Split(NodeNetInternal parent)
+    public void Split(INodeNetInternal parent)
     {
     }
 
-    private AdjacentNodeNet(NodeNetInternal net)
+    private AdjacentNodeNet(INodeNetInternal net)
     {
         Net = net;
     }
 
-    public static AdjacentNodeNet CreateNet(NodeNetInternal net)
+    public static AdjacentNodeNet CreateNet(INodeNetInternal net)
     {
         return new AdjacentNodeNet(net);
     }

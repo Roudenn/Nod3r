@@ -13,12 +13,17 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
     public NodeKernel(NodeConfig config)
     {
         config.RegistrationDelegate.Invoke(this);
+        //Array.Resize(ref _nets, );
     }
+
+    private NodeStorage[] _nodeStorages = [];
+    
+    private NodeNetStorage[] _nodeNetStorages = [];
     
     /// <summary>
     /// All currently living networks mapped by <see cref="NodeIdx"/>.
     /// </summary>
-    private readonly List<NodeNetInternal>[] _nets = [];
+    private List<NodeNetInternal>[] _nets = [];
     
     /// <summary>
     /// Factories that create <see cref="INodeNet"/>s instances from <see cref="NodeIdx"/>.
@@ -79,6 +84,11 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
     {
         return TryGetId(voxel.Chunk, voxel.Pos, voxel.TypeId, out id);
     }
+
+    public LayerId GetLayerId(NodeIdx nodeIdx, ColumnHandle column, int layer)
+    {
+        return GetStorage(nodeIdx).GetLayerId(column, layer);
+    }
     
     public NodeIdx NodeTypeToIdx<T>() where T : INode => NodeIdxStorage.Get<T>();
     
@@ -87,4 +97,16 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
     private NodeChunk GetChunk(NodeChunkHandle chunk, NodeIdx typeId) => _chunkMap[chunk.Pos][typeId.Value];
     
     private NodeChunk GetChunk(NodeVoxel voxel) => _chunkMap[voxel.Chunk.Pos][voxel.TypeId.Value];
+    
+    internal NodeStorage GetStorage(NodeIdx typeId) => _nodeStorages[typeId.Value];
+    
+    internal NodeStorage GetStorage<T>() where T : INode => _nodeStorages[NodeTypeToIdx<T>().Value];
+    
+    internal NodeStorage<T> GetStorageTyped<T>() where T : INode => (NodeStorage<T>) _nodeStorages[NodeTypeToIdx<T>().Value];
+    
+    internal NodeNetStorage GetNetStorage(NodeIdx typeId) => _nodeNetStorages[typeId.Value];
+    
+    internal NodeNetStorage GetNetStorage<T>() where T : INodeNet => _nodeNetStorages[NetTypeToIdx<T>().Value];
+    
+    internal NodeNetStorage<T> GetNetStorageTyped<T>() where T : INodeNet => (NodeNetStorage<T>) _nodeNetStorages[NetTypeToIdx<T>().Value];
 }

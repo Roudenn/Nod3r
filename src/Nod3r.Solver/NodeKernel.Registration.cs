@@ -10,8 +10,9 @@ internal sealed partial class NodeKernel
         where TRule : INodeRule<TNode>, INodeRuleCreator<TRule>
     {
         _ruleFactories.Add(new NodeRuleFactory<TNode, TRule>());
-        _nodeFactories.Add(new NodeNetFactory<TNode, TNet>());
+        _nodeFactories.Add(new NodeNetFactory<TNet>());
         NodeIdxStorage.Register<TNode, TNet>();
-        NodeStorage<TNode>.EnsureLayerCapacity(layerCapacity);
+        Array.Resize(ref _nodeStorages, NodeIdxStorage.Count);
+        _nodeStorages[NodeIdxStorage.Count].EnsureLayerCapacity(layerCapacity);
     }
 }

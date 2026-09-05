@@ -5,7 +5,7 @@ namespace Nod3r.Solver;
 /// <summary>
 /// Shared storage for all <see cref="NodeIdx"/>.
 /// </summary>
-// TODO consider whether this should be public or not
+// TODO consider whether this should be kernel-specific or not
 public static class NodeIdxStorage
 {
     /// <summary>

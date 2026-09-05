@@ -1,11 +1,12 @@
 using Nod3r.Collections;
+using Nod3r.Types;
 
-namespace Nod3r.Types;
+namespace Nod3r.Solver;
 
 /// <summary>
 /// A wrapper around a node network that allows to access it in abstract context.
 /// </summary>
-public abstract class NodeNetInternal
+internal abstract class NodeNetInternal : INodeNetInternal
 {
     /// <summary>
     /// References to nodes that are connected to this node network.
@@ -14,12 +15,7 @@ public abstract class NodeNetInternal
 
     public GenId GenId;
 
-    public abstract void Allocate();
-    
-    /// <summary>
-    /// Method that returns a proper reference to a node that also includes its generation.
-    /// </summary>
-    public abstract LayerId GetLayerId(INodeKernel kernel, ColumnHandle idx, int layer);
+    public abstract void Allocate(NodeKernel kernel);
 
     /// <summary>
     /// Initialize function that is called after this node group was properly set up.
@@ -41,11 +37,11 @@ public abstract class NodeNetInternal
     /// This method is called right before Shutdown and release of every network in the set.
     /// </para>
     /// </summary>
-    public abstract void Merge(IReadOnlySet<NodeNetInternal> nets);
+    public abstract void Merge(IReadOnlySet<INodeNetInternal> nets);
 
     /// <summary>
     /// Called on a newly created node network after its initialization
     /// that was split from the <see cref="parent"/> network.
     /// </summary>
-    public abstract void Split(NodeNetInternal parent);
+    public abstract void Split(INodeNetInternal parent);
 }

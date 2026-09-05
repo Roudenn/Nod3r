@@ -15,7 +15,7 @@ namespace Nod3r.Types;
 /// </para>
 public interface INodeNet
 {
-    NodeNetInternal Net { get; set; }
+    INodeNetInternal Net { get; set; }
     
     /// <summary>
     /// Initialize function that is called after this node group was properly set up.
@@ -35,11 +35,11 @@ public interface INodeNet
     /// This method is called right before Shutdown and release of every network in the set.
     /// </para>
     /// </summary>
-    void Merge(IReadOnlySet<NodeNetInternal> nets);
+    void Merge(IReadOnlySet<INodeNetInternal> nets);
 
     /// <summary>
     /// Called on a newly created node network after its initialization
     /// that was split from the <see cref="parent"/> network.
     /// </summary>
-    void Split(NodeNetInternal parent);
+    void Split(INodeNetInternal parent);
 }

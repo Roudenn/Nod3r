@@ -48,7 +48,7 @@ public sealed class NodeSolver
     public void AddNode<T>(T node, NodeChunkHandle chunk, Int3 pos, bool dirty = true) where T : INode
     {
         var type = _kernel.NodeTypeToIdx<T>();
-        int layer = NodeStorage<T>.GetFreeLayer(_kernel.GetId(chunk, pos, type));
+        int layer = _kernel.GetStorage(type).GetFreeLayer(_kernel.GetId(chunk, pos, type));
         SetNode(node, new NodeVoxel(chunk, pos, type, layer), dirty);
     }
     
@@ -114,7 +114,7 @@ public sealed class NodeSolver
         for (var i = 0; i < handles.Count; i++)
         {
             var handle = handles[i];
-            array[i] = new NodeNetSnapshot<T>(NodeNetStorage<T>.Get(handle.GenId), handle.GenId, handle.Nodes);
+            array[i] = new NodeNetSnapshot<T>(_kernel.GetNetStorageTyped<T>().Get(handle.GenId), handle.GenId, handle.Nodes);
         }
         
         return array;

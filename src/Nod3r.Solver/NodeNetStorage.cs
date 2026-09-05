@@ -3,21 +3,31 @@ using Nod3r.Types;
 
 namespace Nod3r.Solver;
 
+internal abstract class NodeNetStorage
+{
+    public abstract void Free(GenId id);
+}
+
 /// <summary>
-/// Shared storage for all <see cref="INodeNet"/> types.
+/// Kernel-specific storage for all <see cref="INodeNet"/> types.
 /// </summary>
 /// <typeparam name="T">Type of node net.</typeparam>
-public static class NodeNetStorage<T> where T : INodeNet
+internal sealed class NodeNetStorage<T> : NodeNetStorage where T : INodeNet
 {
-    private static readonly GenIdStorage<T> Storage = new();
+    private readonly GenIdStorage<T> _storage = new();
     
-    public static GenId Add(T network)
+    public GenId Add(T network)
     {
-        return Storage.Add(network);
+        return _storage.Add(network);
     }
 
-    public static T Get(GenId id)
+    public T Get(GenId id)
     {
-        return Storage[id];
+        return _storage[id];
+    }
+
+    public override void Free(GenId id)
+    {
+        _storage.Free(id);
     }
 }

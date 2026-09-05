@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using Nod3r.Collections;
 using Nod3r.Types;
 using Numos.Maths;
 
@@ -17,7 +16,7 @@ internal sealed partial class NodeKernel
         if (!genId.IsValid)
             return false;
         
-        node = NodeStorage<T>.Get(genId, layer);
+        node = GetStorageTyped<T>().Get(genId, layer);
         return true;
     }
     

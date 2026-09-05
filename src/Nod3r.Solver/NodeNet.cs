@@ -1,9 +1,8 @@
-using Nod3r.Collections;
 using Nod3r.Types;
 
 namespace Nod3r.Solver;
 
-public sealed class NodeNet<TNode, TNet> : NodeNetInternal where TNode : INode where TNet : INodeNet, INodeNetCreator<TNet>
+internal sealed class NodeNet<TNet> : NodeNetInternal where TNet : INodeNet, INodeNetCreator<TNet>
 {
     private readonly TNet _netImpl;
 
@@ -12,14 +11,9 @@ public sealed class NodeNet<TNode, TNet> : NodeNetInternal where TNode : INode w
         _netImpl = TNet.CreateNet(this);
     }
 
-    public override void Allocate()
+    public override void Allocate(NodeKernel kernel)
     {
-        GenId = NodeNetStorage<TNet>.Add(_netImpl);
-    }
-    
-    public override LayerId GetLayerId(INodeKernel kernel, ColumnHandle idx, int layer)
-    {
-        return NodeStorage<TNode>.GetLayerId(idx, layer);
+        GenId = kernel.GetNetStorageTyped<TNet>().Add(_netImpl);
     }
 
     public override void Initialize()
@@ -32,12 +26,12 @@ public sealed class NodeNet<TNode, TNet> : NodeNetInternal where TNode : INode w
         _netImpl.Shutdown();
     }
 
-    public override void Merge(IReadOnlySet<NodeNetInternal> nets)
+    public override void Merge(IReadOnlySet<INodeNetInternal> nets)
     {
         _netImpl.Merge(nets);
     }
 
-    public override void Split(NodeNetInternal parent)
+    public override void Split(INodeNetInternal parent)
     {
         _netImpl.Split(parent);
     }
