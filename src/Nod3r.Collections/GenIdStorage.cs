@@ -24,42 +24,42 @@ namespace Nod3r.Collections;
 /// </para>
 /// </remarks>
 /// <typeparam name="T">The type of data to store.</typeparam>
-public sealed class GenIdStorage<T>
+public class GenIdStorage<T>
 {
     /// <summary>
     /// Index of the next free slot.
     /// Equals to <see cref="int.MaxValue"/> when the storage is full.
     /// </summary>
-    private int _nextFree;
+    protected int NextFree;
 
     /// <summary>
     /// Data stored in every slot.
     /// </summary>
-    private T[] _data;
+    protected internal T[] Data;
     
     /// <summary>
     /// Next link on the free list for each slot. if int.MaxValue then this is the tail.
     /// If negative, this slot is occupied.
     /// </summary>
-    private int[] _nextSlots;
+    protected int[] NextSlots;
     
     /// <summary>
     /// Current generation for each slot.
     /// Allows for instant deletion by incrementing the generation by 1.
     /// </summary>
-    private int[] _generations;
+    protected int[] Generations;
     
     /// <summary>
     /// Dense index of every slot.
     /// </summary>
-    private int[] _denseIndex;
+    protected int[] DenseIndex;
     
     /// <summary>
     /// Pointer to a position in a dense index array.
     /// Allows for O(Count) iteration instead of O(Length).
     /// </summary>
-    private int[] _dense;
-    
+    protected internal int[] Dense;
+
     /// <summary>
     /// Total amount of stored objects.
     /// </summary>
@@ -72,24 +72,21 @@ public sealed class GenIdStorage<T>
 
     public GenIdStorage(int capacity = 16)
     {
-        Count = 0;
         Length = capacity;
         
-        _data = new T[capacity];
-        _nextSlots = new int[capacity];
-        _generations = new int[capacity];
-        _denseIndex = new int[capacity];
-        _dense = new int[capacity];
+        Data = new T[capacity];
+        NextSlots = new int[capacity];
+        Generations = new int[capacity];
+        DenseIndex = new int[capacity];
+        Dense = new int[capacity];
         
         for (int i = 0; i < capacity; i++)
         {
             // Build linked list chain for newly allocated segment.
-            _nextSlots[i] = i == capacity - 1 ? _nextFree : i + 1;
+            NextSlots[i] = i == capacity - 1 ? NextFree : i + 1;
             // Every slot starts at generation 1.
-            _generations[i] = 1;
+            Generations[i] = 1;
         }
-
-        _nextFree = 0;
     }
     
     public T this[GenId id]
@@ -97,31 +94,39 @@ public sealed class GenIdStorage<T>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            if ((uint)id.Index >= (uint)_data.Length)
+            if ((uint)id.Index >= (uint)Data.Length)
                 ThrowKeyNotFound();
    
-            if (_generations[id.Index] != id.Generation)
+            if (Generations[id.Index] != id.Generation)
                 ThrowKeyNotFound();
 
-            return _data[id.Index];
+            return Data[id.Index];
         }
     }
-    
-    public void Add(T value, out GenId id)
+
+    public bool IsValid(GenId id)
     {
-        if ((uint)_nextFree >= (uint)_data.Length)
+        if ((uint)id.Index >= (uint)Data.Length)
+            return false;
+   
+        return Generations[id.Index] == id.Generation;
+    }
+    
+    public virtual void Add(T value, out GenId id)
+    {
+        if ((uint)NextFree >= (uint)Data.Length)
             ReAllocate();
 
-        var idx = _nextFree;
+        var idx = NextFree;
         
-        _dense[Count] = idx;
-        _denseIndex[idx] = Count;
+        Dense[Count] = idx;
+        DenseIndex[idx] = Count;
         Count += 1;
-        _nextFree = _nextSlots[idx];
-        _nextSlots[idx] = -1; // Means filled
+        NextFree = NextSlots[idx];
+        NextSlots[idx] = -1; // Means filled
 
-        id = new GenId(idx, _generations[idx]);
-        _data[idx] = value;
+        id = new GenId(idx, Generations[idx]);
+        Data[idx] = value;
     }
 
     public GenId Add(T value)
@@ -130,32 +135,32 @@ public sealed class GenIdStorage<T>
         return id;
     }
 
-    public void Free(GenId id)
+    public virtual void Free(GenId id)
     {
-        if ((uint)id.Index >= (uint)_data.Length)
+        if ((uint)id.Index >= (uint)Data.Length)
             ThrowKeyNotFound();
         
-        if (_generations[id.Index] != id.Generation || _nextSlots[id.Index] >= 0)
+        if (Generations[id.Index] != id.Generation || NextSlots[id.Index] >= 0)
             ThrowKeyNotFound();
 
         if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
-            _data[id.Index] = default!;
+            Data[id.Index] = default!;
 
-        int removedDenseIdx = _denseIndex[id.Index];
+        int removedDenseIdx = DenseIndex[id.Index];
         int lastDenseIdx = Count - 1;
     
         // Swap-and-pop inside dense array only if it's not the last element
         if (removedDenseIdx != lastDenseIdx)
         {
-            int lastSlotIdx = _dense[lastDenseIdx];
-            _dense[removedDenseIdx] = lastSlotIdx;
-            _denseIndex[lastSlotIdx] = removedDenseIdx;
+            int lastSlotIdx = Dense[lastDenseIdx];
+            Dense[removedDenseIdx] = lastSlotIdx;
+            DenseIndex[lastSlotIdx] = removedDenseIdx;
         }
         
         Count -= 1;
-        _generations[id.Index] += 1;
-        _nextSlots[id.Index] = _nextFree;
-        _nextFree = id.Index;
+        Generations[id.Index] += 1;
+        NextSlots[id.Index] = NextFree;
+        NextFree = id.Index;
     }
 
     /// <summary>
@@ -176,70 +181,34 @@ public sealed class GenIdStorage<T>
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void ReAllocate()
     {
-        int oldLength = _data.Length;
+        int oldLength = Data.Length;
         int newLength = Math.Max(oldLength, 2) * 2;
 
         ReAllocateTo(newLength);
     }
 
-    private void ReAllocateTo(int newSize)
+    protected virtual void ReAllocateTo(int newSize)
     {
         int oldLength = Length;
         Debug.Assert(newSize >= oldLength, "Cannot shrink GenIdStorage");
         
         Length = newSize;
         
-        Array.Resize(ref _data, newSize);
-        Array.Resize(ref _nextSlots, newSize);
-        Array.Resize(ref _generations, newSize);
-        Array.Resize(ref _denseIndex, newSize);
-        Array.Resize(ref _dense, newSize);
+        Array.Resize(ref Data, newSize);
+        Array.Resize(ref NextSlots, newSize);
+        Array.Resize(ref Generations, newSize);
+        Array.Resize(ref DenseIndex, newSize);
+        Array.Resize(ref Dense, newSize);
 
         for (int i = oldLength; i < newSize; i++)
         {
             // Build linked list chain for newly allocated segment.
-            _nextSlots[i] = i == newSize - 1 ? _nextFree : i + 1;
+            NextSlots[i] = i == newSize - 1 ? NextFree : i + 1;
             // Every slot starts at generation 1.
-            _generations[i] = 1;
+            Generations[i] = 1;
         }
 
-        _nextFree = oldLength;
-    }
-    
-    public Enumerator GetEnumerator()
-    {
-        return new Enumerator(this);
-    }
-        
-    /// <summary>
-    /// Fallback enumerator that returns readonly values stored in this <see cref="GenIdStorage{T}"/>.
-    /// </summary>
-    private IEnumerator<T> GetEnumeratorInterface()
-    {
-        for (var i = 0; i < Count; i++)
-        {
-            yield return _data[_dense[i]];
-        }
-    }
-
-    /// <summary>
-    /// A custom enumerator that returns direct references to stored objects.
-    /// TODO reconsider if this even needed
-    /// </summary>
-    public ref struct Enumerator(GenIdStorage<T> owner)
-    {
-        private readonly T[] _data = owner._data;
-        private readonly int[] _dense = owner._dense;
-        private readonly int _count = owner.Count;
-        private int _index = -1;
-
-        public bool MoveNext()
-        {
-            _index++;
-            return _index < _count;
-        }
-            
-        public ref T Current => ref _data[_dense[_index]];
+        NextFree = oldLength;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
