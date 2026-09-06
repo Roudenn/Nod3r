@@ -13,12 +13,57 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
     public NodeKernel(NodeConfig config)
     {
         config.RegistrationDelegate.Invoke(this);
-        //Array.Resize(ref _nets, );
+        _nodeIds = new int[NodeIdxStorage.Count];
+
+        int j = 0;
+        for (int i = 0; i < NodeIdxStorage.Count; i++)
+        {
+            if (!_registeredIdxs.Contains(new NodeIdx(i)))
+            {
+                // This node index wasn't registered in this instance
+                _nodeIds[i] = NodeIdx.Invalid.Value;
+                continue;
+            }
+            
+            _nodeIds[i] = j;
+            j++;
+        }
+
+        Initialized = true;
     }
 
+    /// <summary>
+    /// Specifies whenever the initialization of the node kernel was completed.
+    /// This is marked as true after the end of the object constructor.
+    /// </summary>
+    public bool Initialized { get; private set; } = false;
+
+    /// <summary>
+    /// Registered amount of node types in this solver instance.
+    /// </summary>
+    public int RegistrationCount { get; private set; } = 0;
+    
+    /// <summary>
+    /// Maps each <see cref="NodeIdx"/> value with a local index
+    /// which is used in internal arrays of this kernel instance.
+    /// -1 means this type isn't registered.
+    /// </summary>
+    private int[] _nodeIds;
+    
     private NodeStorage[] _nodeStorages = [];
     
     private NodeNetStorage[] _nodeNetStorages = [];
+
+    private readonly HashSet<Type> _registeredNodeTypes = [];
+    
+    private readonly HashSet<Type> _registeredNodeNetTypes = [];
+    
+    private readonly HashSet<Type> _registeredNodeRuleTypes = [];
+    
+    /// <summary>
+    /// All node type indexes that were registered in this solver.
+    /// </summary>
+    private readonly List<NodeIdx> _registeredIdxs = new();
     
     /// <summary>
     /// All currently living networks mapped by <see cref="NodeIdx"/>.
@@ -54,7 +99,7 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
 
     internal List<NodeNetInternal> GetNetHandles(NodeIdx typeId)
     {
-        return _nets[typeId.Value];
+        return _nets[_nodeIds[typeId.Value]];
     }
 
     /// <summary>
@@ -65,7 +110,7 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
     /// <param name="chunk">Coordinates of the chunk.</param>
     /// <param name="typeId">Node type index.</param>
     /// <returns><see cref="GenId"/> that can be used in the <see cref="NodeStorage{T}"/> to get the node data.</returns>
-    public ColumnHandle GetId(NodeChunkHandle chunk, Int3 pos, NodeIdx typeId) => _chunkMap[chunk.Pos][typeId.Value].Chunk[pos];
+    public ColumnHandle GetId(NodeChunkHandle chunk, Int3 pos, NodeIdx typeId) => _chunkMap[chunk.Pos][_nodeIds[typeId.Value]].Chunk[pos];
     
     /// <summary>
     /// Gets the <see cref="GenId"/> for <see cref="NodeStorage{T}"/> from a <see cref="NodeVoxel"/>.
@@ -94,19 +139,19 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
     
     public NodeIdx NetTypeToIdx<T>() where T : INodeNet => NodeIdxStorage.GetNet<T>();
     
-    private NodeChunk GetChunk(NodeChunkHandle chunk, NodeIdx typeId) => _chunkMap[chunk.Pos][typeId.Value];
+    private NodeChunk GetChunk(NodeChunkHandle chunk, NodeIdx typeId) => _chunkMap[chunk.Pos][_nodeIds[typeId.Value]];
     
-    private NodeChunk GetChunk(NodeVoxel voxel) => _chunkMap[voxel.Chunk.Pos][voxel.TypeId.Value];
+    private NodeChunk GetChunk(NodeVoxel voxel) => _chunkMap[voxel.Chunk.Pos][_nodeIds[voxel.TypeId.Value]];
     
-    internal NodeStorage GetStorage(NodeIdx typeId) => _nodeStorages[typeId.Value];
+    internal NodeStorage GetStorage(NodeIdx typeId) => _nodeStorages[_nodeIds[typeId.Value]];
     
-    internal NodeStorage GetStorage<T>() where T : INode => _nodeStorages[NodeTypeToIdx<T>().Value];
+    internal NodeStorage GetStorage<T>() where T : INode => _nodeStorages[_nodeIds[NodeTypeToIdx<T>().Value]];
     
-    internal NodeStorage<T> GetStorageTyped<T>() where T : INode => (NodeStorage<T>) _nodeStorages[NodeTypeToIdx<T>().Value];
+    internal NodeStorage<T> GetStorageTyped<T>() where T : INode => (NodeStorage<T>) _nodeStorages[_nodeIds[NodeTypeToIdx<T>().Value]];
     
-    internal NodeNetStorage GetNetStorage(NodeIdx typeId) => _nodeNetStorages[typeId.Value];
+    internal NodeNetStorage GetNetStorage(NodeIdx typeId) => _nodeNetStorages[_nodeIds[typeId.Value]];
     
-    internal NodeNetStorage GetNetStorage<T>() where T : INodeNet => _nodeNetStorages[NetTypeToIdx<T>().Value];
+    internal NodeNetStorage GetNetStorage<T>() where T : INodeNet => _nodeNetStorages[_nodeIds[NetTypeToIdx<T>().Value]];
     
-    internal NodeNetStorage<T> GetNetStorageTyped<T>() where T : INodeNet => (NodeNetStorage<T>) _nodeNetStorages[NetTypeToIdx<T>().Value];
+    internal NodeNetStorage<T> GetNetStorageTyped<T>() where T : INodeNet => (NodeNetStorage<T>) _nodeNetStorages[_nodeIds[NetTypeToIdx<T>().Value]];
 }

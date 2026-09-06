@@ -22,7 +22,7 @@ internal sealed partial class NodeKernel
     
     public bool TryGetRelative(NodeVoxel node, Int3 offset, NodeIdx type, int layer, out NodeVoxel relative)
     {
-        var chunk = _chunkMap[node.Chunk.Pos][type.Value];
+        var chunk = _chunkMap[node.Chunk.Pos][_nodeIds[type.Value]];
         var targetPos = node.Pos + offset;
         if (targetPos.IsWithin(default, chunk.Dimensions))
         {
@@ -38,7 +38,7 @@ internal sealed partial class NodeKernel
     
     public bool TryGetRelative(NodeVoxel node, Int3 offset, NodeIdx type, out NodeVoxel relative)
     {
-        var chunk = _chunkMap[node.Chunk.Pos][type.Value];
+        var chunk = _chunkMap[node.Chunk.Pos][_nodeIds[type.Value]];
         var targetPos = node.Pos + offset;
         if (targetPos.IsWithin(default, chunk.Dimensions))
         {

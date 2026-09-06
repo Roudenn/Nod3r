@@ -40,10 +40,10 @@ internal sealed partial class NodeKernel
             var netNodes = new HashSet<NodeVoxel>();
             while (FloodFill(buffer, netNodes, new Stack<NodeVoxel>(), out var start))
             {
+                int typeIdx = _nodeIds[start.TypeId.Value];
+                
                 // Create the node network instance.
-                var network = (NodeNetInternal) _nodeFactories[start.TypeId.Value].Create();
-
-                int typeIdx = start.TypeId.Value;
+                var network = (NodeNetInternal) _nodeFactories[typeIdx].Create();
                 
                 // First find all already assigned node groups
                 // TODO performance
@@ -111,7 +111,7 @@ internal sealed partial class NodeKernel
 
         while (stack.TryPop(out var fillVoxel))
         {
-            var neighbours = _ruleFactories[start.TypeId.Value].Create().Evaluate(this, fillVoxel);
+            var neighbours = _ruleFactories[_nodeIds[start.TypeId.Value]].Create().Evaluate(this, fillVoxel);
             var array = neighbours.ToArray();
             foreach (var voxel in array)
             {

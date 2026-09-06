@@ -1,6 +1,8 @@
-namespace Nod3r.Types;
+using Nod3r.Types;
 
-public abstract class NodeRuleInternal
+namespace Nod3r.Solver;
+
+internal abstract class NodeRuleInternal
 {
     public abstract IEnumerable<NodeVoxel> Evaluate(INodeKernel kernel, NodeVoxel voxel);
 }

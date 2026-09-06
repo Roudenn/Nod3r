@@ -41,7 +41,7 @@ internal sealed partial class NodeKernel
         GetStorage<T>().Free(id, voxel.Layer);
         GetChunk(voxel).Chunk[voxel.Pos] = ColumnHandle.Invalid;
         _changedChunks.Add(voxel.Chunk);
-        var neighbors = _ruleFactories[voxel.TypeId.Value].Create().Evaluate(this, voxel);
+        var neighbors = _ruleFactories[_nodeIds[voxel.TypeId.Value]].Create().Evaluate(this, voxel);
         foreach (var nearVoxel in neighbors)
         {
             _changedNodes.Add(nearVoxel);

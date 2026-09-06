@@ -5,7 +5,6 @@ namespace Nod3r.Solver;
 /// <summary>
 /// Shared storage for all <see cref="NodeIdx"/>.
 /// </summary>
-// TODO consider whether this should be kernel-specific or not
 public static class NodeIdxStorage
 {
     /// <summary>
@@ -14,14 +13,24 @@ public static class NodeIdxStorage
     public static int Count { get; private set; }
     
     /// <summary>
-    /// Registers a type in the program.
+    /// Registers a node type and its network in the program, or returns an already registered <see cref="NodeIdx"/>
+    /// if it was already registered in the program before.
     /// </summary>
     /// <typeparam name="TNode">Type of node.</typeparam>
     /// <typeparam name="TNet">Type of network that controls <see cref="TNode"/>.</typeparam>
-    internal static void Register<TNode, TNet>() where TNode : INode  where TNet : INodeNet
+    internal static void Register<TNode, TNet>(out NodeIdx typeIdx)
+        where TNode : INode
+        where TNet : INodeNet
     {
-        Storage<TNode>.Index = new NodeIdx(Count);
-        StorageNet<TNet>.Index = new NodeIdx(Count);
+        if (Storage<TNode>.Index.IsValid)
+        {
+            typeIdx = Storage<TNode>.Index;
+            return;
+        }
+        
+        typeIdx = new NodeIdx(Count);
+        Storage<TNode>.Index = typeIdx;
+        StorageNet<TNet>.Index = typeIdx;
         Count++;
     }
 

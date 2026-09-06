@@ -1,0 +1,9 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=050a3e1b_002D9b72_002D446d_002Daccc_002Dd53a709454fe/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="SimpleRegistration" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::8375DCD9-1012-E56F-6409-B9C33BC21784::net10.0::Nod3r.Solver.Tests.NodeRegistrationTest.SimpleRegistration&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::8375DCD9-1012-E56F-6409-B9C33BC21784::net10.0::Nod3r.Solver.Tests.NodeRegistrationTest.BadRegistration&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::8375DCD9-1012-E56F-6409-B9C33BC21784::net10.0::Nod3r.Solver.Tests.NodeRegistrationTest.MassRegistration&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::8375DCD9-1012-E56F-6409-B9C33BC21784::net10.0::Nod3r.Solver.Tests.NodeRegistrationTest.DynamicRegistration&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
