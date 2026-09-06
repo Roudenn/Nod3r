@@ -222,7 +222,7 @@ public readonly record struct GenId(int Index, int Generation)
 {
     public readonly static GenId Invalid = new(0, 0);
     
-    public bool IsValid() => Generation > 0;
+    public bool IsValid => Generation > 0;
     
     public override string ToString()
     {

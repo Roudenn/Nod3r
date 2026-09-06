@@ -6,7 +6,7 @@ namespace Nod3r.Collections;
 /// Represents a graph of objects where each element is stored
 /// as a node that can connect to other nodes.
 /// </summary>
-public class Graph<T> : GenIdStorage<T>
+public class Graph<T> : GenIdStorage<T>, IReadOnlyGraph<T>
 {
     /// <summary>
     /// All connection of every index.
@@ -23,10 +23,10 @@ public class Graph<T> : GenIdStorage<T>
     /// </summary>
     private readonly GenId[] _dummyArray = [];
     
-    public Graph(int capacity, int connectCount = 6)
+    public Graph(int capacity = 16, int connectCount = 6)
     {
         ConnectionCount = connectCount;
-        _connections = new GenId[][capacity];
+        _connections = new GenId[capacity][];
         for (int i = 0; i < capacity; i++)
         {
             _connections[i] = new GenId[connectCount];
@@ -75,7 +75,7 @@ public class Graph<T> : GenIdStorage<T>
     /// <summary>
     /// Enumerates through the graph using Breadth-First Search (BFS).
     /// </summary>
-    public struct BFSEnumerator
+    public struct BFSEnumerator : IGraphEnumerator<T>
     {
         /// <summary>
         /// The target graph.
@@ -87,6 +87,8 @@ public class Graph<T> : GenIdStorage<T>
         /// </summary>
         private readonly Queue<GenId> _indexQueue = new();
         
+        private readonly HashSet<int> _traversed = new();
+        
         /// <summary>
         /// Last processed index.
         /// </summary>
@@ -96,7 +98,7 @@ public class Graph<T> : GenIdStorage<T>
         /// Current element of the enumerator.
         /// </summary>
         private T _current;
-        
+
         public BFSEnumerator(Graph<T> graph, GenId startIndex)
         {
             _indexQueue.Enqueue(startIndex);
@@ -108,18 +110,21 @@ public class Graph<T> : GenIdStorage<T>
         {
             value = default;
             
-            if (!_indexQueue.TryDequeue(out var index))
+            if (!_indexQueue.TryDequeue(out var index)
+                || _traversed.Contains(index.Index))
                 return false;
             
             var connections = _graph.GetConnections(index);
             foreach (var genId in connections)
             {
-                _indexQueue.Enqueue(genId);
+                if (genId.IsValid)
+                    _indexQueue.Enqueue(genId);
             }
             
             LastIndex = index;
             _current = _graph[index];
             value = _current!;
+            _traversed.Add(index.Index);
             return true;
         }
     }
@@ -131,7 +136,7 @@ public class Graph<T> : GenIdStorage<T>
     /// Depth-First Search tries to go into deep branches first, before going to other branches.
     /// This usually
     /// </remarks>
-    public struct DFSEnumerator
+    public struct DFSEnumerator : IGraphEnumerator<T>
     {
         /// <summary>
         /// The target graph.
@@ -142,6 +147,8 @@ public class Graph<T> : GenIdStorage<T>
         /// Queue of indexes to process on the next iteration.
         /// </summary>
         private readonly Stack<GenId> _indexStack = new();
+        
+        private readonly HashSet<int> _traversed = new();
         
         /// <summary>
         /// Last processed index.
@@ -164,19 +171,32 @@ public class Graph<T> : GenIdStorage<T>
         {
             value = default;
             
-            if (!_indexStack.TryPop(out var index))
+            if (!_indexStack.TryPop(out var index)
+                || _traversed.Contains(index.Index))
                 return false;
 
             var connections = _graph.GetConnections(index);
-            foreach (var t in connections)
+            foreach (var genId in connections)
             {
-                _indexStack.Push(t);
+                if (genId.IsValid)
+                    _indexStack.Push(genId);
             }
             
             LastIndex = index;
             _current = _graph[index];
             value = _current!;
+            _traversed.Add(index.Index);
             return true;
         }
+    }
+
+    public IGraphEnumerator<T> GetBFSEnumerator(GenId start)
+    {
+        return new BFSEnumerator(this, start);
+    }
+
+    public IGraphEnumerator<T> GetDFSEnumerator(GenId start)
+    {
+        return new DFSEnumerator(this, start);
     }
 }

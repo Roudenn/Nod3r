@@ -1,5 +1,5 @@
 #pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
-namespace Nod3r.Collections.Tests.Collections;
+namespace Nod3r.Collections.Tests;
 
 [TestFixture]
 public sealed class GenIdStorageTests
