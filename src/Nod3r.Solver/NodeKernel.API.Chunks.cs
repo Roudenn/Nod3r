@@ -12,8 +12,7 @@ internal sealed partial class NodeKernel
     
     public void CreateChunk(Int3 position, int width, int height, int depth)
     {
-        var chunks = new NodeChunk[NodeIdxStorage.Count];
-        Array.Fill(chunks, new NodeChunk(width, height, depth));
+        var chunks = new NodeChunk(_registeredIdxs, width, height, depth);
         _chunkMap.TryAdd(position, chunks);
     }
 }

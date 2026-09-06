@@ -9,7 +9,7 @@ internal sealed partial class NodeKernel
     public void SetNode<T>(T node, NodeVoxel voxel) where T : INode
     {
         var chunk = GetChunk(voxel);
-        var oldGenId = chunk.Chunk[voxel.Pos];
+        var oldGenId = chunk.Chunks[_nodeIds[voxel.TypeId.Value]][voxel.Pos];
         LayerId id;
         var storage = GetStorageTyped<T>();
         if (oldGenId.IsValid)
@@ -23,7 +23,7 @@ internal sealed partial class NodeKernel
             storage.Add(node, voxel.Layer, out id);
         }
         
-        chunk.Chunk[voxel.Pos] = id.ColumnHandle;
+        chunk.Chunks[_nodeIds[voxel.TypeId.Value]][voxel.Pos] = id.ColumnHandle;
         _newNodes.Add(voxel);
         _changedChunks.Add(voxel.Chunk);
     }
@@ -39,7 +39,7 @@ internal sealed partial class NodeKernel
             return false;
         
         GetStorage<T>().Free(id, voxel.Layer);
-        GetChunk(voxel).Chunk[voxel.Pos] = ColumnHandle.Invalid;
+        GetChunk(voxel).Chunks[_nodeIds[voxel.TypeId.Value]][voxel.Pos] = ColumnHandle.Invalid;
         _changedChunks.Add(voxel.Chunk);
         var neighbors = _ruleFactories[_nodeIds[voxel.TypeId.Value]].Create().Evaluate(this, voxel);
         foreach (var nearVoxel in neighbors)

@@ -80,7 +80,7 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
     /// </summary>
     private readonly List<NodeRuleFactory> _ruleFactories = new();
     
-    private readonly ConcurrentDictionary<Int3, NodeChunk[]> _chunkMap = new();
+    private readonly ConcurrentDictionary<Int3, NodeChunk> _chunkMap = new();
     
     /// <summary>
     /// Nodes added since the last solve.
@@ -110,7 +110,7 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
     /// <param name="chunk">Coordinates of the chunk.</param>
     /// <param name="typeId">Node type index.</param>
     /// <returns><see cref="GenId"/> that can be used in the <see cref="NodeStorage{T}"/> to get the node data.</returns>
-    public ColumnHandle GetId(NodeChunkHandle chunk, Int3 pos, NodeIdx typeId) => _chunkMap[chunk.Pos][_nodeIds[typeId.Value]].Chunk[pos];
+    public ColumnHandle GetId(NodeChunkHandle chunk, Int3 pos, NodeIdx typeId) => _chunkMap[chunk.Pos].Chunks[_nodeIds[typeId.Value]][pos];
     
     /// <summary>
     /// Gets the <see cref="GenId"/> for <see cref="NodeStorage{T}"/> from a <see cref="NodeVoxel"/>.
@@ -139,9 +139,9 @@ internal sealed partial class NodeKernel : INodeKernel, INodeRegistration
     
     public NodeIdx NetTypeToIdx<T>() where T : INodeNet => NodeIdxStorage.GetNet<T>();
     
-    private NodeChunk GetChunk(NodeChunkHandle chunk, NodeIdx typeId) => _chunkMap[chunk.Pos][_nodeIds[typeId.Value]];
+    private NodeChunk GetChunk(NodeChunkHandle chunk, NodeIdx typeId) => _chunkMap[chunk.Pos];
     
-    private NodeChunk GetChunk(NodeVoxel voxel) => _chunkMap[voxel.Chunk.Pos][_nodeIds[voxel.TypeId.Value]];
+    private NodeChunk GetChunk(NodeVoxel voxel) => _chunkMap[voxel.Chunk.Pos];
     
     internal NodeStorage GetStorage(NodeIdx typeId) => _nodeStorages[_nodeIds[typeId.Value]];
     

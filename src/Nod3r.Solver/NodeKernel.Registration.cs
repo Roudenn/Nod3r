@@ -28,6 +28,16 @@ internal sealed partial class NodeKernel
         EnsureArrayCapacity(ref _nodeNetStorages, RegistrationCount + 1);
         EnsureArrayCapacity(ref _nets, RegistrationCount + 1);
         
+        foreach (var (_, chunk) in _chunkMap)
+        {
+            var oldLength = chunk.Chunks.Length;
+            var newLength = EnsureArrayCapacity(ref chunk.Chunks, RegistrationCount + 1);
+            for (int i = oldLength; i < newLength; i++)
+            {
+                chunk.Chunks[i] = chunk.CreateArray();
+            }
+        }
+        
         _nodeStorages[RegistrationCount] = new NodeStorage<TNode>();
         _nodeNetStorages[RegistrationCount] = new NodeNetStorage<TNet>();
         
@@ -42,12 +52,12 @@ internal sealed partial class NodeKernel
         _registeredNodeRuleTypes.Add(typeof(TRule));
     }
 
-    private static void EnsureArrayCapacity<T>(ref T[] array, int capacity)
+    private static int EnsureArrayCapacity<T>(ref T[] array, int capacity)
     {
         if ((uint) capacity < (uint) array.Length)
-            return;
+            return array.Length;
         
-        if (array.Length < capacity || array.Length < 4)
-            Array.Resize(ref array, Math.Max(Math.Max(array.Length, 2) * 2, capacity));
+        Array.Resize(ref array, Math.Max(Math.Max(array.Length, 2) * 2, capacity));
+        return array.Length;
     }
 }
