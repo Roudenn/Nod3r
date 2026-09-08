@@ -6,8 +6,4 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
-    <ItemGroup>
-      <PackageReference Include="Numos.Maths" Version="0.1.0-alpha.1" />
-    </ItemGroup>
-
 </Project>
