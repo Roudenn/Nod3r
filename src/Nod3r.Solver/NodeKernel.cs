@@ -6,9 +6,10 @@ using Numos.Maths;
 namespace Nod3r.Solver;
 
 /// <summary>
-/// Solver for 
+/// Kernel implementation for specific <see cref="INode"/> types.
 /// </summary>
-internal sealed partial class NodeKernel<TNode, TNet, TRule>(INodeSolver solver) : INodeKernel<TNode>
+internal sealed partial class NodeKernel<TNode, TNet, TRule>
+    (INodeSolver solver) : INodeKernel<TNode>
     where TNode : INode
     where TNet : INodeNet, INodeNetCreator<TNet>
     where TRule : INodeRule<TNode>, INodeRuleCreator<TRule>

@@ -191,7 +191,7 @@ public sealed partial class NodeSolver : INodeSolver, INodeRegistration
     /// <typeparam name="T">Type of the node network to get.</typeparam>
     /// <typeparam name="TNode">Type of the node this network controls.</typeparam>
     /// <returns>A collection of <see cref="NodeNetSnapshot{T}"/>s for every active network.</returns>
-    public NodeNetSnapshot<T>[] GetAllNetworks<T, TNode>() where T : INodeNet<TNode> where TNode : INode
+    public NodeNetSnapshot<T>[] GetAllNetworks<T, TNode>() where T : INodeNet<TNode, T> where TNode : INode
     {
         var kernel = GetKernelNet<TNode, T>();
         var handles = kernel.Nets;

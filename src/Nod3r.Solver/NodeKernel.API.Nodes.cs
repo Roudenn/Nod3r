@@ -4,7 +4,6 @@ using Numos.Maths;
 
 namespace Nod3r.Solver;
 
-// Contains API methods to interact with nodes.
 internal sealed partial class NodeKernel<TNode, TNet, TRule>
 {
     public void AddNode(TNode node, NodeChunkHandle chunk, Int3 pos)
@@ -31,11 +30,7 @@ internal sealed partial class NodeKernel<TNode, TNet, TRule>
         
         chunk.Handles[voxel.Pos] = id.ColumnHandle;
     }
-
-    /// <summary>
-    /// Removes a node voxel from the chunk map.
-    /// </summary>
-    /// <param name="voxel">Node voxel to remove.</param>
+    
     public bool RemoveNode(NodeVoxelHandle voxel)
     {
         if (!TryGetId(voxel, out var id))

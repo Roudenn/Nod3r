@@ -42,6 +42,13 @@ public sealed partial class NodeSolver
         _registeredNodeRuleTypes.Add(typeof(TRule));
     }
 
+    public void RegisterID<TNet, TRule>(int id, out NodeIdx registered)
+        where TNet : INodeNet, INodeNetCreator<TNet>
+        where TRule : INodeRule, INodeRuleCreator<TRule>
+    {
+        throw new NotImplementedException();
+    }
+
     private static int EnsureArrayCapacity<T>(ref T[] array, int capacity)
     {
         if ((uint) capacity < (uint) array.Length)

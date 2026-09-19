@@ -96,7 +96,7 @@ public sealed class PipeNodeRule : INodeRule<PipeNode>
     }
 }
 
-public struct PipeNodeNetwork() : INodeNet<PipeNode>, INodeNetCreator<PipeNodeNetwork>
+public struct PipeNodeNetwork() : INodeNet<PipeNode, PipeNodeNetwork>, INodeNetCreator<PipeNodeNetwork>
 {
     public float TotalCapacity = 0f;
 
@@ -110,11 +110,11 @@ public struct PipeNodeNetwork() : INodeNet<PipeNode>, INodeNetCreator<PipeNodeNe
     {
     }
 
-    public void Merge(IReadOnlySet<INodeNetInternal> nets)
+    public void Merge(IReadOnlySet<PipeNodeNetwork> nets)
     {
     }
 
-    public void Split(INodeNetInternal parent)
+    public void Split(PipeNodeNetwork parent)
     {
     }
 

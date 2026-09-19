@@ -3,6 +3,7 @@ using Numos.Maths;
 
 namespace Nod3r.API;
 
+// TODO move to Numos.Maths
 public static class Int3Helpers
 {
     public readonly static ImmutableArray<Int3> CardinalOffsets =

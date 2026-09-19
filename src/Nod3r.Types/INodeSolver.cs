@@ -3,6 +3,9 @@ using Numos.Maths;
 
 namespace Nod3r.Types;
 
+/// <summary>
+/// Interface to interact with a node solver while inside a <see cref="INodeRule{T}"/> or from the node kernel.
+/// </summary>
 public interface INodeSolver
 {
     /// <summary>

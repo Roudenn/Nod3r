@@ -3,24 +3,11 @@ using Nod3r.Types;
 
 namespace Nod3r.Solver;
 
-internal abstract class NodeStorage
-{
-    public abstract int GetFreeLayer(ColumnHandle id);
-
-    public abstract LayerId GetLayerId(ColumnHandle idx, int layer);
-
-    public abstract void Free(LayerId id);
-
-    public abstract void Free(ColumnHandle id, int layer);
-
-    public abstract void EnsureLayerCapacity(int capacity);
-}
-
 /// <summary>
 /// A shared <see cref="GenIdStorage{T}"/> for every <see cref="INode"/> type for every layer.
 /// </summary>
 /// <typeparam name="T">Node type of this storage.</typeparam>
-internal sealed class NodeStorage<T> : NodeStorage where T : INode
+internal sealed class NodeStorage<T> where T : INode
 {
     private readonly Gen2DStorage<T> _storage = new();
 
@@ -34,12 +21,12 @@ internal sealed class NodeStorage<T> : NodeStorage where T : INode
         return _storage[GetLayerId(id, layer)];
     }
     
-    public override int GetFreeLayer(ColumnHandle id)
+    public int GetFreeLayer(ColumnHandle id)
     {
         return _storage.GetFreeLayer(id);
     }
 
-    public override LayerId GetLayerId(ColumnHandle idx, int layer)
+    public LayerId GetLayerId(ColumnHandle idx, int layer)
     {
         return _storage.GetLayerId(idx, layer);
     }
@@ -60,17 +47,17 @@ internal sealed class NodeStorage<T> : NodeStorage where T : INode
         _storage.Add(value, idx, out id);
     }
 
-    public override void Free(LayerId id)
+    public void Free(LayerId id)
     {
         _storage.Free(id);
     }
     
-    public override void Free(ColumnHandle id, int layer)
+    public void Free(ColumnHandle id, int layer)
     {
         _storage.Free(GetLayerId(id, layer));
     }
 
-    public override void EnsureLayerCapacity(int capacity)
+    public void EnsureLayerCapacity(int capacity)
     {
         _storage.EnsureLayerCapacity(capacity);
     }

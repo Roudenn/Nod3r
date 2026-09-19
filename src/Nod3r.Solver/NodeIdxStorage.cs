@@ -3,7 +3,7 @@ using Nod3r.Types;
 namespace Nod3r.Solver;
 
 /// <summary>
-/// Shared storage for all <see cref="NodeIdx"/>.
+/// Shared storage for all registered <see cref="NodeIdx"/>es.
 /// </summary>
 public static class NodeIdxStorage
 {

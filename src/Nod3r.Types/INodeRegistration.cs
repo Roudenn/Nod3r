@@ -7,7 +7,8 @@ namespace Nod3r.Types;
 public interface INodeRegistration
 {
     /// <summary>
-    /// Registers a node, its connection rule with other nodes, and a network it creates.
+    /// Registers an <see cref="INode"/> type, its <see cref="INodeRule{T}"/> connection rule
+    /// with other nodes, and an <see cref="INodeNet"/> network it creates.
     /// </summary>
     /// <param name="layerCapacity">
     /// Default layer capacity for node type <see cref="TNode"/>.
@@ -22,4 +23,21 @@ public interface INodeRegistration
         where TNode : INode
         where TNet : INodeNet, INodeNetCreator<TNet>
         where TRule : INodeRule<TNode>, INodeRuleCreator<TRule>;
+    
+    /// <summary>
+    /// Registers a node ID, its <see cref="INodeRule{T}"/> connection rule
+    /// with other nodes, and an <see cref="INodeNet"/> network it creates.
+    /// </summary>
+    /// <para>
+    /// ID-based nodes don't hold any actual data because they are not types.
+    /// Instead, they're stored directly as bytes in chunks, which improves the memory usage significantly.
+    /// </para>
+    /// <para>
+    /// ID nodes don't support node layers at the current moment.
+    /// </para>
+    /// <typeparam name="TRule">Type of the registered rule.</typeparam>
+    /// <typeparam name="TNet">Type of the registered node network.</typeparam>
+    void RegisterID<TNet, TRule>(int id, out NodeIdx registered)
+        where TNet : INodeNet, INodeNetCreator<TNet>
+        where TRule : INodeRule, INodeRuleCreator<TRule>;
 }

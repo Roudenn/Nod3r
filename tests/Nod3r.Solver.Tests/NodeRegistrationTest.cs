@@ -20,14 +20,14 @@ public sealed class NodeRegistrationTest
     {
         var config = new NodeConfig(kernel =>
         {
-            kernel.Register<TestNode1, DummyNodeNet<TestNodeNet1>, DummyNodeRule<TestNodeRule1, TestNode1>>();
-            kernel.Register<TestNode2, DummyNodeNet<TestNodeNet2>, DummyNodeRule<TestNodeRule2, TestNode2>>();
-            kernel.Register<TestNode3, DummyNodeNet<TestNodeNet3>, DummyNodeRule<TestNodeRule3, TestNode3>>();
-            kernel.Register<TestNode4, DummyNodeNet<TestNodeNet4>, DummyNodeRule<TestNodeRule4, TestNode4>>();
-            kernel.Register<TestNode5, DummyNodeNet<TestNodeNet5>, DummyNodeRule<TestNodeRule5, TestNode5>>();
-            kernel.Register<TestNode6, DummyNodeNet<TestNodeNet6>, DummyNodeRule<TestNodeRule6, TestNode6>>();
-            kernel.Register<TestNode7, DummyNodeNet<TestNodeNet7>, DummyNodeRule<TestNodeRule7, TestNode7>>();
-            kernel.Register<TestNode8, DummyNodeNet<TestNodeNet8>, DummyNodeRule<TestNodeRule8, TestNode8>>();
+            kernel.Register<TestNode1, DummyNodeNet<TestNode1>, DummyNodeRule<TestNodeRule1, TestNode1>>();
+            kernel.Register<TestNode2, DummyNodeNet<TestNode2>, DummyNodeRule<TestNodeRule2, TestNode2>>();
+            kernel.Register<TestNode3, DummyNodeNet<TestNode3>, DummyNodeRule<TestNodeRule3, TestNode3>>();
+            kernel.Register<TestNode4, DummyNodeNet<TestNode4>, DummyNodeRule<TestNodeRule4, TestNode4>>();
+            kernel.Register<TestNode5, DummyNodeNet<TestNode5>, DummyNodeRule<TestNodeRule5, TestNode5>>();
+            kernel.Register<TestNode6, DummyNodeNet<TestNode6>, DummyNodeRule<TestNodeRule6, TestNode6>>();
+            kernel.Register<TestNode7, DummyNodeNet<TestNode7>, DummyNodeRule<TestNodeRule7, TestNode7>>();
+            kernel.Register<TestNode8, DummyNodeNet<TestNode8>, DummyNodeRule<TestNodeRule8, TestNode8>>();
         });
         
         var solver = new NodeSolver(config);
@@ -41,14 +41,14 @@ public sealed class NodeRegistrationTest
     {
         var config1 = new NodeConfig((kernel) =>
         {
-            kernel.Register<TestNode1, DummyNodeNet<TestNodeNet1>, DummyNodeRule<TestNodeRule1, TestNode1>>();
-            kernel.Register<TestNode2, DummyNodeNet<TestNodeNet2>, DummyNodeRule<TestNodeRule2, TestNode2>>();
+            kernel.Register<TestNode1, DummyNodeNet<TestNode1>, DummyNodeRule<TestNodeRule1, TestNode1>>();
+            kernel.Register<TestNode2, DummyNodeNet<TestNode2>, DummyNodeRule<TestNodeRule2, TestNode2>>();
         });
         
         var config2 = new NodeConfig((kernel) =>
         {
-            kernel.Register<TestNode3, DummyNodeNet<TestNodeNet3>, DummyNodeRule<TestNodeRule3, TestNode3>>();
-            kernel.Register<TestNode4, DummyNodeNet<TestNodeNet4>, DummyNodeRule<TestNodeRule4, TestNode4>>();
+            kernel.Register<TestNode3, DummyNodeNet<TestNode3>, DummyNodeRule<TestNodeRule3, TestNode3>>();
+            kernel.Register<TestNode4, DummyNodeNet<TestNode4>, DummyNodeRule<TestNodeRule4, TestNode4>>();
         });
         
         var solver1 = new NodeSolver(config1);
@@ -63,16 +63,16 @@ public sealed class NodeRegistrationTest
     {
         var config1 = new NodeConfig((kernel) =>
         {
-            kernel.Register<TestNode1, DummyNodeNet<TestNodeNet1>, DummyNodeRule<TestNodeRule1, TestNode1>>();
-            kernel.Register<TestNode2, DummyNodeNet<TestNodeNet2>, DummyNodeRule<TestNodeRule2, TestNode2>>();
-            kernel.Register<TestNode3, DummyNodeNet<TestNodeNet3>, DummyNodeRule<TestNodeRule3, TestNode3>>();
+            kernel.Register<TestNode1, DummyNodeNet<TestNode1>, DummyNodeRule<TestNodeRule1, TestNode1>>();
+            kernel.Register<TestNode2, DummyNodeNet<TestNode2>, DummyNodeRule<TestNodeRule2, TestNode2>>();
+            kernel.Register<TestNode3, DummyNodeNet<TestNode3>, DummyNodeRule<TestNodeRule3, TestNode3>>();
         });
         
         var config2 = new NodeConfig((kernel) =>
         {
-            kernel.Register<TestNode2, DummyNodeNet<TestNodeNet2>, DummyNodeRule<TestNodeRule2, TestNode2>>();
-            kernel.Register<TestNode3, DummyNodeNet<TestNodeNet3>, DummyNodeRule<TestNodeRule3, TestNode3>>();
-            kernel.Register<TestNode4, DummyNodeNet<TestNodeNet4>, DummyNodeRule<TestNodeRule4, TestNode4>>();
+            kernel.Register<TestNode2, DummyNodeNet<TestNode2>, DummyNodeRule<TestNodeRule2, TestNode2>>();
+            kernel.Register<TestNode3, DummyNodeNet<TestNode3>, DummyNodeRule<TestNodeRule3, TestNode3>>();
+            kernel.Register<TestNode4, DummyNodeNet<TestNode4>, DummyNodeRule<TestNodeRule4, TestNode4>>();
         });
         
         var solver1 = new NodeSolver(config1);
@@ -89,10 +89,10 @@ public sealed class NodeRegistrationTest
         {
             var config = new NodeConfig(kernel =>
             {
-                kernel.Register<TestNode1, DummyNodeNet<TestNodeNet1>, DummyNodeRule<TestNodeRule1, TestNode1>>();
-                kernel.Register<TestNode2, DummyNodeNet<TestNodeNet2>, DummyNodeRule<TestNodeRule2, TestNode2>>();
-                kernel.Register<TestNode3, DummyNodeNet<TestNodeNet3>, DummyNodeRule<TestNodeRule3, TestNode3>>();
-                kernel.Register<TestNode4, DummyNodeNet<TestNodeNet4>, DummyNodeRule<TestNodeRule4, TestNode4>>();
+                kernel.Register<TestNode1, DummyNodeNet<TestNode1>, DummyNodeRule<TestNodeRule1, TestNode1>>();
+                kernel.Register<TestNode2, DummyNodeNet<TestNode2>, DummyNodeRule<TestNodeRule2, TestNode2>>();
+                kernel.Register<TestNode3, DummyNodeNet<TestNode3>, DummyNodeRule<TestNodeRule3, TestNode3>>();
+                kernel.Register<TestNode4, DummyNodeNet<TestNode4>, DummyNodeRule<TestNodeRule4, TestNode4>>();
             });
         
             var solver = new NodeSolver(config);
@@ -107,9 +107,9 @@ public sealed class NodeRegistrationTest
     {
         var config = new NodeConfig(kernel =>
         {
-            kernel.Register<TestNode1, DummyNodeNet<TestNodeNet1>, DummyNodeRule<TestNodeRule1, TestNode1>>();
-            kernel.Register<TestNode2, DummyNodeNet<TestNodeNet2>, DummyNodeRule<TestNodeRule2, TestNode2>>();
-            kernel.Register<TestNode1, DummyNodeNet<TestNodeNet1>, DummyNodeRule<TestNodeRule1, TestNode1>>();
+            kernel.Register<TestNode1, DummyNodeNet<TestNode1>, DummyNodeRule<TestNodeRule1, TestNode1>>();
+            kernel.Register<TestNode2, DummyNodeNet<TestNode2>, DummyNodeRule<TestNodeRule2, TestNode2>>();
+            kernel.Register<TestNode1, DummyNodeNet<TestNode1>, DummyNodeRule<TestNodeRule1, TestNode1>>();
         });
 
         Assert.Throws<ArgumentException>(() =>
@@ -126,21 +126,20 @@ public sealed class NodeRegistrationTest
     {
         var config = new NodeConfig(kernel =>
         {
-            kernel.Register<TestNode1, DummyNodeNet<TestNodeNet1>, DummyNodeRule<TestNodeRule1, TestNode1>>();
-            kernel.Register<TestNode2, DummyNodeNet<TestNodeNet2>, DummyNodeRule<TestNodeRule2, TestNode2>>();
-            kernel.Register<TestNode3, DummyNodeNet<TestNodeNet3>, DummyNodeRule<TestNodeRule3, TestNode3>>();
-            kernel.Register<TestNode4, DummyNodeNet<TestNodeNet4>, DummyNodeRule<TestNodeRule4, TestNode4>>();
+            kernel.Register<TestNode1, DummyNodeNet<TestNode1>, DummyNodeRule<TestNodeRule1, TestNode1>>();
+            kernel.Register<TestNode2, DummyNodeNet<TestNode2>, DummyNodeRule<TestNodeRule2, TestNode2>>();
+            kernel.Register<TestNode3, DummyNodeNet<TestNode3>, DummyNodeRule<TestNodeRule3, TestNode3>>();
+            kernel.Register<TestNode4, DummyNodeNet<TestNode4>, DummyNodeRule<TestNodeRule4, TestNode4>>();
         });
 
         var kernel = new NodeSolver(config);
         
-        kernel.Register<TestNode5, DummyNodeNet<TestNodeNet5>, DummyNodeRule<TestNodeRule5, TestNode5>>();
-        kernel.Register<TestNode6, DummyNodeNet<TestNodeNet6>, DummyNodeRule<TestNodeRule6, TestNode6>>();
-        kernel.Register<TestNode7, DummyNodeNet<TestNodeNet7>, DummyNodeRule<TestNodeRule7, TestNode7>>();
-        kernel.Register<TestNode8, DummyNodeNet<TestNodeNet8>, DummyNodeRule<TestNodeRule8, TestNode8>>();
+        kernel.Register<TestNode5, DummyNodeNet<TestNode5>, DummyNodeRule<TestNodeRule5, TestNode5>>();
+        kernel.Register<TestNode6, DummyNodeNet<TestNode6>, DummyNodeRule<TestNodeRule6, TestNode6>>();
+        kernel.Register<TestNode7, DummyNodeNet<TestNode7>, DummyNodeRule<TestNodeRule7, TestNode7>>();
+        kernel.Register<TestNode8, DummyNodeNet<TestNode8>, DummyNodeRule<TestNodeRule8, TestNode8>>();
     }
 
-    private interface IDummyNodeNet;
     private interface IDummyNodeRule;
     
     private struct TestNode1 : INode;
@@ -152,15 +151,6 @@ public sealed class NodeRegistrationTest
     private struct TestNode7 : INode;
     private struct TestNode8 : INode;
     
-    private struct TestNodeNet1 : IDummyNodeNet;
-    private struct TestNodeNet2 : IDummyNodeNet;
-    private struct TestNodeNet3 : IDummyNodeNet;
-    private struct TestNodeNet4 : IDummyNodeNet;
-    private struct TestNodeNet5 : IDummyNodeNet;
-    private struct TestNodeNet6 : IDummyNodeNet;
-    private struct TestNodeNet7 : IDummyNodeNet;
-    private struct TestNodeNet8 : IDummyNodeNet;
-    
     private struct TestNodeRule1 : IDummyNodeRule;
     private struct TestNodeRule2 : IDummyNodeRule;
     private struct TestNodeRule3 : IDummyNodeRule;
@@ -170,10 +160,8 @@ public sealed class NodeRegistrationTest
     private struct TestNodeRule7 : IDummyNodeRule;
     private struct TestNodeRule8 : IDummyNodeRule;
 
-    private struct DummyNodeNet<T>() : INodeNet, INodeNetCreator<DummyNodeNet<T>> where T : IDummyNodeNet
+    private struct DummyNodeNet<T>() : INodeNet<T, DummyNodeNet<T>>, INodeNetCreator<DummyNodeNet<T>> where T : INode
     {
-        public INodeNetInternal Net { get; set; }
-        
         public HashSet<LayerId> Nodes { get; } = new();
         
         public void Initialize()
@@ -184,11 +172,11 @@ public sealed class NodeRegistrationTest
         {
         }
 
-        public void Merge(IReadOnlySet<INodeNetInternal> nets)
+        public void Merge(IReadOnlySet<DummyNodeNet<T>> nets)
         {
         }
 
-        public void Split(INodeNetInternal parent)
+        public void Split(DummyNodeNet<T> parent)
         {
         }
 

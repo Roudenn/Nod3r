@@ -41,7 +41,7 @@ public sealed class NodeExampleTests
         public float Capacity = 1f;
     }
     
-    private struct AdjacentNodeNet() : INodeNet<AdjacentNode>, INodeNetCreator<AdjacentNodeNet>
+    private struct AdjacentNodeNet() : INodeNet<AdjacentNode, AdjacentNodeNet>, INodeNetCreator<AdjacentNodeNet>
     {
         public float TotalCapacity = 0f;
 
@@ -55,11 +55,11 @@ public sealed class NodeExampleTests
         {
         }
 
-        public void Merge(IReadOnlySet<INodeNetInternal> nets)
+        public void Merge(IReadOnlySet<AdjacentNodeNet> nets)
         {
         }
 
-        public void Split(INodeNetInternal parent)
+        public void Split(AdjacentNodeNet parent)
         {
         }
 
