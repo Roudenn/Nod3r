@@ -84,9 +84,9 @@ public sealed class Gen2DStorage<T>
         Length = capacity;
         LayerCapacity = layerCapacity;
         
-        InitArray(capacity, layerCapacity, out _data);
-        InitArray(capacity, layerCapacity, out _generations);
-        InitArray(capacity, layerCapacity, out _nextSlotLayers);
+        ArrayHelpers.InitArray(capacity, layerCapacity, out _data);
+        ArrayHelpers.InitArray(capacity, layerCapacity, out _generations);
+        ArrayHelpers.InitArray(capacity, layerCapacity, out _nextSlotLayers);
         
         _nextSlots = new int[capacity];
         _nextFreeLayers = new int[capacity];
@@ -106,24 +106,6 @@ public sealed class Gen2DStorage<T>
         }
         
         _nextFree = 0;
-    }
-
-    private static void InitArray<TArray>(int capacity, int layerCapacity, out TArray[][] array)
-    {
-        array = new TArray[capacity][];
-        for (int i = 0; i < capacity; i++)
-        {
-            array[i] = new TArray[layerCapacity];
-        }
-    }
-    
-    private void ResizeCapacity<TArray>(ref TArray[][] array, int capacity)
-    {
-        Array.Resize(ref array, capacity);
-        for (int i = Length; i < capacity; i++)
-        {
-            array[i] = new TArray[LayerCapacity];
-        }
     }
     
     /// <summary>
@@ -395,9 +377,9 @@ public sealed class Gen2DStorage<T>
         
         Length = newSize;
         
-        ResizeCapacity(ref _data, newSize);
-        ResizeCapacity(ref _generations, newSize);
-        ResizeCapacity(ref _nextSlotLayers, newSize);
+        ArrayHelpers.ResizeCapacity(ref _data, Length, newSize, LayerCapacity);
+        ArrayHelpers.ResizeCapacity(ref _generations, Length, newSize, LayerCapacity);
+        ArrayHelpers.ResizeCapacity(ref _nextSlotLayers, Length, newSize, LayerCapacity);
         
         Array.Resize(ref _nextSlots, newSize);
         Array.Resize(ref _nextFreeLayers, newSize);

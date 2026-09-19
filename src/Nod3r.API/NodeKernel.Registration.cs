@@ -1,3 +1,4 @@
+using Nod3r.Collections;
 using Nod3r.Solver;
 using Nod3r.Types;
 
@@ -31,7 +32,7 @@ public sealed partial class NodeSolver
         // Since we can't get the type parameters after the registration method was completed,
         // we have to initialize the storages right now, without knowing the total amount of registrations.
         // This allows to register node types dynamically without having to call a separate method.
-        EnsureArrayCapacity(ref _kernels, RegistrationCount + 1);
+        ArrayHelpers.EnsureArrayCapacity(ref _kernels, RegistrationCount + 1);
 
         _kernels[RegistrationCount] = new NodeKernel<TNode, TNet, TRule>(this);
         
@@ -47,14 +48,5 @@ public sealed partial class NodeSolver
         where TRule : INodeRule, INodeRuleCreator<TRule>
     {
         throw new NotImplementedException();
-    }
-
-    private static int EnsureArrayCapacity<T>(ref T[] array, int capacity)
-    {
-        if ((uint) capacity < (uint) array.Length)
-            return array.Length;
-        
-        Array.Resize(ref array, Math.Max(Math.Max(array.Length, 2) * 2, capacity));
-        return array.Length;
     }
 }
