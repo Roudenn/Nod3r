@@ -1,9 +1,16 @@
+using Nod3r.Solver;
 using Nod3r.Types;
 
-namespace Nod3r.Solver;
+namespace Nod3r.API;
 
-internal sealed partial class NodeKernel
+public sealed partial class NodeSolver
 {
+    private readonly HashSet<Type> _registeredNodeTypes = [];
+    
+    private readonly HashSet<Type> _registeredNodeNetTypes = [];
+    
+    private readonly HashSet<Type> _registeredNodeRuleTypes = [];
+    
     public void Register<TNode, TNet, TRule>(byte layerCapacity = 1)
         where TNode : INode
         where TNet : INodeNet, INodeNetCreator<TNet>
@@ -24,28 +31,11 @@ internal sealed partial class NodeKernel
         // Since we can't get the type parameters after the registration method was completed,
         // we have to initialize the storages right now, without knowing the total amount of registrations.
         // This allows to register node types dynamically without having to call a separate method.
-        EnsureArrayCapacity(ref _nodeStorages, RegistrationCount + 1);
-        EnsureArrayCapacity(ref _nodeNetStorages, RegistrationCount + 1);
-        EnsureArrayCapacity(ref _nets, RegistrationCount + 1);
+        EnsureArrayCapacity(ref _kernels, RegistrationCount + 1);
+
+        _kernels[RegistrationCount] = new NodeKernel<TNode, TNet, TRule>(this);
         
-        foreach (var (_, chunk) in _chunkMap)
-        {
-            var oldLength = chunk.Chunks.Length;
-            var newLength = EnsureArrayCapacity(ref chunk.Chunks, RegistrationCount + 1);
-            for (int i = oldLength; i < newLength; i++)
-            {
-                chunk.Chunks[i] = chunk.CreateArray();
-            }
-        }
-        
-        _nodeStorages[RegistrationCount] = new NodeStorage<TNode>();
-        _nodeNetStorages[RegistrationCount] = new NodeNetStorage<TNet>();
-        
-        _nodeStorages[RegistrationCount].EnsureLayerCapacity(layerCapacity);
         RegistrationCount++;
-        
-        _ruleFactories.Add(new NodeRuleFactory<TNode, TRule>());
-        _nodeFactories.Add(new NodeNetFactory<TNet>());
         
         _registeredNodeTypes.Add(typeof(TNode));
         _registeredNodeNetTypes.Add(typeof(TNet));

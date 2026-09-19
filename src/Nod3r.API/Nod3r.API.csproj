@@ -9,5 +9,9 @@
     <ItemGroup>
         <ProjectReference Include="..\Nod3r.Solver\Nod3r.Solver.csproj" />
     </ItemGroup>
+    
+    <ItemGroup>
+      <PackageReference Include="JetBrains.Annotations" Version="2026.2.0" />
+    </ItemGroup>
 
 </Project>

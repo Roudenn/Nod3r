@@ -4,30 +4,30 @@ using Numos.Maths;
 
 namespace Nod3r.Solver;
 
-internal sealed partial class NodeKernel
+internal sealed partial class NodeKernel<TNode, TNet, TRule>
 {
-    public bool TryGetNode<T>(NodeVoxel voxel, [NotNullWhen(true)] out T? node) where T : INode
-        => TryGetNode(voxel.Chunk, voxel.Pos, voxel.TypeId, voxel.Layer, out node);
+    public bool TryGetNode(NodeVoxelHandle voxel, [NotNullWhen(true)] out TNode? node)
+        => TryGetNode(voxel.Chunk, voxel.Pos, voxel.Layer, out node);
     
-    public bool TryGetNode<T>(NodeChunkHandle chunk, Int3 pos, NodeIdx type, int layer, [NotNullWhen(true)] out T? node) where T : INode
+    public bool TryGetNode(NodeChunkHandle chunk, Int3 pos, int layer, [NotNullWhen(true)] out TNode? node)
     {
         node = default;
-        var genId = GetId(chunk, pos, type);
+        var genId = GetId(chunk, pos);
         if (!genId.IsValid)
             return false;
         
-        node = GetStorageTyped<T>().Get(genId, layer);
+        node = NodeStorage.Get(genId, layer);
         return true;
     }
     
-    public bool TryGetRelative(NodeVoxel node, Int3 offset, NodeIdx type, int layer, out NodeVoxel relative)
+    public bool TryGetRelative(NodeVoxelHandle node, Int3 offset, int layer, out NodeVoxelHandle relative)
     {
-        var chunk = _chunkMap[node.Chunk.Pos];
+        var chunk = _chunkMap[node.Chunk];
         var targetPos = node.Pos + offset;
         if (targetPos.IsWithin(default, chunk.Dimensions))
         {
             // Same chunk
-            relative = new NodeVoxel(node.Chunk, targetPos, type, layer);
+            relative = new NodeVoxelHandle(node.Chunk, targetPos, layer);
             return true;
         }
 
@@ -36,14 +36,14 @@ internal sealed partial class NodeKernel
         return false;
     }
     
-    public bool TryGetRelative(NodeVoxel node, Int3 offset, NodeIdx type, out NodeVoxel relative)
+    public bool TryGetRelative(NodeVoxelHandle node, Int3 offset, out NodeVoxelHandle relative)
     {
-        var chunk = _chunkMap[node.Chunk.Pos];
+        var chunk = _chunkMap[node.Chunk];
         var targetPos = node.Pos + offset;
         if (targetPos.IsWithin(default, chunk.Dimensions))
         {
             // Same chunk
-            relative = node with { Pos = targetPos, TypeId = type };
+            relative = node with { Pos = targetPos };
             return true;
         }
 

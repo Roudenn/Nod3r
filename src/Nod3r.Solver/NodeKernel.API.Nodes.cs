@@ -1,62 +1,64 @@
 using Nod3r.Collections;
 using Nod3r.Types;
+using Numos.Maths;
 
 namespace Nod3r.Solver;
 
 // Contains API methods to interact with nodes.
-internal sealed partial class NodeKernel
+internal sealed partial class NodeKernel<TNode, TNet, TRule>
 {
-    public void SetNode<T>(T node, NodeVoxel voxel) where T : INode
+    public void AddNode(TNode node, NodeChunkHandle chunk, Int3 pos)
+    {
+        int layer = NodeStorage.GetFreeLayer(GetId(chunk, pos));
+        SetNode(node, new NodeVoxelHandle(chunk, pos, layer));
+    }
+    
+    public void SetNode(TNode node, NodeVoxelHandle voxel)
     {
         var chunk = GetChunk(voxel);
-        var oldGenId = chunk.Chunks[_nodeIds[voxel.TypeId.Value]][voxel.Pos];
+        var oldGenId = chunk.Handles[voxel.Pos];
         LayerId id;
-        var storage = GetStorageTyped<T>();
         if (oldGenId.IsValid)
         {
             // Overwrite the existing layer if it is specified
-            storage.Free(oldGenId, voxel.Layer);
-            storage.Add(node, oldGenId, out id);
+            NodeStorage.Free(oldGenId, voxel.Layer);
+            NodeStorage.Add(node, oldGenId, out id);
         }
         else
         {
-            storage.Add(node, voxel.Layer, out id);
+            NodeStorage.Add(node, voxel.Layer, out id);
         }
         
-        chunk.Chunks[_nodeIds[voxel.TypeId.Value]][voxel.Pos] = id.ColumnHandle;
-        _newNodes.Add(voxel);
-        _changedChunks.Add(voxel.Chunk);
+        chunk.Handles[voxel.Pos] = id.ColumnHandle;
     }
 
     /// <summary>
     /// Removes a node voxel from the chunk map.
     /// </summary>
     /// <param name="voxel">Node voxel to remove.</param>
-    /// <typeparam name="T">Type of the node to remove.</typeparam>
-    public bool RemoveNode<T>(NodeVoxel voxel) where T : INode
+    public bool RemoveNode(NodeVoxelHandle voxel)
     {
         if (!TryGetId(voxel, out var id))
             return false;
         
-        GetStorage<T>().Free(id, voxel.Layer);
-        GetChunk(voxel).Chunks[_nodeIds[voxel.TypeId.Value]][voxel.Pos] = ColumnHandle.Invalid;
-        _changedChunks.Add(voxel.Chunk);
-        var neighbors = _ruleFactories[_nodeIds[voxel.TypeId.Value]].Create().Evaluate(this, voxel);
+        if (!TryGetNode(voxel, out var node))
+            return false;
+        
+        NodeStorage.Free(id, voxel.Layer);
+        GetChunk(voxel).Handles[voxel.Pos] = ColumnHandle.Invalid;
+        
+        // TODO: consider making all node rules static
+        var neighbors = TRule.CreateRule().Evaluate(_solver, voxel, node);
         foreach (var nearVoxel in neighbors)
         {
-            _changedNodes.Add(nearVoxel);
+            _solver.DirtyVoxel(nearVoxel);
         }
 
         return true;
     }
-    
-    /// <summary>
-    /// Marks a node voxel as changed, which will force the parent network to update.
-    /// Call this method when <see cref="INodeRule"/> have potentially changed.
-    /// </summary>
-    /// <param name="voxel"></param>
-    public void DirtyNode(NodeVoxel voxel)
+
+    public bool HasNode(NodeVoxelHandle voxel)
     {
-        _changedNodes.Add(voxel);
+        return GetChunk(voxel).Handles[voxel.Pos].IsValid;
     }
 }

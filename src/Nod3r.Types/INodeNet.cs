@@ -1,3 +1,5 @@
+using Nod3r.Collections;
+
 namespace Nod3r.Types;
 
 /// <summary>
@@ -15,7 +17,7 @@ namespace Nod3r.Types;
 /// </para>
 public interface INodeNet
 {
-    INodeNetInternal Net { get; set; }
+    HashSet<LayerId> Nodes { get; }
     
     /// <summary>
     /// Initialize function that is called after this node group was properly set up.
@@ -43,3 +45,5 @@ public interface INodeNet
     /// </summary>
     void Split(INodeNetInternal parent);
 }
+
+public interface INodeNet<T> : INodeNet where T : INode;

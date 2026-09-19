@@ -3,32 +3,27 @@ using Numos.Maths;
 
 namespace Nod3r.Types;
 
-/// <summary>
-/// Interface that contains public API to read information from the node kernel.
-/// Used for <see cref="INodeRule"/>s to access the kernel data publicly.
-/// </summary>
-public interface INodeKernel
+public interface INodeSolver
 {
-    /// <summary>
-    /// Attempts to get a node at a specified voxel.
-    /// </summary>
-    /// <param name="voxel">The target voxel to check.</param>
-    /// <param name="node">The found node.</param>
-    /// <typeparam name="T">Type of the node.</typeparam>
-    /// <returns>True if the node was found.</returns>
-    bool TryGetNode<T>(NodeVoxel voxel, [NotNullWhen(true)] out T? node) where T : INode;
-
     /// <summary>
     /// Attempts to get a node at a specified voxel.
     /// </summary>
     /// <param name="chunk"></param>
     /// <param name="pos"></param>
-    /// <param name="type"></param>
     /// <param name="layer"></param>
     /// <param name="node">The found node.</param>
     /// <typeparam name="T">Type of the node.</typeparam>
     /// <returns>True if the node was found.</returns>
-    bool TryGetNode<T>(NodeChunkHandle chunk, Int3 pos, NodeIdx type, int layer, [NotNullWhen(true)] out T? node) where T : INode;
+    bool TryGetNode<T>(NodeChunkHandle chunk, Int3 pos, int layer, [NotNullWhen(true)] out T? node) where T : INode;
+    
+    /// <summary>
+    /// Attempts to get a node at a specified voxel.
+    /// </summary>
+    /// <param name="voxel"></param>
+    /// <param name="node">The found node.</param>
+    /// <typeparam name="T">Type of the node.</typeparam>
+    /// <returns>True if the node was found.</returns>
+    bool TryGetNode<T>(NodeVoxelHandle voxel, [NotNullWhen(true)] out T? node) where T : INode;
     
     /// <summary>
     /// Gets a node voxel of a certain type that is relative
@@ -36,11 +31,10 @@ public interface INodeKernel
     /// </summary>
     /// <param name="voxel">The origin node.</param>
     /// <param name="offset">Offset relative to the origin voxel to check for the target.</param>
-    /// <param name="type">Type of the node to look for.</param>
     /// <param name="layer">Target layer to search the node in.</param>
     /// <param name="relative">The node that was found at that position.</param>
     /// <returns>True if the node was found on a relative position.</returns>
-    bool TryGetRelative(NodeVoxel voxel, Int3 offset, NodeIdx type, int layer, out NodeVoxel relative);
+    bool TryGetRelative<T>(NodeVoxelHandle voxel, Int3 offset, int layer, out NodeVoxel relative) where T : INode;
     
     /// <summary>
     /// Gets a node voxel of a certain type that is relative
@@ -48,8 +42,20 @@ public interface INodeKernel
     /// </summary>
     /// <param name="voxel">The origin node.</param>
     /// <param name="offset">Offset relative to the origin voxel to check for the target.</param>
-    /// <param name="type">Type of the node to look for.</param>
     /// <param name="relative">The node that was found at that position.</param>
     /// <returns>True if the node was found on a relative position.</returns>
+    bool TryGetRelative<T>(NodeVoxelHandle voxel, Int3 offset, out NodeVoxel relative) where T : INode;
+
     bool TryGetRelative(NodeVoxel voxel, Int3 offset, NodeIdx type, out NodeVoxel relative);
+    
+    bool TryGetRelative(NodeVoxel voxel, Int3 offset, NodeIdx type, int layer, out NodeVoxel relative);
+    
+    /// <summary>
+    /// Marks the target voxel as dirty, which means it itself or one of its neighbors were changed.
+    /// </summary>
+    /// <param name="voxel">The target voxel to mark as dirty.</param>
+    /// <returns>True if the voxel existed and marked as dirty, false if the voxel doesn't exist.</returns>
+    bool DirtyVoxel(NodeVoxel voxel);
+    
+    bool DirtyVoxel<T>(NodeVoxelHandle voxel) where T : INode;
 }

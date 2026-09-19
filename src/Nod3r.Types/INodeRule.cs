@@ -14,5 +14,5 @@ public interface INodeRule;
 /// <typeparam name="T">Type of node this rule controls.</typeparam>
 public interface INodeRule<in T> : INodeRule where T : INode
 {
-    IEnumerable<NodeVoxel> Evaluate(INodeKernel solver, NodeVoxel voxel, T node);
+    IEnumerable<NodeVoxel> Evaluate(INodeSolver solver, NodeVoxelHandle voxel, T node);
 }

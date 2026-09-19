@@ -1,7 +1,5 @@
 namespace Nod3r.Types;
 
-// TODO: consider making all node rules static
-
 /// <summary>
 /// Interface for node rules that allows to statically create new instances of the same type.
 /// </summary>

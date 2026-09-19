@@ -1,3 +1,4 @@
+using Nod3r.Collections;
 using Numos.Maths;
 using Nod3r.Types;
 
@@ -77,14 +78,14 @@ public static class PipeDirectionExtensions
 
 public sealed class PipeNodeRule : INodeRule<PipeNode>
 {
-    public IEnumerable<NodeVoxel> Evaluate(INodeKernel solver, NodeVoxel voxel, PipeNode node)
+    public IEnumerable<NodeVoxel> Evaluate(INodeSolver solver, NodeVoxelHandle voxel, PipeNode node)
     {
         foreach (var (offset, dir) in node.Directions.ToInt3())
         {
-            if (!solver.TryGetRelative(voxel, offset, voxel.TypeId, out var nearVoxel))
+            if (!solver.TryGetRelative<PipeNode>(voxel, offset, out var nearVoxel))
                 continue;
             
-            if (!solver.TryGetNode<PipeNode>(nearVoxel, out var nearData))
+            if (!solver.TryGetNode<PipeNode>(nearVoxel.Handle, out var nearData))
                 continue;
             
             if ((nearData.Directions & (PipeDirectionFlags) dir.GetOpposite()) == 0x0)
@@ -95,12 +96,12 @@ public sealed class PipeNodeRule : INodeRule<PipeNode>
     }
 }
 
-public struct PipeNodeNetwork : INodeNet, INodeNetCreator<PipeNodeNetwork>
+public struct PipeNodeNetwork() : INodeNet<PipeNode>, INodeNetCreator<PipeNodeNetwork>
 {
     public float TotalCapacity = 0f;
-    
-    public INodeNetInternal Net { get; set; }
-    
+
+    public HashSet<LayerId> Nodes { get; } = new();
+
     public void Initialize()
     {
     }
@@ -117,13 +118,8 @@ public struct PipeNodeNetwork : INodeNet, INodeNetCreator<PipeNodeNetwork>
     {
     }
 
-    private PipeNodeNetwork(INodeNetInternal net)
+    public static PipeNodeNetwork CreateNet()
     {
-        Net = net;
-    }
-
-    public static PipeNodeNetwork CreateNet(INodeNetInternal net)
-    {
-        return new PipeNodeNetwork(net);
+        return new PipeNodeNetwork();
     }
 }

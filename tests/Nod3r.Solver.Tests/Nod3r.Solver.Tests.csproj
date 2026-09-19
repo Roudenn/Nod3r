@@ -22,7 +22,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\Nod3r.Solver\Nod3r.Solver.csproj"/>
+        <ProjectReference Include="..\..\src\Nod3r.API\Nod3r.API.csproj"/>
     </ItemGroup>
 
     <ItemGroup>

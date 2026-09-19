@@ -1,4 +1,5 @@
 using Nod3r.API;
+using Nod3r.Collections;
 using Nod3r.Types;
 using Numos.Maths;
 
@@ -16,7 +17,7 @@ public sealed class NodeExampleTests
         });
         var solver = new NodeSolver(config);
 
-        var chunk = solver.EnsureChunk(default);
+        var chunk = solver.EnsureChunk<AdjacentNode>(default);
         
         var node = new AdjacentNode();
         
@@ -31,7 +32,40 @@ public sealed class NodeExampleTests
         
         solver.Rebuild();
 
-        var nets = solver.GetAllNetworks<AdjacentNodeNet>();
+        var nets = solver.GetAllNetworks<AdjacentNodeNet, AdjacentNode>();
         Assert.That(nets, Has.Count.EqualTo(1));
+    }
+    
+    private record struct AdjacentNode() : INode
+    {
+        public float Capacity = 1f;
+    }
+    
+    private struct AdjacentNodeNet() : INodeNet<AdjacentNode>, INodeNetCreator<AdjacentNodeNet>
+    {
+        public float TotalCapacity = 0f;
+
+        public HashSet<LayerId> Nodes { get; } = new();
+
+        public void Initialize()
+        {
+        }
+
+        public void Shutdown()
+        {
+        }
+
+        public void Merge(IReadOnlySet<INodeNetInternal> nets)
+        {
+        }
+
+        public void Split(INodeNetInternal parent)
+        {
+        }
+
+        public static AdjacentNodeNet CreateNet()
+        {
+            return new AdjacentNodeNet();
+        }
     }
 }

@@ -3,10 +3,7 @@ using Nod3r.Types;
 
 namespace Nod3r.Solver;
 
-internal abstract class NodeNetStorage
-{
-    public abstract void Free(GenId id);
-}
+internal abstract class NodeNetStorage;
 
 /// <summary>
 /// Kernel-specific storage for all <see cref="INodeNet"/> types.
@@ -26,7 +23,7 @@ internal sealed class NodeNetStorage<T> : NodeNetStorage where T : INodeNet
         return _storage[id];
     }
 
-    public override void Free(GenId id)
+    public void Free(GenId id)
     {
         _storage.Free(id);
     }

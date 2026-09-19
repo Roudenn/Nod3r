@@ -1,3 +1,5 @@
+using Nod3r.API;
+using Nod3r.Collections;
 using Nod3r.Types;
 
 namespace Nod3r.Solver.Tests;
@@ -28,7 +30,7 @@ public sealed class NodeRegistrationTest
             kernel.Register<TestNode8, DummyNodeNet<TestNodeNet8>, DummyNodeRule<TestNodeRule8, TestNode8>>();
         });
         
-        var solver = new NodeKernel(config);
+        var solver = new NodeSolver(config);
     }
     
     /// <summary>
@@ -49,8 +51,8 @@ public sealed class NodeRegistrationTest
             kernel.Register<TestNode4, DummyNodeNet<TestNodeNet4>, DummyNodeRule<TestNodeRule4, TestNode4>>();
         });
         
-        var solver1 = new NodeKernel(config1);
-        var solver2 = new NodeKernel(config2);
+        var solver1 = new NodeSolver(config1);
+        var solver2 = new NodeSolver(config2);
     }
     
     /// <summary>
@@ -73,8 +75,8 @@ public sealed class NodeRegistrationTest
             kernel.Register<TestNode4, DummyNodeNet<TestNodeNet4>, DummyNodeRule<TestNodeRule4, TestNode4>>();
         });
         
-        var solver1 = new NodeKernel(config1);
-        var solver2 = new NodeKernel(config2);
+        var solver1 = new NodeSolver(config1);
+        var solver2 = new NodeSolver(config2);
     }
     
     /// <summary>
@@ -93,7 +95,7 @@ public sealed class NodeRegistrationTest
                 kernel.Register<TestNode4, DummyNodeNet<TestNodeNet4>, DummyNodeRule<TestNodeRule4, TestNode4>>();
             });
         
-            var solver = new NodeKernel(config);
+            var solver = new NodeSolver(config);
         }
     }
     
@@ -112,7 +114,7 @@ public sealed class NodeRegistrationTest
 
         Assert.Throws<ArgumentException>(() =>
         {
-            var solver = new NodeKernel(config);
+            var solver = new NodeSolver(config);
         });
     }
     
@@ -130,7 +132,7 @@ public sealed class NodeRegistrationTest
             kernel.Register<TestNode4, DummyNodeNet<TestNodeNet4>, DummyNodeRule<TestNodeRule4, TestNode4>>();
         });
 
-        var kernel = new NodeKernel(config);
+        var kernel = new NodeSolver(config);
         
         kernel.Register<TestNode5, DummyNodeNet<TestNodeNet5>, DummyNodeRule<TestNodeRule5, TestNode5>>();
         kernel.Register<TestNode6, DummyNodeNet<TestNodeNet6>, DummyNodeRule<TestNodeRule6, TestNode6>>();
@@ -168,9 +170,12 @@ public sealed class NodeRegistrationTest
     private struct TestNodeRule7 : IDummyNodeRule;
     private struct TestNodeRule8 : IDummyNodeRule;
 
-    private struct DummyNodeNet<T> : INodeNet, INodeNetCreator<DummyNodeNet<T>> where T : IDummyNodeNet
+    private struct DummyNodeNet<T>() : INodeNet, INodeNetCreator<DummyNodeNet<T>> where T : IDummyNodeNet
     {
         public INodeNetInternal Net { get; set; }
+        
+        public HashSet<LayerId> Nodes { get; } = new();
+        
         public void Initialize()
         {
         }
@@ -187,7 +192,7 @@ public sealed class NodeRegistrationTest
         {
         }
 
-        public static DummyNodeNet<T> CreateNet(INodeNetInternal net)
+        public static DummyNodeNet<T> CreateNet()
         {
             return new DummyNodeNet<T>();
         }
@@ -197,7 +202,7 @@ public sealed class NodeRegistrationTest
         where T : IDummyNodeRule
         where TNode : INode
     {
-        public IEnumerable<NodeVoxel> Evaluate(INodeKernel solver, NodeVoxel voxel, TNode node)
+        public IEnumerable<NodeVoxel> Evaluate(INodeSolver solver, NodeVoxelHandle voxel, TNode node)
         {
             return [];
         }
