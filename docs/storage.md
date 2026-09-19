@@ -4,7 +4,7 @@
 
 Nod3r mostly uses 3 data structures: `FlatArray` from Numos to store chunk data (references for nodes), `GenIdStorage` to store existing node networks, and `Gen2DStorage` to store nodes themselves. They come from the `Numos.Collections` package and the `Nod3r.Collections` project.
 
-Obviously, the amount of nodes in voxel chunks is almost always lower than the maximum amount of nodes a chunk can hold. That's why Nod3r uses an evolving data structure instead of pre-allocating all memory for every node type (since that would be a complete waste of memory).
+Obviously, the amount of nodes in voxel chunks is almost always lower than the maximum amount of nodes a chunk can hold. That's why Nod3r uses an evolving data structure for Type nodes instead of pre-allocating space for every node type (since that would be a complete waste of memory).
 
 ## `GenIdStorage`
 
