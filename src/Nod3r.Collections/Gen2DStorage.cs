@@ -377,9 +377,9 @@ public sealed class Gen2DStorage<T>
         
         Length = newSize;
         
-        ArrayHelpers.ResizeCapacity(ref _data, Length, newSize, LayerCapacity);
-        ArrayHelpers.ResizeCapacity(ref _generations, Length, newSize, LayerCapacity);
-        ArrayHelpers.ResizeCapacity(ref _nextSlotLayers, Length, newSize, LayerCapacity);
+        ArrayHelpers.ResizeCapacity(ref _data, newSize, LayerCapacity);
+        ArrayHelpers.ResizeCapacity(ref _generations,  newSize, LayerCapacity);
+        ArrayHelpers.ResizeCapacity(ref _nextSlotLayers, newSize, LayerCapacity);
         
         Array.Resize(ref _nextSlots, newSize);
         Array.Resize(ref _nextFreeLayers, newSize);
