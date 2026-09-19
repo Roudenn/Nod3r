@@ -35,7 +35,6 @@ internal sealed partial class NodeKernel<TNode, TNet, TRule>
     /// </summary>
     /// <param name="pos">Position inside the chunk.</param>
     /// <param name="chunk">Coordinates of the chunk.</param>
-    /// <param name="typeId">Node type index.</param>
     /// <returns><see cref="GenId"/> that can be used in the <see cref="NodeStorage{T}"/> to get the node data.</returns>
     public ColumnHandle GetId(NodeChunkHandle chunk, Int3 pos) => _chunkMap[chunk].Handles[pos];
     

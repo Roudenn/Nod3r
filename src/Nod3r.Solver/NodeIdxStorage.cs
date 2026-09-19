@@ -1,3 +1,4 @@
+using Nod3r.Collections;
 using Nod3r.Types;
 
 namespace Nod3r.Solver;
@@ -11,6 +12,11 @@ public static class NodeIdxStorage
     /// Amount of nodes registered in the program.
     /// </summary>
     public static int Count { get; private set; }
+
+    /// <summary>
+    /// <see cref="NodeIdx"/>es for ID nodes.
+    /// </summary>
+    private static NodeIdx[] _idNodes = [];
     
     /// <summary>
     /// Registers a node type and its network in the program, or returns an already registered <see cref="NodeIdx"/>
@@ -33,6 +39,32 @@ public static class NodeIdxStorage
         StorageNet<TNet>.Index = typeIdx;
         Count++;
     }
+    
+    internal static void Register<TNet>(int id, out NodeIdx typeIdx)
+        where TNet : INodeNet
+    {
+        if (_idNodes.Length > id && _idNodes[id].IsValid)
+        {
+            typeIdx = _idNodes[id];
+            return;
+        }
+        
+        typeIdx = new NodeIdx(Count);
+        EnsureIdCapacity(id);
+        _idNodes[id] = typeIdx;
+        StorageNet<TNet>.Index = typeIdx;
+        Count++;
+    }
+
+    private static void EnsureIdCapacity(int capacity)
+    {
+        var oldLength = _idNodes.Length;
+        ArrayHelpers.EnsureArrayCapacity(ref _idNodes, capacity);
+        for (int i = oldLength; i < capacity; i++)
+        {
+            _idNodes[i] = NodeIdx.Invalid;
+        }
+    }
 
     /// <summary>
     /// Gets the <see cref="NodeIdx"/> of a node type.
@@ -46,6 +78,16 @@ public static class NodeIdxStorage
         return idx == NodeIdx.Invalid
             ? throw new InvalidOperationException($"Tried to get a {nameof(NodeIdx)} for a node type that wasn't registered!")
             : idx;
+    }
+
+    /// <summary>
+    /// Gets the <see cref="NodeIdx"/> of a node ID.
+    /// </summary>
+    /// <param name="id">The node ID to get the <see cref="NodeIdx"/> from.</param>
+    /// <returns><see cref="NodeIdx"/> representing this type.</returns>
+    public static NodeIdx Get(int id)
+    {
+        return _idNodes[id];
     }
     
     /// <summary>
@@ -63,7 +105,7 @@ public static class NodeIdxStorage
     }
     
     /// <summary>
-    /// A helper static class automatically creates a separate static instance for each registered node type.
+    /// A helper static class that automatically creates a separate static instance for each registered node type.
     /// </summary>
     /// <typeparam name="T">The controlled node type.</typeparam>
     private static class Storage<T> where T : INode
@@ -76,7 +118,7 @@ public static class NodeIdxStorage
     }
     
     /// <summary>
-    /// A helper static class automatically creates a separate static instance for each registered node netrowk type.
+    /// A helper static class that automatically creates a separate static instance for each registered node network type.
     /// </summary>
     /// <typeparam name="T">The controlled node network type.</typeparam>
     private static class StorageNet<T> where T : INodeNet

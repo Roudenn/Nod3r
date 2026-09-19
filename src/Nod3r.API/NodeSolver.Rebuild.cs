@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using JetBrains.Annotations;
 using Nod3r.Types;
 
 namespace Nod3r.API;
@@ -21,4 +22,12 @@ public sealed partial class NodeSolver
     /// </summary>
     private readonly HashSet<NodeChunkHandle> _changedChunks = new();
     
+    /// <summary>
+    /// General function that updates all node networks in this solver instance.
+    /// </summary>
+    [PublicAPI]
+    public void Rebuild()
+    {
+        // TODO
+    }
 }

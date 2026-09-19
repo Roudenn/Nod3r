@@ -94,4 +94,3 @@ internal interface INodeKernel<TNode, TNet> : INodeKernel<TNode>
     /// </summary>
     internal NodeNetStorage<TNet> NodeNetStorage { get; set; }
 }
-    

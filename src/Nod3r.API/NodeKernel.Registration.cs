@@ -47,6 +47,15 @@ public sealed partial class NodeSolver
         where TNet : INodeNet, INodeNetCreator<TNet>
         where TRule : INodeRule, INodeRuleCreator<TRule>
     {
-        throw new NotImplementedException();
+        NodeIdxStorage.Register<TNet>(id, out registered);
+        _registeredIdxs.Add(registered);
+
+        ArrayHelpers.EnsureArrayCapacity(ref _kernels, RegistrationCount + 1);
+        ArrayHelpers.EnsureArrayCapacity(ref _idxes, NodeIdxStorage.Count + 1);
+        
+        _kernels[RegistrationCount] = new NodeIDKernel<TNet, TRule>(this);
+        _idxes[registered.Value] = RegistrationCount;
+        
+        RegistrationCount++;
     }
 }
