@@ -21,7 +21,7 @@ public interface INodeRegistration
     /// <typeparam name="TNet">Type of the registered node network that control type <see cref="TNode"/>.</typeparam>
     void Register<TNode, TNet, TRule>(byte layerCapacity = 1)
         where TNode : INode
-        where TNet : INodeNet, INodeNetCreator<TNet>
+        where TNet : INodeNet<TNode, TNet>, INodeNetCreator<TNet>
         where TRule : INodeRule<TNode>, INodeRuleCreator<TRule>;
     
     /// <summary>

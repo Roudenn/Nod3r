@@ -6,6 +6,8 @@ namespace Nod3r.API;
 // TODO move to Numos.Maths
 public static class Int3Helpers
 {
+    public readonly static Int3 Zero = new Int3(0, 0, 0);
+    
     public readonly static ImmutableArray<Int3> CardinalOffsets =
     [
         Int3.PosX, Int3.NegX, Int3.PosY, Int3.NegY, Int3.PosZ, Int3.NegZ

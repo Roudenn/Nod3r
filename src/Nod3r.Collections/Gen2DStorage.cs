@@ -301,6 +301,22 @@ public sealed class Gen2DStorage<T>
     }
     
     /// <summary>
+    /// Returns all data contained in a specific column.
+    /// </summary>
+    public void GetColumnData(ColumnHandle idx, List<T> list)
+    {
+        if ((uint)idx.Index >= (uint)_data.Length || _nextSlots[idx.Index] >= 0)
+            ThrowKeyNotFound();
+
+        for (var layer = 0; layer < _nextSlotLayers[idx.Index].Length; layer++)
+        {
+            int id = _nextSlotLayers[idx.Index][layer];
+            if (id == -1)
+                list.Add(this[GetLayerId(idx, layer)]);
+        }
+    }
+    
+    /// <summary>
     /// Ensures that the capacity of this storage is at least the specified <paramref name="capacity"/>.
     /// If the current capacity is less than <paramref name="capacity"/>,
     /// it is increased to at least the specified <paramref name="capacity"/>.

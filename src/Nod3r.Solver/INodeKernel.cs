@@ -19,7 +19,9 @@ namespace Nod3r.Solver;
 /// </remarks>
 internal interface INodeKernel
 {
-    bool HasChunk(Int3 position);
+    int ChunkCount { get; }
+    
+    bool HasChunk(NodeChunkHandle handle);
 
     void CreateChunk(Int3 position, int width, int height, int depth);
     
@@ -43,6 +45,8 @@ internal interface INodeKernel
     bool TryGetRelative(NodeVoxelHandle node, Int3 offset, int layer, out NodeVoxelHandle relative);
     
     bool TryGetRelative(NodeVoxelHandle node, Int3 offset, out NodeVoxelHandle relative);
+
+    void GetChunkHandles(NodeChunkHandle[] set);
 }
 
 /// <summary>
@@ -77,6 +81,8 @@ internal interface INodeKernel<T> : INodeKernel
     bool TryGetNode(NodeVoxelHandle voxel, [NotNullWhen(true)] out T? node);
     
     bool TryGetNode(NodeChunkHandle chunk, Int3 pos, int layer, [NotNullWhen(true)] out T? node);
+
+    void GetChunkData(NodeChunkHandle chunk, List<(T Data, Int3 Pos)> list, out Int3 dimensions);
 }
 
 /// <summary>

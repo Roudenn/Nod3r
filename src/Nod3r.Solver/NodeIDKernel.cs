@@ -9,10 +9,12 @@ namespace Nod3r.Solver;
 /// Kernel implementation for node IDs.
 /// </summary>
 internal sealed partial class NodeIDKernel<TNet, TRule>
-    (INodeSolver solver) : INodeIDKernel
+    (INodeSolver solver, int id) : INodeIDKernel
     where TNet : INodeNet, INodeNetCreator<TNet>
     where TRule : INodeRule, INodeRuleCreator<TRule>
 {
+    internal readonly int ID = id;
+    
     /// <summary>
     /// Owning solver of this kernel instance.
     /// Required for node rules, since they want access to the whole
@@ -51,10 +53,12 @@ internal sealed partial class NodeIDKernel<TNet, TRule>
         var chunks = new NodeIDChunk(width, height, depth);
         _chunkMap.TryAdd(new NodeChunkHandle(position), chunks);
     }
+
+    public int ChunkCount => _chunkMap.Count;
     
-    public bool HasChunk(Int3 position)
+    public bool HasChunk(NodeChunkHandle handle)
     {
-        return _chunkMap.ContainsKey(new NodeChunkHandle(position));
+        return _chunkMap.ContainsKey(handle);
     }
 
     public bool TryGetRelative(NodeVoxelHandle node, Int3 offset, int layer, out NodeVoxelHandle relative)
@@ -88,6 +92,11 @@ internal sealed partial class NodeIDKernel<TNet, TRule>
         relative = default;
         return false;
     }
-    
+
+    public void GetChunkHandles(NodeChunkHandle[] set)
+    {
+        
+    }
+
     #endregion
 }

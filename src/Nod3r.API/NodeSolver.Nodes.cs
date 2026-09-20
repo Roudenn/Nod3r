@@ -18,19 +18,19 @@ public sealed partial class NodeSolver
         return GetKernel(voxel).HasNode(voxel.Handle);
     }
     
-    /// <inheritdoc cref="INodeSolver.TryGetRelative(NodeVoxel, Int3, NodeIdx, int, out NodeVoxel)" />
-    public bool TryGetRelative(NodeVoxel voxel, Int3 offset, NodeIdx type, int layer, out NodeVoxel relative)
+    /// <inheritdoc cref="INodeSolver.TryGetRelative(NodeVoxel, Int3, int, out NodeVoxel)" />
+    public bool TryGetRelative(NodeVoxel voxel, Int3 offset, int layer, out NodeVoxel relative)
     {
         var success = GetKernel(voxel).TryGetRelative(voxel.Handle, offset, layer, out var relativeHandle);
-        relative = new NodeVoxel(relativeHandle, type);
+        relative = voxel with { Handle = relativeHandle };
         return success;
     }
 
-    /// <inheritdoc cref="INodeSolver.TryGetRelative(NodeVoxel, Int3, NodeIdx, out NodeVoxel)" />
-    public bool TryGetRelative(NodeVoxel voxel, Int3 offset, NodeIdx type, out NodeVoxel relative)
+    /// <inheritdoc cref="INodeSolver.TryGetRelative(NodeVoxel, Int3, out NodeVoxel)" />
+    public bool TryGetRelative(NodeVoxel voxel, Int3 offset, out NodeVoxel relative)
     {
         var success = GetKernel(voxel).TryGetRelative(voxel.Handle, offset, out var relativeHandle);
-        relative = new NodeVoxel(relativeHandle, type);
+        relative = voxel with { Handle = relativeHandle };
         return success;
     }
 

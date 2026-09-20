@@ -48,10 +48,12 @@ public interface INodeSolver
     /// <param name="relative">The node that was found at that position.</param>
     /// <returns>True if the node was found on a relative position.</returns>
     bool TryGetRelative<T>(NodeVoxelHandle voxel, Int3 offset, out NodeVoxel relative) where T : INode;
-
-    bool TryGetRelative(NodeVoxel voxel, Int3 offset, NodeIdx type, out NodeVoxel relative);
     
-    bool TryGetRelative(NodeVoxel voxel, Int3 offset, NodeIdx type, int layer, out NodeVoxel relative);
+    bool TryGetRelative(int id, NodeVoxelHandle voxel, Int3 offset, out NodeVoxel relative);
+
+    bool TryGetRelative(NodeVoxel voxel, Int3 offset, out NodeVoxel relative);
+    
+    bool TryGetRelative(NodeVoxel voxel, Int3 offset, int layer, out NodeVoxel relative);
     
     /// <summary>
     /// Marks the target voxel as dirty, which means it itself or one of its neighbors were changed.

@@ -16,3 +16,8 @@ public interface INodeRule<in T> : INodeRule where T : INode
 {
     IEnumerable<NodeVoxel> Evaluate(INodeSolver solver, NodeVoxelHandle voxel, T node);
 }
+
+public interface INodeRuleID : INodeRule
+{
+    IEnumerable<NodeVoxel> Evaluate(INodeSolver solver, NodeVoxel voxel);
+}

@@ -11,6 +11,8 @@ internal sealed class NodeStorage<T> where T : INode
 {
     private readonly Gen2DStorage<T> _storage = new();
 
+    public int LayerCapacity => _storage.LayerCapacity;
+    
     public T Get(LayerId id)
     {
         return _storage[id];
@@ -60,5 +62,10 @@ internal sealed class NodeStorage<T> where T : INode
     public void EnsureLayerCapacity(int capacity)
     {
         _storage.EnsureLayerCapacity(capacity);
+    }
+
+    public void GetColumnData(ColumnHandle idx, List<T> list)
+    {
+        _storage.GetColumnData(idx, list);
     }
 }

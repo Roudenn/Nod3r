@@ -20,13 +20,13 @@ public struct AdjacentNodeRule<T> : INodeRule<T>, INodeRuleCreator<AdjacentNodeR
     }
 }
 
-public struct AdjacentNodeRule : INodeRule, INodeRuleCreator<AdjacentNodeRule>
+public struct AdjacentNodeRule : INodeRuleID, INodeRuleCreator<AdjacentNodeRule>
 {
     public IEnumerable<NodeVoxel> Evaluate(INodeSolver solver, NodeVoxel voxel)
     {
         foreach (var offset in Int3Helpers.CardinalOffsets)
         {
-            if (solver.TryGetRelative(voxel, offset, voxel.TypeId, out var adjacentVoxel))
+            if (solver.TryGetRelative(voxel, offset, out var adjacentVoxel))
                 yield return adjacentVoxel;
         }
     }

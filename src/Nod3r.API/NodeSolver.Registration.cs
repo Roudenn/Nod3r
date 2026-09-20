@@ -14,7 +14,7 @@ public sealed partial class NodeSolver
     
     public void Register<TNode, TNet, TRule>(byte layerCapacity = 1)
         where TNode : INode
-        where TNet : INodeNet, INodeNetCreator<TNet>
+        where TNet : INodeNet<TNode, TNet>, INodeNetCreator<TNet>
         where TRule : INodeRule<TNode>, INodeRuleCreator<TRule>
     {
         if (_registeredNodeTypes.Contains(typeof(TNode)))
@@ -32,9 +32,11 @@ public sealed partial class NodeSolver
         // Since we can't get the type parameters after the registration method was completed,
         // we have to initialize the storages right now, without knowing the total amount of registrations.
         // This allows to register node types dynamically without having to call a separate method.
-        ArrayHelpers.EnsureArrayCapacity(ref _kernels, RegistrationCount + 1);
+        ArrayHelpers.EnsureCapacity(ref _kernels, RegistrationCount);
+        ArrayHelpers.EnsureCapacity(ref _idxes, NodeIdxStorage.Count);
 
         _kernels[RegistrationCount] = new NodeKernel<TNode, TNet, TRule>(this);
+        _idxes[typeIdx.Value] = RegistrationCount;
         
         RegistrationCount++;
         
@@ -50,10 +52,10 @@ public sealed partial class NodeSolver
         NodeIdxStorage.Register<TNet>(id, out registered);
         _registeredIdxs.Add(registered);
 
-        ArrayHelpers.EnsureArrayCapacity(ref _kernels, RegistrationCount + 1);
-        ArrayHelpers.EnsureArrayCapacity(ref _idxes, NodeIdxStorage.Count + 1);
+        ArrayHelpers.EnsureCapacity(ref _kernels, RegistrationCount);
+        ArrayHelpers.EnsureCapacity(ref _idxes, NodeIdxStorage.Count, NodeIdx.Invalid.Value);
         
-        _kernels[RegistrationCount] = new NodeIDKernel<TNet, TRule>(this);
+        _kernels[RegistrationCount] = new NodeIDKernel<TNet, TRule>(this, id);
         _idxes[registered.Value] = RegistrationCount;
         
         RegistrationCount++;

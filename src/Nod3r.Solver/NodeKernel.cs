@@ -29,6 +29,8 @@ internal sealed partial class NodeKernel<TNode, TNet, TRule>
     
     public List<GenId> Nets { get; set; } = new();
     
+    public int ChunkCount => _chunkMap.Count;
+    
     /// <summary>
     /// Gets the <see cref="GenId"/> for <see cref="NodeStorage{T}"/>
     /// from chunk coordinates, node position and <see cref="NodeIdx"/> of the node.

@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-using JetBrains.Annotations;
 using Nod3r.Solver;
 using Nod3r.Types;
 using Numos.Maths;
@@ -74,7 +72,7 @@ public sealed partial class NodeSolver : INodeSolver, INodeRegistration
     /// <typeparam name="T">Type of the node network to get.</typeparam>
     /// <typeparam name="TNode">Type of the node this network controls.</typeparam>
     /// <returns>A collection of <see cref="NodeNetSnapshot{T}"/>s for every active network.</returns>
-    public NodeNetSnapshot<T>[] GetAllNetworks<T, TNode>() where T : INodeNet<TNode, T> where TNode : INode
+    public NodeNetSnapshot<T>[] GetNetworksSnapshot<T, TNode>() where T : INodeNet<TNode, T> where TNode : INode
     {
         var kernel = GetKernelNet<TNode, T>();
         var handles = kernel.Nets;
@@ -89,10 +87,41 @@ public sealed partial class NodeSolver : INodeSolver, INodeRegistration
         return array;
     }
 
+    public NodeChunkSnapshot<T>[] GetChunksSnapshot<T>() where T : INode
+    {
+        // TODO Parallelize
+        var kernel = GetKernel<T>();
+        var handles = new NodeChunkHandle[kernel.ChunkCount];
+        var array = new NodeChunkSnapshot<T>[kernel.ChunkCount];
+        kernel.GetChunkHandles(handles);
+        
+        for (var i = 0; i < handles.Length; i++)
+        {
+            var handle = handles[i];
+            var data = new List<(T Data, Int3 Pos)>();
+            kernel.GetChunkData(handle, data, out var dimensions);
+            array[i] = new NodeChunkSnapshot<T>(data, dimensions, handle.Pos);
+        }
+
+        return array;
+    }
+    
+    public NodeChunkSnapshot<T> GetChunkSnapshot<T>(NodeChunkHandle handle) where T : INode
+    {
+        var kernel = GetKernel<T>();
+        if (!kernel.HasChunk(handle))
+            throw new ArgumentException($"No chunk found at position {handle.Pos}!");
+
+        var set = new List<(T Data, Int3 Pos)>();
+        kernel.GetChunkData(handle, set, out var dimensions);
+        
+        return new NodeChunkSnapshot<T>(set, dimensions, handle.Pos);
+    }
+
     public NodeChunkHandle EnsureChunk<T>(Int3 position) where T : INode
     {
         var kernel = GetKernel<T>();
-        if (!kernel.HasChunk(position))
+        if (!kernel.HasChunk(new NodeChunkHandle(position)))
             kernel.CreateChunk(position, _chunkWidth, _chunkHeight, _chunkDepth);
         
         return new NodeChunkHandle(position);

@@ -24,14 +24,6 @@ public sealed partial class NodeSolver
     {
         return GetIDKernel(id).HasNode(voxel);
     }
-    
-    [PublicAPI]
-    public bool TryGetRelative(int id, NodeVoxelHandle voxel, Int3 offset, int layer, out NodeVoxel relative)
-    {
-        var success = GetIDKernel(id).TryGetRelative(voxel, offset, layer, out var relativeHandle);
-        relative = new NodeVoxel(relativeHandle, NodeIdxStorage.Get(id));
-        return success;
-    }
 
     [PublicAPI]
     public bool TryGetRelative(int id, NodeVoxelHandle voxel, Int3 offset, out NodeVoxel relative)

@@ -32,6 +32,11 @@ internal sealed class NodeChunk
         int depth = NodeChunkConstants.DefaultDepth)
     {
         Dimensions = new Int3(width, height, depth);
-        Handles = new FlatArray<ColumnHandle>(new ColumnHandle[Dimensions.X * Dimensions.Y * Dimensions.Z], Dimensions);
+        var length = Dimensions.X * Dimensions.Y * Dimensions.Z;
+        Handles = new FlatArray<ColumnHandle>(new ColumnHandle[length], Dimensions);
+        for (int i = 0; i < length; i++)
+        {
+            Handles[i] = ColumnHandle.Invalid;
+        }
     }
 }

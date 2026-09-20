@@ -10,12 +10,35 @@ public static class ArrayHelpers
     /// <param name="array">The target array.</param>
     /// <param name="capacity">Minimal capacity to ensure for this array.</param>
     /// <returns>New array length.</returns>
-    public static int EnsureArrayCapacity<T>(ref T[] array, int capacity)
+    public static int EnsureCapacity<T>(ref T[] array, int capacity)
     {
         if ((uint) capacity < (uint) array.Length)
             return array.Length;
         
         Array.Resize(ref array, Math.Max(Math.Max(array.Length, 2) * 2, capacity));
+        return array.Length;
+    }
+    
+    /// <summary>
+    /// Ensures that an array has a specified capacity.
+    /// If the length of the array is less than capacity,
+    /// it's resized to fit that capacity, and all new slots are set to <see cref="defaultValue"/>.
+    /// </summary>
+    /// <param name="array">The target array.</param>
+    /// <param name="capacity">Minimal capacity to ensure for this array.</param>
+    /// <param name="defaultValue">The default value to set in every slot of the array.</param>
+    /// <returns>New array length.</returns>
+    public static int EnsureCapacity<T>(ref T[] array, int capacity, T defaultValue)
+    {
+        if ((uint) capacity < (uint) array.Length)
+            return array.Length;
+        
+        var oldCapacity = array.Length;
+        Array.Resize(ref array, Math.Max(Math.Max(array.Length, 2) * 2, capacity));
+        for (int i = oldCapacity; i < array.Length; i++)
+        {
+            array[i] = defaultValue;
+        }
         return array.Length;
     }
     

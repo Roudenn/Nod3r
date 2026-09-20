@@ -26,7 +26,7 @@ public static class NodeIdxStorage
     /// <typeparam name="TNet">Type of network that controls <see cref="TNode"/>.</typeparam>
     internal static void Register<TNode, TNet>(out NodeIdx typeIdx)
         where TNode : INode
-        where TNet : INodeNet
+        where TNet : INodeNet<TNode, TNet>
     {
         if (Storage<TNode>.Index.IsValid)
         {
@@ -40,8 +40,7 @@ public static class NodeIdxStorage
         Count++;
     }
     
-    internal static void Register<TNet>(int id, out NodeIdx typeIdx)
-        where TNet : INodeNet
+    internal static void Register<TNet>(int id, out NodeIdx typeIdx) where TNet : INodeNet
     {
         if (_idNodes.Length > id && _idNodes[id].IsValid)
         {
@@ -59,7 +58,7 @@ public static class NodeIdxStorage
     private static void EnsureIdCapacity(int capacity)
     {
         var oldLength = _idNodes.Length;
-        ArrayHelpers.EnsureArrayCapacity(ref _idNodes, capacity);
+        ArrayHelpers.EnsureCapacity(ref _idNodes, capacity);
         for (int i = oldLength; i < capacity; i++)
         {
             _idNodes[i] = NodeIdx.Invalid;
