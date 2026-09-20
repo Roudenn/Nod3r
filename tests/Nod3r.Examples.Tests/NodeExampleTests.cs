@@ -32,7 +32,7 @@ public sealed class NodeExampleTests
         
         solver.Rebuild();
 
-        var nets = solver.GetNetworksSnapshot<AdjacentNodeNet, AdjacentNode>();
+        var nets = solver.GetNetworksSnapshot<AdjacentNodeNet>();
         Assert.That(nets, Has.Count.EqualTo(1));
     }
     

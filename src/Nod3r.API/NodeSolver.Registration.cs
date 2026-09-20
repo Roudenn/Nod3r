@@ -49,7 +49,7 @@ public sealed partial class NodeSolver
         where TNet : INodeNet, INodeNetCreator<TNet>
         where TRule : INodeRule, INodeRuleCreator<TRule>
     {
-        NodeIdxStorage.Register<TNet>(id, out var typeIdx);
+        NodeIdxStorage.Register(id, out var typeIdx);
         _registeredIdxs.Add(typeIdx);
 
         ArrayHelpers.EnsureCapacity(ref _kernels, RegistrationCount);

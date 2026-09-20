@@ -9,7 +9,7 @@ namespace Nod3r.Solver;
 /// Kernel implementation for node IDs.
 /// </summary>
 internal sealed partial class NodeIDKernel<TNet, TRule>
-    (INodeSolver solver, int id) : INodeIDKernel
+    (INodeSolver solver, int id) : INodeIDKernel, INodeNetKernel<TNet>
     where TNet : INodeNet, INodeNetCreator<TNet>
     where TRule : INodeRule, INodeRuleCreator<TRule>
 {

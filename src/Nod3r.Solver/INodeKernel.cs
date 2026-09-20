@@ -19,10 +19,25 @@ namespace Nod3r.Solver;
 /// </remarks>
 internal interface INodeKernel
 {
+    /// <summary>
+    /// Total amount of registered chunks.
+    /// </summary>
     int ChunkCount { get; }
     
+    /// <summary>
+    /// Checks whether a <see cref="NodeChunkHandle"/> is initialized in this kernel.
+    /// </summary>
+    /// <param name="handle">A chunk handle to validate.</param>
+    /// <returns>True if the chunk is initialized at this spot, otherwise false.</returns>
     bool HasChunk(NodeChunkHandle handle);
 
+    /// <summary>
+    /// Creates a chunk in the kernel's chunk map.
+    /// </summary>
+    /// <param name="position">Local chunk map position of the chunk.</param>
+    /// <param name="width">Width of a new chunk.</param>
+    /// <param name="height">Height of a new chunk.</param>
+    /// <param name="depth">Depth of a new chunk.</param>
     void CreateChunk(Int3 position, int width, int height, int depth);
     
     /// <summary>
@@ -46,6 +61,10 @@ internal interface INodeKernel
     
     bool TryGetRelative(NodeVoxelHandle node, Int3 offset, out NodeVoxelHandle relative);
 
+    /// <summary>
+    /// Copies all living chunk handles into an array.
+    /// </summary>
+    /// <param name="set">An array that has a length of <see cref="ChunkCount"/>.</param>
     void GetChunkHandles(NodeChunkHandle[] set);
 }
 
@@ -53,11 +72,8 @@ internal interface INodeKernel
 /// Interface to interact with a node kernel that controls a specific node type <see cref="T"/>.
 /// </summary>
 /// <typeparam name="T">Type of node this node kernel controls.</typeparam>
-internal interface INodeKernel<T> : INodeKernel
-    where T : INode
+internal interface INodeKernel<T> : INodeKernel where T : INode
 {
-    internal List<GenId> Nets { get; set; }
-    
     /// <summary>
     /// Storage that contains all node data of that kernel instance.
     /// </summary>
@@ -86,17 +102,26 @@ internal interface INodeKernel<T> : INodeKernel
 }
 
 /// <summary>
-/// Interface to interact with a node kernel that controls a specific node type <see cref="TNode"/>
-/// and a node network type <see cref="TNet"/>.
+/// Interface to interact with a node kernel that controls
+/// a specific node network type <see cref="TNet"/>.
 /// </summary>
-/// <typeparam name="TNode">Type of node this node kernel controls.</typeparam>
 /// <typeparam name="TNet">Type of node network this node kernel controls.</typeparam>
-internal interface INodeKernel<TNode, TNet> : INodeKernel<TNode>
-    where TNode : INode
-    where TNet : INodeNet
+internal interface INodeNetKernel<TNet> : INodeKernel where TNet : INodeNet
 {
+    /// <summary>
+    /// All currently living networks.
+    /// </summary>
+    internal List<GenId> Nets { get; set; }
+    
     /// <summary>
     /// Storage that contains all node network data of that kernel instance.
     /// </summary>
     internal NodeNetStorage<TNet> NodeNetStorage { get; set; }
+}
+
+internal interface INodeIDKernel : INodeKernel
+{
+    void SetNode(NodeVoxelHandle voxel);
+    
+    void GetChunkData(NodeChunkHandle chunk, HashSet<Int3> list, out Int3 dimensions);
 }

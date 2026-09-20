@@ -9,7 +9,7 @@ namespace Nod3r.Solver;
 /// Kernel implementation for specific <see cref="INode"/> types.
 /// </summary>
 internal sealed partial class NodeKernel<TNode, TNet, TRule>
-    (INodeSolver solver) : INodeKernel<TNode>
+    (INodeSolver solver) : INodeKernel<TNode>, INodeNetKernel<TNet>
     where TNode : INode
     where TNet : INodeNet, INodeNetCreator<TNet>
     where TRule : INodeRule<TNode>, INodeRuleCreator<TRule>
@@ -23,7 +23,7 @@ internal sealed partial class NodeKernel<TNode, TNet, TRule>
     
     public NodeStorage<TNode> NodeStorage { get; set; } = new();
     
-    public NodeNetStorage<TNet> NodeNetStorage = new();
+    public NodeNetStorage<TNet> NodeNetStorage { get; set; } = new();
     
     private readonly ConcurrentDictionary<NodeChunkHandle, NodeChunk> _chunkMap = new();
     

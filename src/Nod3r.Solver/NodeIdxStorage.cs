@@ -40,7 +40,7 @@ public static class NodeIdxStorage
         Count++;
     }
     
-    internal static void Register<TNet>(int id, out NodeIdx typeIdx) where TNet : INodeNet
+    internal static void Register(int id, out NodeIdx typeIdx)
     {
         if (_idNodes.Length > id && _idNodes[id].IsValid)
         {
@@ -51,7 +51,6 @@ public static class NodeIdxStorage
         typeIdx = new NodeIdx(Count);
         EnsureIdCapacity(id);
         _idNodes[id] = typeIdx;
-        StorageNet<TNet>.Index = typeIdx;
         Count++;
     }
 
