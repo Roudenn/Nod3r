@@ -26,7 +26,7 @@ public sealed class NodeRegistrationTest
             kernel.Register<TestNode7, DummyNodeNet<TestNode7>, DummyNodeRule<TestNode7>>();
             kernel.Register<TestNode8, DummyNodeNet<TestNode8>, DummyNodeRule<TestNode8>>();
             
-            kernel.RegisterID<DummyNodeNet<TestNode8>, DummyNodeRuleID>(0, out _);
+            kernel.RegisterID<DummyNodeNet<TestNode8>, DummyNodeRuleID>(0);
         });
         
         var solver = new NodeSolver(config);

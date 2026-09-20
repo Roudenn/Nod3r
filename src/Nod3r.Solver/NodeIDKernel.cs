@@ -44,6 +44,25 @@ internal sealed partial class NodeIDKernel<TNet, TRule>
         _chunkMap[voxel.Chunk].Bytes[voxel.Pos] = false;
         return hadNode;
     }
+
+    public void GetChunkData(NodeChunkHandle handle, HashSet<Int3> list, out Int3 dimensions)
+    {
+        var chunk = GetChunk(handle);
+        dimensions = chunk.Dimensions;
+        for (int z = 0; z < chunk.Dimensions.Z; z++)
+        {
+            for (int y = 0; y < chunk.Dimensions.Y; y++)
+            {
+                for (int x = 0; x < chunk.Dimensions.X; x++)
+                {
+                    var pos = new Int3(x, y, z);
+                    var value = chunk.Bytes[pos];
+                    if (value)
+                        list.Add(pos);
+                }
+            }
+        }
+    }
     
     // TODO this is copy-pasted code from NodeKernel
     #region copy pasteee
@@ -99,4 +118,8 @@ internal sealed partial class NodeIDKernel<TNet, TRule>
     }
 
     #endregion
+    
+    private NodeIDChunk GetChunk(NodeChunkHandle chunk) => _chunkMap[chunk];
+    
+    private NodeIDChunk GetChunk(NodeVoxelHandle voxel) => _chunkMap[voxel.Chunk];
 }

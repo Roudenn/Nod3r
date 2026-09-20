@@ -45,18 +45,18 @@ public sealed partial class NodeSolver
         _registeredNodeRuleTypes.Add(typeof(TRule));
     }
 
-    public void RegisterID<TNet, TRule>(int id, out NodeIdx registered)
+    public void RegisterID<TNet, TRule>(int id)
         where TNet : INodeNet, INodeNetCreator<TNet>
         where TRule : INodeRule, INodeRuleCreator<TRule>
     {
-        NodeIdxStorage.Register<TNet>(id, out registered);
-        _registeredIdxs.Add(registered);
+        NodeIdxStorage.Register<TNet>(id, out var typeIdx);
+        _registeredIdxs.Add(typeIdx);
 
         ArrayHelpers.EnsureCapacity(ref _kernels, RegistrationCount);
         ArrayHelpers.EnsureCapacity(ref _idxes, NodeIdxStorage.Count, NodeIdx.Invalid.Value);
         
         _kernels[RegistrationCount] = new NodeIDKernel<TNet, TRule>(this, id);
-        _idxes[registered.Value] = RegistrationCount;
+        _idxes[typeIdx.Value] = RegistrationCount;
         
         RegistrationCount++;
     }

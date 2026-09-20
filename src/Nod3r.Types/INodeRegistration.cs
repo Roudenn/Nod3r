@@ -37,7 +37,7 @@ public interface INodeRegistration
     /// </para>
     /// <typeparam name="TRule">Type of the registered rule.</typeparam>
     /// <typeparam name="TNet">Type of the registered node network.</typeparam>
-    void RegisterID<TNet, TRule>(int id, out NodeIdx registered)
+    void RegisterID<TNet, TRule>(int id)
         where TNet : INodeNet, INodeNetCreator<TNet>
         where TRule : INodeRule, INodeRuleCreator<TRule>;
 }

@@ -126,4 +126,44 @@ public sealed partial class NodeSolver : INodeSolver, INodeRegistration
         
         return new NodeChunkHandle(position);
     }
+    
+    public NodeChunkSnapshot[] GetChunksSnapshot(int id)
+    {
+        // TODO Parallelize
+        var kernel = GetIDKernel(id);
+        var handles = new NodeChunkHandle[kernel.ChunkCount];
+        var array = new NodeChunkSnapshot[kernel.ChunkCount];
+        kernel.GetChunkHandles(handles);
+        
+        for (var i = 0; i < handles.Length; i++)
+        {
+            var handle = handles[i];
+            var data = new HashSet<Int3>();
+            kernel.GetChunkData(handle, data, out var dimensions);
+            array[i] = new NodeChunkSnapshot(id, data, dimensions, handle.Pos);
+        }
+
+        return array;
+    }
+    
+    public NodeChunkSnapshot GetChunkSnapshot(int id, NodeChunkHandle handle)
+    {
+        var kernel = GetIDKernel(id);
+        if (!kernel.HasChunk(handle))
+            throw new ArgumentException($"No chunk found at position {handle.Pos}!");
+
+        var set = new HashSet<Int3>();
+        kernel.GetChunkData(handle, set, out var dimensions);
+        
+        return new NodeChunkSnapshot(id, set, dimensions, handle.Pos);
+    }
+
+    public NodeChunkHandle EnsureChunk(int id, Int3 position)
+    {
+        var kernel = GetIDKernel(id);
+        if (!kernel.HasChunk(new NodeChunkHandle(position)))
+            kernel.CreateChunk(position, _chunkWidth, _chunkHeight, _chunkDepth);
+        
+        return new NodeChunkHandle(position);
+    }
 }
