@@ -1,4 +1,6 @@
-namespace Nod3r.Types;
+using Nod3r.Solver;
+
+namespace Nod3r.API;
 
 /// <summary>
 /// Represents a registered node in a program.

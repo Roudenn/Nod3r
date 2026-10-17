@@ -1,5 +1,4 @@
 using Nod3r.Collections;
-using Nod3r.Types;
 
 namespace Nod3r.Solver;
 
@@ -21,6 +20,11 @@ internal sealed class NodeNetStorage<T> : NodeNetStorage where T : INodeNet
     public T Get(GenId id)
     {
         return _storage[id];
+    }
+    
+    public ref T GetRef(GenId id)
+    {
+        return ref _storage[id];
     }
 
     public void Free(GenId id)

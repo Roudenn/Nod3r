@@ -1,5 +1,5 @@
+using Nod3r.API;
 using Nod3r.Collections;
-using Nod3r.Types;
 
 namespace Nod3r.Solver.Tests;
 
@@ -29,38 +29,26 @@ public struct DummyNodeNet<T>() : INodeNet<T, DummyNodeNet<T>>, INodeNetCreator<
     }
 }
 
-public struct DummyNodeRule<TNode> : INodeRule<TNode>, INodeRuleCreator<DummyNodeRule<TNode>>
-    where TNode : INode
+public static class NodeRegistrationExtensions
 {
-    public IEnumerable<NodeVoxel> Evaluate(INodeSolver solver, NodeVoxelHandle voxel, TNode node)
+    extension(INodeRegistration registration)
     {
-        return [];
-    }
-        
-    public static DummyNodeRule<TNode> CreateRule()
-    {
-        return new DummyNodeRule<TNode>();
-    }
-}
-    
-public struct DummyNodeRuleID : INodeRuleID, INodeRuleCreator<DummyNodeRuleID>
-{
-    public IEnumerable<NodeVoxel> Evaluate(INodeSolver solver, NodeVoxel voxel)
-    {
-        return [];
-    }
-        
-    public static DummyNodeRuleID CreateRule()
-    {
-        return new DummyNodeRuleID();
+        public void RegisterTest<TNode, TNet>(byte layerCapacity = 1)
+            where TNode : INode, ITestNode
+            where TNet : INodeNet<TNode, TNet>, INodeNetCreator<TNet>
+        {
+            registration.Register<TNode, TNet>(NodeRuleBuilder<TNode>.Empty, layerCapacity);
+        }
     }
 }
 
-public struct TestNode1 : INode;
-public struct TestNode2 : INode;
-public struct TestNode3 : INode;
-public struct TestNode4 : INode;
-public struct TestNode5 : INode;
-public struct TestNode6 : INode;
-public struct TestNode7 : INode;
-public struct TestNode8 : INode;
+public interface ITestNode;
+
+public struct TestNode1 : INode, ITestNode;
+public struct TestNode2 : INode, ITestNode;
+public struct TestNode3 : INode, ITestNode;
+public struct TestNode4 : INode, ITestNode;
+public struct TestNode5 : INode, ITestNode;
+public struct TestNode6 : INode, ITestNode;
+public struct TestNode7 : INode, ITestNode;
+public struct TestNode8 : INode, ITestNode;

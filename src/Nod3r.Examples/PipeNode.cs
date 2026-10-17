@@ -1,6 +1,7 @@
+using Nod3r.API;
 using Nod3r.Collections;
+using Nod3r.Solver;
 using Numos.Maths;
-using Nod3r.Types;
 
 namespace Nod3r.Examples;
 
@@ -10,13 +11,19 @@ namespace Nod3r.Examples;
 /// In order for 2 pipes to connect, they must be on the same <see cref="Layer"/>
 /// </para>
 /// </summary>
-public record struct PipeNode() : INode
+public record struct PipeNode() : INode, INodeAutoRegistration<PipeNode>
 {
     public float Volume = 1f;
 
     public PipeDirectionFlags Directions = PipeDirectionFlags.None;
 
-    public byte Layer = 0;
+    public static NodeRule<PipeNode> ConnectionRule =>
+        NodeRuleBuilder.Create()
+            .IncludeCartesian()
+            .Compile<PipeNode>(
+                args
+                => (args.Current.Directions & (PipeDirectionFlags)PipeDirectionExtensions.GetDirection(args.OtherPos)) == 0x0
+                   && (args.Neighbor.Directions & (PipeDirectionFlags)PipeDirectionExtensions.GetDirection(new Int3() - args.OtherPos)) == 0x0);
 }
 
 [Flags]
@@ -74,25 +81,23 @@ public static class PipeDirectionExtensions
             _ => throw new ArgumentOutOfRangeException(nameof(dir), dir, null)
         };
     }
-}
 
-public sealed class PipeNodeRule : INodeRule<PipeNode>
-{
-    public IEnumerable<NodeVoxel> Evaluate(INodeSolver solver, NodeVoxelHandle voxel, PipeNode node)
+    public static PipeDirection GetDirection(Int3 dir)
     {
-        foreach (var (offset, dir) in node.Directions.ToInt3())
-        {
-            if (!solver.TryGetRelative<PipeNode>(voxel, offset, out var nearVoxel))
-                continue;
-            
-            if (!solver.TryGetNode<PipeNode>(nearVoxel.Handle, out var nearData))
-                continue;
-            
-            if ((nearData.Directions & (PipeDirectionFlags) dir.GetOpposite()) == 0x0)
-                continue;
-            
-            yield return nearVoxel;
-        }
+        if (dir == Int3.PosX)
+            return PipeDirection.Forward;
+        if (dir == Int3.NegX)
+            return PipeDirection.Backward;
+        if (dir == Int3.PosZ)
+            return PipeDirection.Up;
+        if (dir == Int3.NegZ)
+            return PipeDirection.Down;
+        if (dir == Int3.PosY)
+            return PipeDirection.Right;
+        if (dir == Int3.NegY)
+            return PipeDirection.Left;
+
+        return PipeDirection.None;
     }
 }
 

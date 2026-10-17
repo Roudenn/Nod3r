@@ -1,5 +1,4 @@
 using Nod3r.Collections;
-using Nod3r.Types;
 
 namespace Nod3r.Solver;
 
@@ -23,9 +22,9 @@ internal sealed class NodeStorage<T> where T : INode
         return _storage[GetLayerId(id, layer)];
     }
     
-    public int GetFreeLayer(ColumnHandle id)
+    public byte GetFreeLayer(ColumnHandle id)
     {
-        return _storage.GetFreeLayer(id);
+        return (byte) _storage.GetFreeLayer(id);
     }
 
     public LayerId GetLayerId(ColumnHandle idx, int layer)
@@ -47,6 +46,11 @@ internal sealed class NodeStorage<T> where T : INode
     public void Add(T value, ColumnHandle idx, out LayerId id)
     {
         _storage.Add(value, idx, out id);
+    }
+    
+    public void Set(LayerId id, T value)
+    {
+        _storage.Set(id, value);
     }
 
     public void Free(LayerId id)

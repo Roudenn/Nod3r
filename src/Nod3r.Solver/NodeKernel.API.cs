@@ -1,33 +1,29 @@
 using System.Diagnostics.CodeAnalysis;
-using Nod3r.Types;
 using Numos.Maths;
 
 namespace Nod3r.Solver;
 
-internal sealed partial class NodeKernel<TNode, TNet, TRule>
+internal sealed partial class NodeKernel<TNode, TNet>
 {
-    public bool TryGetNode(NodeVoxelHandle voxel, [NotNullWhen(true)] out TNode? node)
-        => TryGetNode(voxel.Chunk, voxel.Pos, voxel.Layer, out node);
-    
-    public bool TryGetNode(NodeChunkHandle chunk, Int3 pos, int layer, [NotNullWhen(true)] out TNode? node)
+    public bool TryGetNode(VoxelHandle handle, [NotNullWhen(true)] out TNode? node)
     {
         node = default;
-        var genId = GetId(chunk, pos);
+        var genId = GetId(handle.ChunkPos, handle.VoxelIndex);
         if (!genId.IsValid)
             return false;
         
-        node = NodeStorage.Get(genId, layer);
+        node = NodeStorage.Get(genId, handle.Layer);
         return true;
     }
     
-    public bool TryGetRelative(NodeVoxelHandle node, Int3 offset, int layer, out NodeVoxelHandle relative)
+    public bool TryGetRelative(VoxelHandle node, Int3 offset, byte layer, out VoxelHandle relative)
     {
-        var chunk = _chunkMap[node.Chunk];
-        var targetPos = node.Pos + offset;
+        var chunk = _chunkMap[node.ChunkPos];
+        var targetPos = chunk.Handles.GetPosition(node.VoxelIndex) + offset;
         if (targetPos.IsWithin(default, chunk.Dimensions))
         {
             // Same chunk
-            relative = new NodeVoxelHandle(node.Chunk, targetPos, layer);
+            relative = new VoxelHandle(node.ChunkPos, (ushort) chunk.Handles.GetIndex(targetPos), layer);
             return true;
         }
 
@@ -36,14 +32,14 @@ internal sealed partial class NodeKernel<TNode, TNet, TRule>
         return false;
     }
     
-    public bool TryGetRelative(NodeVoxelHandle node, Int3 offset, out NodeVoxelHandle relative)
+    public bool TryGetRelative(VoxelHandle node, Int3 offset, out VoxelHandle relative)
     {
-        var chunk = _chunkMap[node.Chunk];
-        var targetPos = node.Pos + offset;
+        var chunk = _chunkMap[node.ChunkPos];
+        var targetPos = chunk.Handles.GetPosition(node.VoxelIndex) + offset;
         if (targetPos.IsWithin(default, chunk.Dimensions))
         {
             // Same chunk
-            relative = node with { Pos = targetPos };
+            relative = node with { VoxelIndex = (ushort) chunk.Handles.GetIndex(targetPos) };
             return true;
         }
 

@@ -1,5 +1,6 @@
+using JetBrains.Annotations;
+using Nod3r.API.Snapshots;
 using Nod3r.Solver;
-using Nod3r.Types;
 using Numos.Maths;
 
 namespace Nod3r.API;
@@ -7,18 +8,21 @@ namespace Nod3r.API;
 /// <summary>
 /// A solver instance that allows manipulating a chunk map of nodes
 /// and rebuild node networks inside of it.
+/// </summary>
+/// <para>
+/// A solver is a continuous grid where grids can interact with each other directly.
+/// Multiple simulation instances can be connected together in context of a <see cref="NodeWorld"/>
+/// with explicit links.
+/// </para>
 /// <para>
 /// Each solver wraps a node kernel instance for every registered node type <see cref="NodeIdx"/>.
 /// Such division right at the top makes the internals much nicer and faster.
 /// </para>
-/// </summary>
-public sealed partial class NodeSolver : INodeSolver, INodeRegistration
+public sealed partial class NodeSimulation : INodeSimulation, INodeRegistration
 {
     private INodeKernel[] _kernels = [];
-    
-    private readonly int _chunkDepth;
-    private readonly int _chunkHeight;
-    private readonly int _chunkWidth;
+
+    private readonly SortedSet<NodeChunkHandle> _registeredChunks = new();
 
     /// <summary>
     /// Registered amount of node types in this solver instance.
@@ -36,25 +40,34 @@ public sealed partial class NodeSolver : INodeSolver, INodeRegistration
     /// </summary>
     private readonly List<NodeIdx> _registeredIdxs = new();
     
-    public NodeSolver(
-        NodeConfig config,
+    [PublicAPI]
+    public NodeWorld World { get; }
+    
+    [PublicAPI]
+    public SimulationId Id { get; }
+    
+    [PublicAPI]
+    public Int3 Dimensions { get; }
+    
+    public NodeSimulation(
+        NodeWorld world,
         int chunkDepth = NodeChunkConstants.DefaultDepth,
         int chunkHeight = NodeChunkConstants.DefaultHeight,
         int chunkWidth = NodeChunkConstants.DefaultWidth)
     {
-        ArgumentNullException.ThrowIfNull(config);
+        ArgumentNullException.ThrowIfNull(world);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(chunkWidth);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(chunkHeight);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(chunkDepth);
         
-        _chunkDepth = chunkDepth;
-        _chunkHeight = chunkHeight;
-        _chunkWidth = chunkWidth;
+        World = world;
+        Dimensions = new Int3(chunkWidth, chunkHeight, chunkDepth);
+        Id = world.RegisterSimulation(this);
         
-        config.RegistrationDelegate.Invoke(this);
+        world.Config.RegistrationDelegate.Invoke(this);
     }
 
-    private INodeKernel GetKernel(NodeVoxel voxel) => _kernels[_idxes[voxel.TypeId.Value]];
+    private INodeKernel GetKernel(VoxelRef voxel) => _kernels[_idxes[voxel.Type.Value]];
     
     private INodeKernel<T> GetKernel<T>() where T : INode => (INodeKernel<T>) _kernels[_idxes[NodeIdxStorage.Get<T>().Value]];
 
@@ -92,6 +105,7 @@ public sealed partial class NodeSolver : INodeSolver, INodeRegistration
         return array;
     }
     
+    [PublicAPI]
     public NodeNetSnapshot<T>[] GetNetworksSnapshot<T>(int id) where T : INodeNet
     {
         var kernel = GetIDKernelNet<T>(id);
@@ -113,13 +127,13 @@ public sealed partial class NodeSolver : INodeSolver, INodeRegistration
     /// </summary>
     /// <typeparam name="T">Type of the node to create a snapshot of.</typeparam>
     /// <returns>An array of snapshots of every chunk.</returns>
+    [PublicAPI]
     public NodeChunkSnapshot<T>[] GetChunksSnapshot<T>() where T : INode
     {
         // TODO Parallelize
         var kernel = GetKernel<T>();
-        var handles = new NodeChunkHandle[kernel.ChunkCount];
+        var handles = GetChunkHandles();
         var array = new NodeChunkSnapshot<T>[kernel.ChunkCount];
-        kernel.GetChunkHandles(handles);
         
         for (var i = 0; i < handles.Length; i++)
         {
@@ -139,11 +153,12 @@ public sealed partial class NodeSolver : INodeSolver, INodeRegistration
     /// <typeparam name="T">Type of the node to create a snapshot of.</typeparam>
     /// <returns>A <see cref="NodeChunkSnapshot{T}"/> of the target chunk.</returns>
     /// <exception cref="ArgumentException">The specified <see cref="NodeChunkHandle"/> wasn't initialized.</exception>
+    [PublicAPI]
     public NodeChunkSnapshot<T> GetChunkSnapshot<T>(NodeChunkHandle handle) where T : INode
     {
         var kernel = GetKernel<T>();
         if (!kernel.HasChunk(handle))
-            throw new ArgumentException($"No chunk found at position {handle.Pos}!");
+            throw new ArgumentException($"No chunk found at position {handle.Position}!");
 
         var set = new List<(T Data, Int3 Pos)>();
         kernel.GetChunkData(handle, set, out var dimensions);
@@ -152,18 +167,32 @@ public sealed partial class NodeSolver : INodeSolver, INodeRegistration
     }
 
     /// <summary>
-    /// Ensures that a chunk exists at a specific position in the local chunk map.
+    /// Ensures that a chunk exists at a specific position in the local chunk map of a specific kernel.
     /// </summary>
     /// <param name="position">Local chunk map position.</param>
     /// <typeparam name="T">Type of the node of a chunk to ensure.</typeparam>
     /// <returns>A handle to an already existing or newly created chunk.</returns>
+    [PublicAPI]
     public NodeChunkHandle EnsureChunk<T>(Int3 position) where T : INode
     {
         var kernel = GetKernel<T>();
         if (!kernel.HasChunk(new NodeChunkHandle(position)))
-            kernel.CreateChunk(position, _chunkWidth, _chunkHeight, _chunkDepth);
+            kernel.CreateChunk(position);
         
         return new NodeChunkHandle(position);
+    }
+    
+    public NodeChunkHandle EnsureChunk(Int3 position)
+    {
+        foreach (var kernel in _kernels)
+        {
+            if (!kernel.HasChunk(position))
+                kernel.CreateChunk(position);
+        }
+        
+        var handle = new NodeChunkHandle(position);
+        _registeredChunks.Add(handle);
+        return handle;
     }
     
     /// <summary>
@@ -172,13 +201,13 @@ public sealed partial class NodeSolver : INodeSolver, INodeRegistration
     /// </summary>
     /// <param name="id">Node ID to create a snapshot of.</param>
     /// <returns>An array of snapshots of every chunk.</returns>
+    [PublicAPI]
     public NodeChunkSnapshot[] GetChunksSnapshot(int id)
     {
         // TODO Parallelize
         var kernel = GetIDKernel(id);
-        var handles = new NodeChunkHandle[kernel.ChunkCount];
+        var handles = GetChunkHandles();
         var array = new NodeChunkSnapshot[kernel.ChunkCount];
-        kernel.GetChunkHandles(handles);
         
         for (var i = 0; i < handles.Length; i++)
         {
@@ -198,11 +227,12 @@ public sealed partial class NodeSolver : INodeSolver, INodeRegistration
     /// <param name="handle">The target chunk to create a snapshot.</param>
     /// <returns>A <see cref="NodeChunkSnapshot{T}"/> of the target chunk.</returns>
     /// <exception cref="ArgumentException">The specified <see cref="NodeChunkHandle"/> wasn't initialized.</exception>
+    [PublicAPI]
     public NodeChunkSnapshot GetChunkSnapshot(int id, NodeChunkHandle handle)
     {
         var kernel = GetIDKernel(id);
         if (!kernel.HasChunk(handle))
-            throw new ArgumentException($"No chunk found at position {handle.Pos}!");
+            throw new ArgumentException($"No chunk found at position {handle.Position}!");
 
         var set = new HashSet<Int3>();
         kernel.GetChunkData(handle, set, out var dimensions);
@@ -216,12 +246,25 @@ public sealed partial class NodeSolver : INodeSolver, INodeRegistration
     /// <param name="position">Local chunk map position.</param>
     /// <param name="id">Node ID to ensure a chunk.</param>
     /// <returns>A handle to an already existing or newly created chunk.</returns>
+    [PublicAPI]
     public NodeChunkHandle EnsureChunk(int id, Int3 position)
     {
         var kernel = GetIDKernel(id);
-        if (!kernel.HasChunk(new NodeChunkHandle(position)))
-            kernel.CreateChunk(position, _chunkWidth, _chunkHeight, _chunkDepth);
+        var handle = new NodeChunkHandle(position);
         
-        return new NodeChunkHandle(position);
+        if (kernel.HasChunk(handle))
+            return handle;
+        
+        kernel.CreateChunk(position);
+        _registeredChunks.Add(handle);
+        return handle;
+    }
+
+    [PublicAPI]
+    public NodeChunkHandle[] GetChunkHandles()
+    {
+        var arr = new NodeChunkHandle[_registeredChunks.Count];
+        _registeredChunks.CopyTo(arr);
+        return arr;
     }
 }

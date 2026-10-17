@@ -1,5 +1,4 @@
 using Nod3r.API;
-using Nod3r.Types;
 
 namespace Nod3r.Solver.Tests;
 
@@ -17,19 +16,19 @@ public sealed class NodeRegistrationTest
     {
         var config = new NodeConfig(kernel =>
         {
-            kernel.Register<TestNode1, DummyNodeNet<TestNode1>, DummyNodeRule<TestNode1>>();
-            kernel.Register<TestNode2, DummyNodeNet<TestNode2>, DummyNodeRule<TestNode2>>();
-            kernel.Register<TestNode3, DummyNodeNet<TestNode3>, DummyNodeRule<TestNode3>>();
-            kernel.Register<TestNode4, DummyNodeNet<TestNode4>, DummyNodeRule<TestNode4>>();
-            kernel.Register<TestNode5, DummyNodeNet<TestNode5>, DummyNodeRule<TestNode5>>();
-            kernel.Register<TestNode6, DummyNodeNet<TestNode6>, DummyNodeRule<TestNode6>>();
-            kernel.Register<TestNode7, DummyNodeNet<TestNode7>, DummyNodeRule<TestNode7>>();
-            kernel.Register<TestNode8, DummyNodeNet<TestNode8>, DummyNodeRule<TestNode8>>();
+            kernel.RegisterTest<TestNode1, DummyNodeNet<TestNode1>>();
+            kernel.RegisterTest<TestNode2, DummyNodeNet<TestNode2>>();
+            kernel.RegisterTest<TestNode3, DummyNodeNet<TestNode3>>();
+            kernel.RegisterTest<TestNode4, DummyNodeNet<TestNode4>>();
+            kernel.RegisterTest<TestNode5, DummyNodeNet<TestNode5>>();
+            kernel.RegisterTest<TestNode6, DummyNodeNet<TestNode6>>();
+            kernel.RegisterTest<TestNode7, DummyNodeNet<TestNode7>>();
+            kernel.RegisterTest<TestNode8, DummyNodeNet<TestNode8>>();
             
-            kernel.RegisterID<DummyNodeNet<TestNode8>, DummyNodeRuleID>(0);
+            kernel.RegisterID<DummyNodeNet<TestNode8>>(NodeRuleBuilder.Create().Compile(), 0);
         });
         
-        var solver = new NodeSolver(config);
+        var solver = new NodeWorld(config);
     }
     
     /// <summary>
@@ -40,18 +39,18 @@ public sealed class NodeRegistrationTest
     {
         var config1 = new NodeConfig((kernel) =>
         {
-            kernel.Register<TestNode1, DummyNodeNet<TestNode1>, DummyNodeRule<TestNode1>>();
-            kernel.Register<TestNode2, DummyNodeNet<TestNode2>, DummyNodeRule<TestNode2>>();
+            kernel.RegisterTest<TestNode1, DummyNodeNet<TestNode1>>();
+            kernel.RegisterTest<TestNode2, DummyNodeNet<TestNode2>>();
         });
         
         var config2 = new NodeConfig((kernel) =>
         {
-            kernel.Register<TestNode3, DummyNodeNet<TestNode3>, DummyNodeRule<TestNode3>>();
-            kernel.Register<TestNode4, DummyNodeNet<TestNode4>, DummyNodeRule<TestNode4>>();
+            kernel.RegisterTest<TestNode3, DummyNodeNet<TestNode3>>();
+            kernel.RegisterTest<TestNode4, DummyNodeNet<TestNode4>>();
         });
         
-        var solver1 = new NodeSolver(config1);
-        var solver2 = new NodeSolver(config2);
+        var solver1 = new NodeWorld(config1);
+        var solver2 = new NodeWorld(config2);
     }
     
     /// <summary>
@@ -62,20 +61,20 @@ public sealed class NodeRegistrationTest
     {
         var config1 = new NodeConfig((kernel) =>
         {
-            kernel.Register<TestNode1, DummyNodeNet<TestNode1>, DummyNodeRule<TestNode1>>();
-            kernel.Register<TestNode2, DummyNodeNet<TestNode2>, DummyNodeRule<TestNode2>>();
-            kernel.Register<TestNode3, DummyNodeNet<TestNode3>, DummyNodeRule<TestNode3>>();
+            kernel.RegisterTest<TestNode1, DummyNodeNet<TestNode1>>();
+            kernel.RegisterTest<TestNode2, DummyNodeNet<TestNode2>>();
+            kernel.RegisterTest<TestNode3, DummyNodeNet<TestNode3>>();
         });
         
         var config2 = new NodeConfig((kernel) =>
         {
-            kernel.Register<TestNode2, DummyNodeNet<TestNode2>, DummyNodeRule<TestNode2>>();
-            kernel.Register<TestNode3, DummyNodeNet<TestNode3>, DummyNodeRule<TestNode3>>();
-            kernel.Register<TestNode4, DummyNodeNet<TestNode4>, DummyNodeRule<TestNode4>>();
+            kernel.RegisterTest<TestNode2, DummyNodeNet<TestNode2>>();
+            kernel.RegisterTest<TestNode3, DummyNodeNet<TestNode3>>();
+            kernel.RegisterTest<TestNode4, DummyNodeNet<TestNode4>>();
         });
         
-        var solver1 = new NodeSolver(config1);
-        var solver2 = new NodeSolver(config2);
+        var solver1 = new NodeWorld(config1);
+        var solver2 = new NodeWorld(config2);
     }
     
     /// <summary>
@@ -88,13 +87,13 @@ public sealed class NodeRegistrationTest
         {
             var config = new NodeConfig(kernel =>
             {
-                kernel.Register<TestNode1, DummyNodeNet<TestNode1>, DummyNodeRule<TestNode1>>();
-                kernel.Register<TestNode2, DummyNodeNet<TestNode2>, DummyNodeRule<TestNode2>>();
-                kernel.Register<TestNode3, DummyNodeNet<TestNode3>, DummyNodeRule<TestNode3>>();
-                kernel.Register<TestNode4, DummyNodeNet<TestNode4>, DummyNodeRule<TestNode4>>();
+                kernel.RegisterTest<TestNode1, DummyNodeNet<TestNode1>>();
+                kernel.RegisterTest<TestNode2, DummyNodeNet<TestNode2>>();
+                kernel.RegisterTest<TestNode3, DummyNodeNet<TestNode3>>();
+                kernel.RegisterTest<TestNode4, DummyNodeNet<TestNode4>>();
             });
         
-            var solver = new NodeSolver(config);
+            var solver = new NodeWorld(config);
         }
     }
     
@@ -106,14 +105,14 @@ public sealed class NodeRegistrationTest
     {
         var config = new NodeConfig(kernel =>
         {
-            kernel.Register<TestNode1, DummyNodeNet<TestNode1>, DummyNodeRule<TestNode1>>();
-            kernel.Register<TestNode2, DummyNodeNet<TestNode2>, DummyNodeRule<TestNode2>>();
-            kernel.Register<TestNode1, DummyNodeNet<TestNode1>, DummyNodeRule<TestNode1>>();
+            kernel.RegisterTest<TestNode1, DummyNodeNet<TestNode1>>();
+            kernel.RegisterTest<TestNode2, DummyNodeNet<TestNode2>>();
+            kernel.RegisterTest<TestNode1, DummyNodeNet<TestNode1>>();
         });
 
         Assert.Throws<ArgumentException>(() =>
         {
-            var solver = new NodeSolver(config);
+            var solver = new NodeWorld(config);
         });
     }
     
@@ -125,17 +124,17 @@ public sealed class NodeRegistrationTest
     {
         var config = new NodeConfig(kernel =>
         {
-            kernel.Register<TestNode1, DummyNodeNet<TestNode1>, DummyNodeRule<TestNode1>>();
-            kernel.Register<TestNode2, DummyNodeNet<TestNode2>, DummyNodeRule<TestNode2>>();
-            kernel.Register<TestNode3, DummyNodeNet<TestNode3>, DummyNodeRule<TestNode3>>();
-            kernel.Register<TestNode4, DummyNodeNet<TestNode4>, DummyNodeRule<TestNode4>>();
+            kernel.RegisterTest<TestNode1, DummyNodeNet<TestNode1>>();
+            kernel.RegisterTest<TestNode2, DummyNodeNet<TestNode2>>();
+            kernel.RegisterTest<TestNode3, DummyNodeNet<TestNode3>>();
+            kernel.RegisterTest<TestNode4, DummyNodeNet<TestNode4>>();
         });
 
-        var kernel = new NodeSolver(config);
+        var kernel = new NodeWorld(config);
         
-        kernel.Register<TestNode5, DummyNodeNet<TestNode5>, DummyNodeRule<TestNode5>>();
-        kernel.Register<TestNode6, DummyNodeNet<TestNode6>, DummyNodeRule<TestNode6>>();
-        kernel.Register<TestNode7, DummyNodeNet<TestNode7>, DummyNodeRule<TestNode7>>();
-        kernel.Register<TestNode8, DummyNodeNet<TestNode8>, DummyNodeRule<TestNode8>>();
+        kernel.RegisterTest<TestNode5, DummyNodeNet<TestNode5>>();
+        kernel.RegisterTest<TestNode6, DummyNodeNet<TestNode6>>();
+        kernel.RegisterTest<TestNode7, DummyNodeNet<TestNode7>>();
+        kernel.RegisterTest<TestNode8, DummyNodeNet<TestNode8>>();
     }
 }

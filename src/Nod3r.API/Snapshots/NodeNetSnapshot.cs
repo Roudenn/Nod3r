@@ -1,7 +1,7 @@
 using Nod3r.Collections;
-using Nod3r.Types;
+using Nod3r.Solver;
 
-namespace Nod3r.API;
+namespace Nod3r.API.Snapshots;
 
 /// <summary>
 /// A read-only snapshot of a node network. 

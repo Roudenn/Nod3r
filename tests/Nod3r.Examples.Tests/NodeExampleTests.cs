@@ -1,6 +1,6 @@
 using Nod3r.API;
 using Nod3r.Collections;
-using Nod3r.Types;
+using Nod3r.Solver;
 using Numos.Maths;
 
 namespace Nod3r.Examples.Tests;
@@ -13,9 +13,11 @@ public sealed class NodeExampleTests
     {
         var config = new NodeConfig(reg =>
         {
-            reg.Register<AdjacentNode, AdjacentNodeNet, AdjacentNodeRule<AdjacentNode>>();
+            reg.Register<AdjacentNode, AdjacentNodeNet>();
         });
-        var solver = new NodeSolver(config);
+        
+        var world = new NodeWorld(config);
+        var solver = world.CreateSimulation();
 
         var chunk = solver.EnsureChunk<AdjacentNode>(default);
         
@@ -36,9 +38,14 @@ public sealed class NodeExampleTests
         Assert.That(nets, Has.Count.EqualTo(1));
     }
     
-    private record struct AdjacentNode() : INode
+    private record struct AdjacentNode() : INode, INodeAutoRegistration<AdjacentNode>
     {
         public float Capacity = 1f;
+        
+        public static NodeRule<AdjacentNode> ConnectionRule =>
+            NodeRuleBuilder.Create()
+            .IncludeCartesian()
+            .Compile<AdjacentNode>();
     }
     
     private struct AdjacentNodeNet() : INodeNet<AdjacentNode, AdjacentNodeNet>, INodeNetCreator<AdjacentNodeNet>

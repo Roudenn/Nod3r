@@ -58,6 +58,17 @@ public sealed class Gen2DStorage<T>
     private int[] _layerCapacities;
     
     /// <summary>
+    /// Generation of every column.
+    /// Allows for O(1) removal of entire columns by just increasing their generation.
+    /// </summary>
+    private int[] _columnGenerations;
+    
+    /// <summary>
+    /// Amount of living elements in each column.
+    /// </summary>
+    private int[] _columnCounts;
+    
+    /// <summary>
     /// Total amount of active elements.
     /// </summary>
     public int Count { get; private set; }
@@ -91,12 +102,16 @@ public sealed class Gen2DStorage<T>
         _nextSlots = new int[capacity];
         _nextFreeLayers = new int[capacity];
         _layerCapacities = new int[capacity];
+        _columnGenerations = new int[capacity];
+        _columnCounts = new int[capacity];
         
         for (int i = 0; i < capacity; i++)
         {
             _layerCapacities[i] = layerCapacity;
             _nextSlots[i] = i == capacity - 1 ? int.MaxValue : i + 1;
             _nextFreeLayers[i] = 0;
+            _columnGenerations[i] = 1;
+            _columnCounts[i] = 0;
             
             for (int j = 0; j < layerCapacity; j++)
             {
@@ -123,7 +138,9 @@ public sealed class Gen2DStorage<T>
             if ((uint)id.Layer >= (uint)_layerCapacities[id.Index])
                 ThrowKeyNotFound();
 
-            if (_generations[id.Index][id.Layer] != id.Generation || _nextSlotLayers[id.Index][id.Layer] >= 0)
+            if (_columnGenerations[id.Index] != id.ColumnGeneration
+                || _generations[id.Index][id.Layer] != id.Generation
+                || _nextSlotLayers[id.Index][id.Layer] >= 0)
                 ThrowKeyNotFound();
 
             return _data[id.Index][id.Layer];
@@ -148,10 +165,22 @@ public sealed class Gen2DStorage<T>
         
         ColumnCount += 1;
         Count += 1;
+        _columnCounts[idx] = 1;
         
-        if (startLayer >= _layerCapacities[idx])
+        int cap = _layerCapacities[idx];
+        if (startLayer >= cap)
         {
             EnsureColumnLayerCapacity(idx, startLayer + 1);
+            cap = _layerCapacities[idx];
+        }
+
+        _nextFreeLayers[idx] = 0;
+        for (int j = 0; j < cap; j++)
+        {
+            _nextSlotLayers[idx][j] = j == cap - 1 ? int.MaxValue : j + 1;
+            _generations[idx][j] = 1;
+            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+                _data[idx][j] = default!;
         }
 
         int prev = -1;
@@ -172,7 +201,7 @@ public sealed class Gen2DStorage<T>
         
         _nextSlotLayers[idx][startLayer] = -1;
 
-        id = new LayerId(idx, startLayer, _generations[idx][startLayer]);
+        id = new LayerId(idx, startLayer, _generations[idx][startLayer], _columnGenerations[idx]);
         _data[idx][startLayer] = value;
     }
 
@@ -201,9 +230,36 @@ public sealed class Gen2DStorage<T>
         _nextSlotLayers[idx][layer] = -1;
 
         Count += 1;
+        _columnCounts[idx] += 1;
 
-        id = new LayerId(idx, layer, _generations[idx][layer]);
+        id = new LayerId(idx, layer, _generations[idx][layer], _columnGenerations[idx]);
         _data[idx][layer] = value;
+    }
+
+    /// <summary>
+    /// Sets an already allocated slot to a specific value.
+    /// </summary>
+    /// <remarks>
+    /// Doesn't change the generation of the slot on modification.
+    /// Setting values to unallocated <see cref="LayerId"/>s will result in an exception.
+    /// </remarks>
+    /// <param name="id">Layer index in the 2D storage.</param>
+    /// <param name="value">A new value that may overwrite the old one if it's already specified.</param>
+    public void Set(LayerId id, T value)
+    {
+        if ((uint)id.Index >= (uint)_data.Length)
+            ThrowKeyNotFound();
+        
+        if ((uint)id.Layer >= (uint)_layerCapacities[id.Index])
+            ThrowKeyNotFound();
+            
+        if (_columnGenerations[id.Index] != id.ColumnGeneration
+            || _generations[id.Index][id.Layer] != id.Generation
+            || _nextSlots[id.Index] >= 0
+            || _nextSlotLayers[id.Index][id.Layer] >= 0)
+            ThrowKeyNotFound();
+        
+        _data[id.Index][id.Layer] = value;
     }
 
     /// <summary>
@@ -219,13 +275,17 @@ public sealed class Gen2DStorage<T>
         if ((uint)id.Layer >= (uint)_layerCapacities[id.Index])
             ThrowKeyNotFound();
             
-        if (_generations[id.Index][id.Layer] != id.Generation || _nextSlots[id.Index] >= 0 || _nextSlotLayers[id.Index][id.Layer] >= 0)
+        if (_columnGenerations[id.Index] != id.ColumnGeneration
+            || _generations[id.Index][id.Layer] != id.Generation
+            || _nextSlots[id.Index] >= 0
+            || _nextSlotLayers[id.Index][id.Layer] >= 0)
             ThrowKeyNotFound();
 
         if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
             _data[id.Index][id.Layer] = default!;
         
         Count -= 1;
+        _columnCounts[id.Index] -= 1;
         _generations[id.Index][id.Layer] += 1;
         
         _nextSlotLayers[id.Index][id.Layer] = _nextFreeLayers[id.Index];
@@ -236,36 +296,19 @@ public sealed class Gen2DStorage<T>
     /// Frees the entire column of elements.
     /// </summary>
     /// <param name="id">The index of the column to free from the storage.</param>
-    // TODO implement column generations to make column removal O(1) instead of O(n)
     public void Free(ColumnHandle id)
     {
         if ((uint)id.Index >= (uint)_data.Length)
             ThrowKeyNotFound();
-        
+
         if (_nextSlots[id.Index] >= 0)
             ThrowKeyNotFound();
 
-        int freedElements = 0;
-        int cap = _layerCapacities[id.Index];
-
-        for (int i = 0; i < cap; i++)
-        {
-            if (_nextSlotLayers[id.Index][i] < 0)
-            {
-                if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
-                    _data[id.Index][i] = default!;
-                
-                _generations[id.Index][i] += 1;
-                freedElements++;
-            }
-            
-            _nextSlotLayers[id.Index][i] = i == cap - 1 ? int.MaxValue : i + 1;
-        }
-        
-        Count -= freedElements;
+        _columnGenerations[id.Index] += 1;
+        Count -= _columnCounts[id.Index];
         ColumnCount -= 1;
-        _nextFreeLayers[id.Index] = 0;
-        
+        _columnCounts[id.Index] = 0;
+
         _nextSlots[id.Index] = _nextFree;
         _nextFree = id.Index;
     }
@@ -280,13 +323,16 @@ public sealed class Gen2DStorage<T>
     /// <returns>A safe reference to an element that is stored on the specified position.</returns>
     public LayerId GetLayerId(ColumnHandle idx, int layer)
     {
+        if (!idx.IsValid)
+            ThrowKeyNotFound();
+        
         if ((uint)idx.Index >= (uint)_data.Length || _nextSlots[idx.Index] >= 0)
             ThrowKeyNotFound();
             
         if ((uint)layer >= (uint)_layerCapacities[idx.Index])
             ThrowKeyNotFound();
 
-        return new LayerId(idx.Index, layer, _generations[idx.Index][layer]);
+        return new LayerId(idx.Index, layer, _generations[idx.Index][layer], _columnGenerations[idx.Index]);
     }
 
     /// <summary>
@@ -400,12 +446,16 @@ public sealed class Gen2DStorage<T>
         Array.Resize(ref _nextSlots, newSize);
         Array.Resize(ref _nextFreeLayers, newSize);
         Array.Resize(ref _layerCapacities, newSize);
+        Array.Resize(ref _columnGenerations, newSize);
+        Array.Resize(ref _columnCounts, newSize);
 
         for (int i = oldLength; i < newSize; i++)
         {
             _layerCapacities[i] = LayerCapacity;
-            _nextSlots[i] = (i == newSize - 1) ? _nextFree : i + 1;
+            _nextSlots[i] = i == newSize - 1 ? _nextFree : i + 1;
             _nextFreeLayers[i] = 0;
+            _columnGenerations[i] = 1;
+            _columnCounts[i] = 0;
             
             for (int j = 0; j < LayerCapacity; j++)
             {
@@ -427,19 +477,19 @@ public sealed class Gen2DStorage<T>
 /// <summary>
 /// A generational identifier that uniquely references a specific element in the storage.
 /// </summary>
-public readonly record struct LayerId(int Index, int Layer, int Generation)
+public readonly record struct LayerId(int Index, int Layer, int Generation, int ColumnGeneration)
 {
-    public static readonly LayerId Invalid = new(-1, -1, 0);
+    public static readonly LayerId Invalid = new(-1, -1, 0, 0);
 
     public ColumnHandle ColumnHandle => new(Index);
     
-    public bool IsValid => Generation > 0 && Index >= 0 && Layer >= 0;
+    public bool IsValid => Generation > 0 && ColumnGeneration > 0 && Index >= 0 && Layer >= 0;
 
-    public override string ToString() => $"[Col: {Index}, Layer: {Layer}, Gen: {Generation}]";
+    public override string ToString() => $"[Col: {Index}, Layer: {Layer}, Gen: {Generation}, ColGen: {ColumnGeneration}]";
 }
 
 /// <summary>
-/// Represents a reference to a specific column without layer or generation validation.
+/// Represents a reference to a specific column.
 /// </summary>
 public readonly record struct ColumnHandle(int Index)
 {

@@ -1,12 +1,12 @@
 using Nod3r.Collections;
 
-namespace Nod3r.Types;
+namespace Nod3r.Solver;
 
 /// <summary>
 /// Represents a network of connected nodes.
 /// </summary>
 /// <para>
-/// Node networks are the final result of produced by the <see cref="INodeSolver"/>.
+/// Node networks are the final result of produced by the <see cref="INodeSimulation"/>.
 /// They contain references to all nodes that are connected between each other according to the specified <see cref="INodeRule"/>s.
 /// Each network's data is shared between all nodes.
 /// </para>

@@ -22,12 +22,10 @@ internal sealed class NodeIDChunk
     /// </summary>
     public Int3 GridPosition;
     
-    public NodeIDChunk(
-        int width = NodeChunkConstants.DefaultWidth,
-        int height = NodeChunkConstants.DefaultHeight,
-        int depth = NodeChunkConstants.DefaultDepth)
+    public NodeIDChunk(Int3 gridPosition, Int3 dimensions)
     {
-        Dimensions = new Int3(width, height, depth);
+        Dimensions = dimensions;
+        GridPosition = gridPosition;
         Bytes = new FlatArray<bool>(new bool[Dimensions.X * Dimensions.Y * Dimensions.Z], Dimensions);
     }
 }

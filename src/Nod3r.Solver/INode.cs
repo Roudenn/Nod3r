@@ -1,7 +1,7 @@
-namespace Nod3r.Types;
+namespace Nod3r.Solver;
 
 /// <summary>
-/// Basic interface for all nodes that can be stored in a <see cref="INodeSolver"/>.
+/// Basic interface for all nodes that can be stored in a <see cref="INodeSimulation"/>.
 /// </summary>
 /// <para>
 /// Nodes are "atoms" of a graph. In Nod3r, nodes are stored in a voxel grid,
