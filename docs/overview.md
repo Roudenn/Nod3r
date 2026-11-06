@@ -2,14 +2,23 @@
 
 Nod3r is an engine-agnostic, voxel-based node network connection solver. Nodes are "blocks" in space, and according to some custom rules they can connect together, forming a node network (a graph).
 
-The library intents to replace slow and unexpandable `NodeGroupSystem` in the disaster simulation and roleplaying game Space Station 14.
-However, Nod3r is still designed to be usable by other games that may need to connect a lot of objects in a voxel grid space.
+Nod3r can be useful for voxel or tile based games for connecting large amounts of objects placed in a grid,
+as well as physics simulations that use the finite difference method.
 
-## Core Design
-Nod3r aims for good performance and multithreading, while allowing high level of customization using C# templates and more functionality for dynamic graph structures.
+## Highlights
 
-Space Station 14's `NodeGroupSystem` had many issues, which this project was designed to fix:
-- Graph construction wasn't dynamic - this makes any rebuild of the node network extremely slow (around O(n^2) in runtime and O(n) on initialization).
-- Every graph rebuild creates new node network objects and abandons the old ones, adding more work for the garbage collector.
-- The system was heavily connected to the Entity-Component-System methods, which makes the usage of this system much more limited.
+Nod3r aims for good performance and multithreading, while also allowing a high level of customization.
 
+**Highlights for some main features:**
+- Support for both simple boolean nodes and complex C# type nodes
+- High memory locality
+- Parallel and background-thread support
+- Support for non-standard space topology (portals)
+
+## Project structure
+
+Nod3r is split into 4 projects (dependent on each other in order):
+- `Nod3r.Collections` - General collections used by Nod3r internally. Mostly includes the generation storages of multiple kinds, which are used for storing nodes in large monolith arrays and providing direct access to them with `ref return`s.
+- `Nod3r.Solver` - The core part of the project, which includes the basic types, node kernels and implementations for node storage and chunks. Doesn't do anything on its own and requires `Nod3r.API` project to interact with.
+- `Nod3r.API` - API methods to interact with `Nod3r.Solver`, also includes the most useful `NodeSimulation` and `NodeWorld` spaces.
+- `Nod3r.Examples` - General and example implementations of nodes and node networks.

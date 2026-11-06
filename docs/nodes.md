@@ -20,6 +20,6 @@ ID nodes on the other hand take up only 1 bit in memory, which is 40 times bette
 
 ## Type nodes VS ID nodes
 
-Use ID nodes when each node doesn't have special properties compared to other nodes. Sometimes you may even be able to get away with very rare differences in nodes by storing these changes in the node network of the nodes.
+Use ID nodes when each node doesn't have special properties compared to other nodes. Sometimes you may even be able to get away with very rare differences in nodes by storing these changes in the node network instead of each node.
 
 Use Type nodes when you are making a complex system where each node may contain unique data. This includes complex simulations where each node can have a completely unique state.
