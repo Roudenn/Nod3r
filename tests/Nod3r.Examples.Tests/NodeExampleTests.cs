@@ -11,12 +11,10 @@ public sealed class NodeExampleTests
     [Test]
     public void TestAdjacentNode()
     {
-        var config = new NodeConfig(reg =>
+        var world = new NodeWorld(reg =>
         {
             reg.Register<AdjacentNode, AdjacentNodeNet>();
         });
-        
-        var world = new NodeWorld(config);
         var solver = world.CreateSimulation();
 
         var chunk = solver.EnsureChunk<AdjacentNode>(default);

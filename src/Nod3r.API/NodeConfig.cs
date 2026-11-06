@@ -3,22 +3,13 @@ using Nod3r.Solver;
 namespace Nod3r.API;
 
 /// <summary>
-/// A config for initializing a <see cref="NodeSimulation"/> instance.
-/// </summary>
-/// <param name="subs">Delegate that specifies which node types and IDs to register.</param>
-public sealed class NodeConfig(Action<INodeRegistration> subs)
-{
-    public readonly Action<INodeRegistration> RegistrationDelegate = subs;
-}
-
-/// <summary>
 /// Interface of the kernel that only provides registration methods.
-/// Used by <see cref="NodeConfig"/> to restrict the available methods.
+/// Used in the <see cref="NodeWorld"/>'s constructor to restrict the available methods.
 /// </summary>
 public interface INodeRegistration
 {
     /// <summary>
-    /// Registers an <see cref="INode"/> type, its <see cref="INodeRule{T}"/> connection rule
+    /// Registers an <see cref="INode"/> type, its <see cref="NodeRule{T}"/> connection rule
     /// with other nodes, and an <see cref="INodeNet"/> network it creates.
     /// </summary>
     /// <param name="rule">
@@ -57,7 +48,7 @@ public interface INodeRegistration
     => Register<TNode, TNet>(TNode.ConnectionRule, layerCapacity);
 
     /// <summary>
-    /// Registers a node ID, its <see cref="INodeRule{T}"/> connection rule
+    /// Registers a node ID, its <see cref="NodeRule"/> connection rule
     /// with other nodes, and an <see cref="INodeNet"/> network it creates.
     /// <para>
     /// ID-based nodes don't hold any actual data because they are not types.

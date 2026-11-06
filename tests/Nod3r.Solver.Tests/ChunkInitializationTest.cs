@@ -14,12 +14,10 @@ public class ChunkInitializationTest
     [Test]
     public void TypeChunkTest()
     {
-        var config = new NodeConfig(kernel =>
+        var world = new NodeWorld(kernel =>
         {
             kernel.RegisterTest<TestNode1, DummyNodeNet<TestNode1>>();
         });
-        
-        var world = new NodeWorld(config);
         var solver = world.CreateSimulation();
         solver.EnsureChunk<TestNode1>(Int3Helpers.Zero);
         var snapshot = solver.GetChunksSnapshot<TestNode1>();
@@ -32,12 +30,10 @@ public class ChunkInitializationTest
     [Test]
     public void IDChunkTest()
     {
-        var config = new NodeConfig(kernel =>
+        var world = new NodeWorld(kernel =>
         {
             kernel.RegisterID<DummyNodeNet<TestNode1>>(NodeRuleBuilder.Empty, 0);
         });
-        
-        var world = new NodeWorld(config);
         var solver = world.CreateSimulation();
         solver.EnsureChunk(0, Int3Helpers.Zero);
         var snapshot = solver.GetChunksSnapshot(0);

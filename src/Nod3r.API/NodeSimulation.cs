@@ -18,7 +18,7 @@ namespace Nod3r.API;
 /// Each solver wraps a node kernel instance for every registered node type <see cref="NodeIdx"/>.
 /// Such division right at the top makes the internals much nicer and faster.
 /// </para>
-public sealed partial class NodeSimulation : INodeSimulation, INodeRegistration
+public sealed partial class NodeSimulation : INodeSimulation
 {
     private INodeKernel[] _kernels = [];
 
@@ -38,7 +38,7 @@ public sealed partial class NodeSimulation : INodeSimulation, INodeRegistration
     /// <summary>
     /// All node type indexes that were registered in this solver.
     /// </summary>
-    private readonly List<NodeIdx> _registeredIdxs = new();
+    private readonly HashSet<NodeIdx> _registeredIdxs = new();
     
     [PublicAPI]
     public NodeWorld World { get; }
@@ -63,8 +63,6 @@ public sealed partial class NodeSimulation : INodeSimulation, INodeRegistration
         World = world;
         Dimensions = new Int3(chunkWidth, chunkHeight, chunkDepth);
         Id = world.RegisterSimulation(this);
-        
-        world.Config.RegistrationDelegate.Invoke(this);
     }
 
     private INodeKernel GetKernel(VoxelRef voxel) => _kernels[_idxes[voxel.Type.Value]];
