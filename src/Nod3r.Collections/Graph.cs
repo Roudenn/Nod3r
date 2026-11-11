@@ -25,7 +25,7 @@ public sealed class Graph<T>(int capacity = 16) : IReadOnlyGraph<T>
     public GenId AddNode(T data, params ReadOnlySpan<GenId> connections)
     {
         var span = _edges.Allocate(connections.Length, out var genId);
-        connections.CopyTo(span);
+        connections.CopyTo(span.Span);
         _storage.Add(new Edge(data, genId), out var id);
         return id;
     }
