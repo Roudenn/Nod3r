@@ -6,6 +6,7 @@
     
     <Folder Name="/Benchmarks/">
         <Project Path="bench/Nod3r.Benchmarks/Nod3r.Benchmarks.csproj" />
+        <Project Path="bench/Nod3r.Collections.Benchmarks/Nod3r.Collections.Benchmarks.csproj" />
     </Folder>
     
     <Folder Name="/Tests/">
