@@ -36,10 +36,8 @@ internal sealed partial class NodeKernel<TNode, TNet>
         return true;
     }
     
-    
-    
     /// <summary>
-    ///     Adds the specified chunk to the chunk map internal dictionary and reserves a <see cref="Chunk.DenseId"/>.
+    ///     Adds the specified chunk to the chunk map internal dictionary and reserves a <see cref="NodeChunk.DenseId"/>.
     /// </summary>
     /// <param name="chunk">The chunk object to register.</param>
     /// <exception cref="ArgumentException">Chunk dimensions didn't match the dimensions of the chunk map.</exception>
@@ -81,7 +79,7 @@ internal sealed partial class NodeKernel<TNode, TNet>
         if (_chunkMap.ContainsKey(position))
             throw new InvalidOperationException($"A chunk is already registered at {position}.");
 
-        new NodeChunk(position, Dimensions);
+        _chunkMap.TryAdd(position, new NodeChunk(position, Dimensions));
     }
     
     /// <summary>

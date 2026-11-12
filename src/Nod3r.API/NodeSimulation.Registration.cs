@@ -5,14 +5,10 @@ namespace Nod3r.API;
 
 public sealed partial class NodeSimulation
 {
-    internal void Register<TNode, TNet>(NodeRule<TNode> rule, byte layerCapacity = 1)
+    internal void Register<TNode, TNet>(NodeRule<TNode> rule, NodeIdx typeIdx, byte layerCapacity = 1)
         where TNode : INode
         where TNet : INodeNet<TNode, TNet>, INodeNetCreator<TNet>
     {
-        NodeIdxStorage.Register<TNode, TNet>(out var typeIdx);
-        if (!_registeredIdxs.Add(typeIdx))
-            return;
-
         ArrayHelpers.EnsureCapacity(ref _kernels, RegistrationCount);
         ArrayHelpers.EnsureCapacity(ref _idxes, NodeIdxStorage.Count);
 
@@ -22,17 +18,35 @@ public sealed partial class NodeSimulation
         RegistrationCount++;
     }
 
-    internal void RegisterID<TNet>(NodeRule rule, int id)
+    internal void RegisterID<TNet>(int id, NodeRule rule, NodeIdx typeIdx)
         where TNet : INodeNet, INodeNetCreator<TNet>
     {
-        NodeIdxStorage.Register(id, out var typeIdx);
-        if (!_registeredIdxs.Add(typeIdx))
-            return;
-
         ArrayHelpers.EnsureCapacity(ref _kernels, RegistrationCount);
         ArrayHelpers.EnsureCapacity(ref _idxes, NodeIdxStorage.Count, NodeIdx.Invalid.Value);
         
-        _kernels[RegistrationCount] = new NodeIDKernel<TNet>(id, Dimensions);
+        _kernels[RegistrationCount] = new NodeIDKernel<TNet>(id, rule, Dimensions);
+        _idxes[typeIdx.Value] = RegistrationCount;
+        
+        RegistrationCount++;
+    }
+
+    internal void Register(INodeKernelFactory factory, NodeIdx typeIdx, byte layerCapacity = 1)
+    {
+        ArrayHelpers.EnsureCapacity(ref _kernels, RegistrationCount);
+        ArrayHelpers.EnsureCapacity(ref _idxes, NodeIdxStorage.Count);
+
+        _kernels[RegistrationCount] = factory.Create(Dimensions);
+        _idxes[typeIdx.Value] = RegistrationCount;
+        
+        RegistrationCount++;
+    }
+    
+    internal void Register(int id, INodeIDKernelFactory factory, NodeIdx typeIdx)
+    {
+        ArrayHelpers.EnsureCapacity(ref _kernels, RegistrationCount);
+        ArrayHelpers.EnsureCapacity(ref _idxes, NodeIdxStorage.Count);
+
+        _kernels[RegistrationCount] = factory.Create(Dimensions);
         _idxes[typeIdx.Value] = RegistrationCount;
         
         RegistrationCount++;

@@ -36,19 +36,36 @@ public sealed partial class NodeSimulation : INodeSimulation
     private int[] _idxes = [];
     
     /// <summary>
-    /// All node type indexes that were registered in this solver.
+    /// A <see cref="NodeWorld"/> that owns this simulation.
     /// </summary>
-    private readonly HashSet<NodeIdx> _registeredIdxs = new();
-    
     [PublicAPI]
     public NodeWorld World { get; }
     
+    /// <summary>
+    /// ID of this simulation in the registered <see cref="NodeWorld"/> storage.
+    /// </summary>
     [PublicAPI]
     public SimulationId Id { get; }
     
+    /// <summary>
+    /// Dimensions for all chunks in the simulation.
+    /// </summary>
     [PublicAPI]
     public Int3 Dimensions { get; }
     
+    /// <summary>
+    /// Creates a new node simulation instance, registering it in a <see cref="world"/>.
+    /// </summary>
+    /// <param name="world">World to register this simulation in.</param>
+    /// <param name="chunkDepth">Depth of every chunk.</param>
+    /// <param name="chunkHeight">Height of every chunk.</param>
+    /// <param name="chunkWidth">Width of every chunk.</param>
+    /// <exception cref="ArgumentNullException">
+    /// The provided <see cref="world"/> was null.
+    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Chunk dimensions are zero or negative.
+    /// </exception>
     public NodeSimulation(
         NodeWorld world,
         int chunkDepth = NodeChunkConstants.DefaultDepth,
@@ -179,7 +196,8 @@ public sealed partial class NodeSimulation : INodeSimulation
         
         return new NodeChunkHandle(position);
     }
-    
+
+    [PublicAPI]
     public NodeChunkHandle EnsureChunk(Int3 position)
     {
         foreach (var kernel in _kernels)

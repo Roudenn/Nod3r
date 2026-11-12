@@ -6,5 +6,8 @@ namespace Nod3r.Solver;
 /// <typeparam name="T">Type of node network, must be the same as the implemented type.</typeparam>
 public interface INodeNetCreator<out T> where T : INodeNet
 {
+    /// <summary>
+    /// Creates a new <see cref="INodeNet"/> instance.
+    /// </summary>
     abstract static T CreateNet();
 }

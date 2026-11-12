@@ -1,4 +1,5 @@
 using Nod3r.API;
+using Nod3r.API.Attributes;
 using Nod3r.Collections;
 using Nod3r.Solver;
 using Numos.Maths;
@@ -8,7 +9,7 @@ namespace Nod3r.Examples;
 /// <summary>
 /// Pipe that can have up to 6 connections to its cardinal nodes.
 /// /// <para>
-/// In order for 2 pipes to connect, they must be on the same <see cref="Layer"/>
+/// In order for 2 pipes to connect, they must be on the same layer.
 /// </para>
 /// </summary>
 public record struct PipeNode() : INode, INodeAutoRegistration<PipeNode>
@@ -17,6 +18,7 @@ public record struct PipeNode() : INode, INodeAutoRegistration<PipeNode>
 
     public PipeDirectionFlags Directions = PipeDirectionFlags.None;
 
+    /// <inheritdoc/>
     public static NodeRule<PipeNode> ConnectionRule =>
         NodeRuleBuilder.Create()
             .IncludeCartesian()
@@ -101,28 +103,38 @@ public static class PipeDirectionExtensions
     }
 }
 
+[AutoNodeNetwork]
 public struct PipeNodeNetwork() : INodeNet<PipeNode, PipeNodeNetwork>, INodeNetCreator<PipeNodeNetwork>
 {
+    /// <summary>
+    /// Total capacity of all nodes in the network.
+    /// </summary>
     public float TotalCapacity = 0f;
 
+    /// <inheritdoc/>
     public HashSet<LayerId> Nodes { get; } = new();
 
+    /// <inheritdoc/>
     public void Initialize()
     {
     }
 
+    /// <inheritdoc/>
     public void Shutdown()
     {
     }
 
+    /// <inheritdoc/>
     public void Merge(IReadOnlySet<PipeNodeNetwork> nets)
     {
     }
 
+    /// <inheritdoc/>
     public void Split(PipeNodeNetwork parent)
     {
     }
 
+    /// <inheritdoc/>
     public static PipeNodeNetwork CreateNet()
     {
         return new PipeNodeNetwork();

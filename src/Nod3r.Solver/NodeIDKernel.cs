@@ -8,12 +8,14 @@ namespace Nod3r.Solver;
 /// Kernel implementation for node IDs.
 /// </summary>
 internal sealed class NodeIDKernel<TNet>
-    (int id, Int3 dimensions) : INodeIDKernel, INodeNetKernel<TNet>
+    (int id, NodeRule rule, Int3 dimensions) : INodeIDKernel, INodeNetKernel<TNet>
     where TNet : INodeNet, INodeNetCreator<TNet>
 {
     internal readonly int ID = id;
     
     private readonly Int3 _dimensions = dimensions;
+
+    private readonly NodeRule _rule = rule;
 
     private readonly ConcurrentDictionary<Int3, NodeIDChunk> _chunkMap = new();
     

@@ -1,7 +1,11 @@
+using Numos.Collections;
 using Numos.Maths;
 
 namespace Nod3r.Solver;
 
+/// <summary>
+/// Static helpers for <see cref="FlatArray{T}"/>s.
+/// </summary>
 public static class FlatArrayHelpers
 {
     /// <summary>
