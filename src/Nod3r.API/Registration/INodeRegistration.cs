@@ -1,6 +1,7 @@
+using Nod3r.API.Rules;
 using Nod3r.Solver;
 
-namespace Nod3r.API;
+namespace Nod3r.API.Registration;
 
 /// <summary>
 /// Interface of the kernel that only provides registration methods.

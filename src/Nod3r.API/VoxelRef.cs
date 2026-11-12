@@ -1,4 +1,5 @@
-﻿using Nod3r.Solver;
+﻿using Nod3r.API.Registration;
+using Nod3r.Solver;
 using Numos.Maths;
 
 namespace Nod3r.API;

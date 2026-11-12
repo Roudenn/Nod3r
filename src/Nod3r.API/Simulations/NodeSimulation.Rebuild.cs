@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using JetBrains.Annotations;
 
-namespace Nod3r.API;
+namespace Nod3r.API.Simulations;
 
 // This partial controls the coordinated solving of all node kernels.
 public sealed partial class NodeSimulation

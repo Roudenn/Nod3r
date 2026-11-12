@@ -1,7 +1,8 @@
+using Nod3r.API.Registration;
 using Nod3r.Collections;
 using Nod3r.Solver;
 
-namespace Nod3r.API;
+namespace Nod3r.API.Simulations;
 
 public sealed partial class NodeSimulation
 {

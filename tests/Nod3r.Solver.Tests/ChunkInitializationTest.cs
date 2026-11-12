@@ -1,4 +1,5 @@
 using Nod3r.API;
+using Nod3r.API.Rules;
 
 namespace Nod3r.Solver.Tests;
 

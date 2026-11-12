@@ -1,4 +1,5 @@
-using Nod3r.API;
+using Nod3r.API.Registration;
+using Nod3r.API.Rules;
 using Nod3r.Collections;
 
 namespace Nod3r.Solver.Tests;

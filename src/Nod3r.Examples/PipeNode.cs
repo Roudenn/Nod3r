@@ -1,5 +1,6 @@
-using Nod3r.API;
 using Nod3r.API.Attributes;
+using Nod3r.API.Registration;
+using Nod3r.API.Rules;
 using Nod3r.Collections;
 using Nod3r.Solver;
 using Numos.Maths;

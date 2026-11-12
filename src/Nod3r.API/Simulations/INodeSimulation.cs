@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using Nod3r.Solver;
 using Numos.Maths;
 
-namespace Nod3r.API;
+namespace Nod3r.API.Simulations;
 
 /// <summary>
 /// Interface to interact with a node solver while inside a <see cref="NodeRule{T}"/> or from the node kernel.

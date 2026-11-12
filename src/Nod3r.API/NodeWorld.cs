@@ -1,4 +1,6 @@
 using JetBrains.Annotations;
+using Nod3r.API.Registration;
+using Nod3r.API.Simulations;
 using Nod3r.Collections;
 using Nod3r.Solver;
 

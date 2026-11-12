@@ -1,7 +1,7 @@
 using Nod3r.Collections;
 using Nod3r.Solver;
 
-namespace Nod3r.API;
+namespace Nod3r.API.Registration;
 
 /// <summary>
 /// Shared storage for all registered <see cref="NodeIdx"/>es.

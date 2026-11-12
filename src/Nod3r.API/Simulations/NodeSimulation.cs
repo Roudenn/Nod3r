@@ -1,9 +1,10 @@
 using JetBrains.Annotations;
+using Nod3r.API.Registration;
 using Nod3r.API.Snapshots;
 using Nod3r.Solver;
 using Numos.Maths;
 
-namespace Nod3r.API;
+namespace Nod3r.API.Simulations;
 
 /// <summary>
 /// A solver instance that allows manipulating a chunk map of nodes

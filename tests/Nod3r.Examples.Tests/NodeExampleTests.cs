@@ -1,4 +1,6 @@
 using Nod3r.API;
+using Nod3r.API.Registration;
+using Nod3r.API.Rules;
 using Nod3r.Collections;
 using Nod3r.Solver;
 using Numos.Maths;
@@ -21,14 +23,14 @@ public sealed class NodeExampleTests
         
         var node = new AdjacentNode();
         
-        solver.SetNode(node, chunk, new Int3(0, 0, 0), 0);
-        solver.SetNode(node, chunk, new Int3(1, 0, 0), 0);
-        solver.SetNode(node, chunk, new Int3(2, 0, 0), 0);
-        solver.SetNode(node, chunk, new Int3(0, 1, 0), 0);
-        solver.SetNode(node, chunk, new Int3(0, 2, 0), 0);
-        solver.SetNode(node, chunk, new Int3(1, 2, 0), 0);
-        solver.SetNode(node, chunk, new Int3(2, 1, 0), 0);
-        solver.SetNode(node, chunk, new Int3(2, 2, 0), 0);
+        solver.SetNode(node, chunk, new Int3(0, 0, 0));
+        solver.SetNode(node, chunk, new Int3(1, 0, 0));
+        solver.SetNode(node, chunk, new Int3(2, 0, 0));
+        solver.SetNode(node, chunk, new Int3(0, 1, 0));
+        solver.SetNode(node, chunk, new Int3(0, 2, 0));
+        solver.SetNode(node, chunk, new Int3(1, 2, 0));
+        solver.SetNode(node, chunk, new Int3(2, 1, 0));
+        solver.SetNode(node, chunk, new Int3(2, 2, 0));
         
         solver.Rebuild();
 

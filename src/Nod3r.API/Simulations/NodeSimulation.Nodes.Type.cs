@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 using Nod3r.Solver;
 using Numos.Maths;
 
-namespace Nod3r.API;
+namespace Nod3r.API.Simulations;
 
 public sealed partial class NodeSimulation
 {

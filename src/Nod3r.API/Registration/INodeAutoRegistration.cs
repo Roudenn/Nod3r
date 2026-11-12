@@ -1,6 +1,6 @@
 using Nod3r.Solver;
 
-namespace Nod3r.API;
+namespace Nod3r.API.Registration;
 
 /// <summary>
 /// Allows to automatically register this <see cref="INode"/> type in

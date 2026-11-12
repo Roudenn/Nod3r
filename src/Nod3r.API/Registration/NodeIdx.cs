@@ -1,6 +1,6 @@
 using Nod3r.Solver;
 
-namespace Nod3r.API;
+namespace Nod3r.API.Registration;
 
 /// <summary>
 /// Represents a registered node in a program.
