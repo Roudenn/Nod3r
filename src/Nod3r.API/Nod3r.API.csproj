@@ -1,9 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+    <Import Project="..\Nod3r.Solver\Version.props"/>
+    
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <RootNamespace>Nod3r.API</RootNamespace>
+        <PackageId>Nod3r.API</PackageId>
+        <Title>Nod3r API</Title>
+        <Description>Supported public API for Nod3r, an engine-agnostic, voxel-based node network connection solver library.</Description>
+        <PackageTags>graph;solver;voxel;nativeaot</PackageTags>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
     
     <ItemGroup>

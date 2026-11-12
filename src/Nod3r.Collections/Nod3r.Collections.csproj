@@ -1,9 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
+    
+    <Import Project="..\Nod3r.Solver\Version.props"/>
+    
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <RootNamespace>Nod3r.Collections</RootNamespace>
+        <PackageId>Nod3r.Collections</PackageId>
+        <Title>Nod3r Collections</Title>
+        <Description>Collection types used by Nod3r.</Description>
+        <PackageTags>graph;collections;nativeaot</PackageTags>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
 
     <ItemGroup>
