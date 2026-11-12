@@ -1,6 +1,7 @@
 using Nod3r.API.Registration;
 using Nod3r.API.Rules;
 using Nod3r.Collections;
+using Nod3r.Solver.Factories;
 
 namespace Nod3r.Solver.Tests;
 

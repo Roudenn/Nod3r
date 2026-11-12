@@ -4,7 +4,7 @@ namespace Nod3r.Collections;
 /// A dynamic graph that implements methods to add, remove, and query through its elements.
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public sealed class Graph<T>(int capacity = 16) : IReadOnlyGraph<T>
+public sealed class Graph<T>(int capacity = 16)
 {
     /// <summary>
     /// The internal storage that stores all nodes of the graph.
@@ -54,12 +54,19 @@ public sealed class Graph<T>(int capacity = 16) : IReadOnlyGraph<T>
         _edges.EnsureCapacity(capacity);
     }
 
+    /// <summary>
+    /// Gets all connections of a node.
+    /// </summary>
     public Span<GenId> GetConnections(GenId id)
     {
         return !_storage.TryGetValue(id, out var edge) ? Span<GenId>.Empty : _edges.GetSpan(edge.VerticesId);
     }
 
-    public void CalculateDepthMap(GenId start)
+    /// <summary>
+    /// Calculates depth for every node in the graph relative to some starting point.
+    /// </summary>
+    /// <param name="start"></param>
+    public void CalculateDepth(GenId start)
     {
         var curNodes = new Stack<GenId>();
         curNodes.Push(start);

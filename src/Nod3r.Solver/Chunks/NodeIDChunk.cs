@@ -1,7 +1,7 @@
 using Numos.Collections;
 using Numos.Maths;
 
-namespace Nod3r.Solver;
+namespace Nod3r.Solver.Chunks;
 
 // TODO Numos copy-paste
 /// <summary>

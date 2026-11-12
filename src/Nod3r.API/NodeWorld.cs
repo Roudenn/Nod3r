@@ -3,6 +3,9 @@ using Nod3r.API.Registration;
 using Nod3r.API.Simulations;
 using Nod3r.Collections;
 using Nod3r.Solver;
+using Nod3r.Solver.Chunks;
+using Nod3r.Solver.Factories;
+using Nod3r.Solver.Kernels;
 
 namespace Nod3r.API;
 
@@ -56,12 +59,18 @@ public sealed class NodeWorld : INodeRegistration
         return simulation;
     }
     
+    /// <summary>
+    /// Tries to get a <see cref="NodeSimulation"/> from its <see cref="SimulationId"/>.
+    /// </summary>
     [PublicAPI]
     public bool TryGetSimulation(SimulationId id, out NodeSimulation? simulation)
     {
         return _simulations.TryGetValue(id.GenId, out simulation);
     }
     
+    /// <summary>
+    /// Frees and disposes a <see cref="NodeSimulation"/>.
+    /// </summary>
     [PublicAPI]
     public bool DestroySimulation(NodeSimulation simulation)
     {

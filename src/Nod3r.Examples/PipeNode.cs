@@ -3,6 +3,7 @@ using Nod3r.API.Registration;
 using Nod3r.API.Rules;
 using Nod3r.Collections;
 using Nod3r.Solver;
+using Nod3r.Solver.Factories;
 using Numos.Maths;
 
 namespace Nod3r.Examples;

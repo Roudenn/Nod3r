@@ -1,8 +1,11 @@
 using System.Collections.Concurrent;
 using Nod3r.Collections;
+using Nod3r.Solver.Chunks;
+using Nod3r.Solver.Factories;
+using Nod3r.Solver.Storages;
 using Numos.Maths;
 
-namespace Nod3r.Solver;
+namespace Nod3r.Solver.Kernels;
 
 /// <summary>
 /// Kernel implementation for node IDs.

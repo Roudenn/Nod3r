@@ -21,12 +21,21 @@ public static class NodeRuleBuilder
         return new NodeVoxelSelectionBuilder();
     }
 
+    /// <summary>
+    /// An empty ID node rule with no neighbors.
+    /// </summary>
     [PublicAPI]
     public static NodeRule Empty => new([]);
 }
 
+/// <summary>
+/// Static helper class for typed node rules.
+/// </summary>
 public static class NodeRuleBuilder<T> where T : INode
 {
+    /// <summary>
+    /// An empty typed node rule with no neighbors.
+    /// </summary>
     [PublicAPI]
     public static NodeRule<T> Empty => new([], [], _ => true);
 }

@@ -1,11 +1,11 @@
 namespace Nod3r.Solver;
 
 /// <summary>
-/// Basic interface for all nodes that can be stored in a <see cref="INodeSimulation"/>.
+/// Basic interface for all nodes that can be stored in Nod3r simulations.
 /// </summary>
 /// <para>
 /// Nodes are "atoms" of a graph. In Nod3r, nodes are stored in a voxel grid,
-/// where each node can connect to other nodes according to some <see cref="INodeRule{T}"/>.
+/// where each node can connect to other nodes according to a <see cref="NodeRule{T}"/>.
 /// </para>
 /// <para>
 /// Each <see cref="INode"/> contains data that is specific for every single part of a graph.

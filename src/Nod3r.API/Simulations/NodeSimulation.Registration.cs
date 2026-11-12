@@ -1,6 +1,8 @@
 using Nod3r.API.Registration;
 using Nod3r.Collections;
 using Nod3r.Solver;
+using Nod3r.Solver.Factories;
+using Nod3r.Solver.Kernels;
 
 namespace Nod3r.API.Simulations;
 

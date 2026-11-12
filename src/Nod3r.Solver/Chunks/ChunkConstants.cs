@@ -1,4 +1,4 @@
-﻿namespace Nod3r.Solver;
+﻿namespace Nod3r.Solver.Chunks;
 
 /// <summary>
 ///     Default constants for Nod3r chunks.

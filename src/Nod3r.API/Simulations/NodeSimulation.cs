@@ -2,6 +2,8 @@ using JetBrains.Annotations;
 using Nod3r.API.Registration;
 using Nod3r.API.Snapshots;
 using Nod3r.Solver;
+using Nod3r.Solver.Chunks;
+using Nod3r.Solver.Kernels;
 using Numos.Maths;
 
 namespace Nod3r.API.Simulations;
@@ -55,23 +57,23 @@ public sealed partial class NodeSimulation : INodeSimulation
     public Int3 Dimensions { get; }
     
     /// <summary>
-    /// Creates a new node simulation instance, registering it in a <see cref="world"/>.
+    /// Creates a new node simulation instance, registering it in a world.
     /// </summary>
     /// <param name="world">World to register this simulation in.</param>
     /// <param name="chunkDepth">Depth of every chunk.</param>
     /// <param name="chunkHeight">Height of every chunk.</param>
     /// <param name="chunkWidth">Width of every chunk.</param>
     /// <exception cref="ArgumentNullException">
-    /// The provided <see cref="world"/> was null.
+    /// The provided world was null.
     /// </exception>
     /// <exception cref="ArgumentOutOfRangeException">
     /// Chunk dimensions are zero or negative.
     /// </exception>
     public NodeSimulation(
         NodeWorld world,
-        int chunkDepth = NodeChunkConstants.DefaultDepth,
-        int chunkHeight = NodeChunkConstants.DefaultHeight,
-        int chunkWidth = NodeChunkConstants.DefaultWidth)
+        int chunkDepth = ChunkConstants.DefaultDepth,
+        int chunkHeight = ChunkConstants.DefaultHeight,
+        int chunkWidth = ChunkConstants.DefaultWidth)
     {
         ArgumentNullException.ThrowIfNull(world);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(chunkWidth);
@@ -98,7 +100,7 @@ public sealed partial class NodeSimulation : INodeSimulation
         => (INodeNetKernel<T>) _kernels[_idxes[NodeIdxStorage.GetNet<T>().Value]];
     
     /// <summary>
-    /// Gets the snapshot of all node networks currently active in this solver instance.
+    /// Gets the snapshot of all typed node networks currently active in this solver instance.
     /// </summary>
     /// <remarks>
     /// This works only for type nodes! Use <see cref="GetNetworksSnapshot{T}(int)"/>
@@ -121,6 +123,12 @@ public sealed partial class NodeSimulation : INodeSimulation
         return array;
     }
     
+    /// <summary>
+    /// Gets the snapshot of all ID node networks currently active in this solver instance.
+    /// </summary>
+    /// <param name="id">Target node ID.</param>
+    /// <typeparam name="T">Type of the network registered.</typeparam>
+    /// <returns>A collection of <see cref="NodeNetSnapshot{T}"/>s for every active network.</returns>
     [PublicAPI]
     public NodeNetSnapshot<T>[] GetNetworksSnapshot<T>(int id) where T : INodeNet
     {
@@ -277,6 +285,9 @@ public sealed partial class NodeSimulation : INodeSimulation
         return handle;
     }
 
+    /// <summary>
+    /// Gets all registered chunk handles.
+    /// </summary>
     [PublicAPI]
     public NodeChunkHandle[] GetChunkHandles()
     {

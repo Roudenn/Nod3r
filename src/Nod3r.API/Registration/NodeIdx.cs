@@ -8,7 +8,13 @@ namespace Nod3r.API.Registration;
 /// </summary>
 public readonly record struct NodeIdx(int Value)
 {
+    /// <summary>
+    /// An invalid index.
+    /// </summary>
     public readonly static NodeIdx Invalid = new(-1);
     
+    /// <summary>
+    /// Checks whether this index is valid.
+    /// </summary>
     public bool IsValid => Value >= 0;
 }

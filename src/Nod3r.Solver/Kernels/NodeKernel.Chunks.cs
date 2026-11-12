@@ -1,6 +1,7 @@
+using Nod3r.Solver.Chunks;
 using Numos.Maths;
 
-namespace Nod3r.Solver;
+namespace Nod3r.Solver.Kernels;
 
 // Contains API methods to interact with chunks.
 internal sealed partial class NodeKernel<TNode, TNet>

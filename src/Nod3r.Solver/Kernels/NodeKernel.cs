@@ -1,8 +1,11 @@
 using System.Collections.Concurrent;
 using Nod3r.Collections;
+using Nod3r.Solver.Chunks;
+using Nod3r.Solver.Factories;
+using Nod3r.Solver.Storages;
 using Numos.Maths;
 
-namespace Nod3r.Solver;
+namespace Nod3r.Solver.Kernels;
 
 /// <summary>
 /// Kernel implementation for specific <see cref="INode"/> types.
@@ -36,8 +39,8 @@ internal sealed partial class NodeKernel<TNode, TNet>(Int3 dimensions) : IDispos
     public int ChunkCount => _chunkMap.Count;
     
     /// <summary>
-    /// Gets the <see cref="GenId"/> for <see cref="NodeStorage{T}"/>
-    /// from chunk coordinates, node position and <see cref="NodeIdx"/> of the node.
+    /// Gets the <see cref="ColumnHandle"/> for <see cref="NodeStorage{T}"/>
+    /// from chunk coordinates and voxel index.
     /// </summary>
     /// <param name="voxelIndex">Position inside the chunk.</param>
     /// <param name="chunkPos">Coordinates of the chunk.</param>
@@ -48,7 +51,7 @@ internal sealed partial class NodeKernel<TNode, TNet>(Int3 dimensions) : IDispos
     }
     
     /// <summary>
-    /// Gets the <see cref="GenId"/> for <see cref="NodeStorage{T}"/> from a <see cref="NodeVoxel"/>.
+    /// Gets the <see cref="GenId"/> for <see cref="NodeStorage{T}"/> from a <see cref="VoxelHandle"/>.
     /// </summary>
     /// <param name="voxel">The target node voxel.</param>
     /// <returns><see cref="GenId"/> that can be used in the <see cref="NodeStorage{T}"/> to get the node data.</returns>

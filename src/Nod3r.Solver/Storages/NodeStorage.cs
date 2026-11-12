@@ -1,6 +1,6 @@
 using Nod3r.Collections;
 
-namespace Nod3r.Solver;
+namespace Nod3r.Solver.Storages;
 
 /// <summary>
 /// A shared <see cref="GenIdStorage{T}"/> for every <see cref="INode"/> type for every layer.

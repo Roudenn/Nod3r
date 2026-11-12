@@ -1,5 +1,6 @@
 using Nod3r.API.Rules;
 using Nod3r.Solver;
+using Nod3r.Solver.Factories;
 
 namespace Nod3r.API.Registration;
 
@@ -35,13 +36,13 @@ public interface INodeRegistration
     /// with other nodes, and an <see cref="INodeNet"/> network it creates.
     /// </summary>
     /// <param name="layerCapacity">
-    /// Default layer capacity for node type <see cref="TNode"/>.
+    /// Default layer capacity for node type TNode.
     /// If multiple nodes are going to be placed frequently in a single voxel,
     /// it's recommended to set this value to the most common and large amount of nodes
     /// that a single voxel may have to avoid automatic array resizes.
     /// </param>
     /// <typeparam name="TNode">Type of the registered node.</typeparam>
-    /// <typeparam name="TNet">Type of the registered node network that control type <see cref="TNode"/>.</typeparam>
+    /// <typeparam name="TNet">Type of the registered node network that control type TNode.</typeparam>
     /// <seealso cref="NodeRuleBuilder"/>
     void Register<TNode, TNet>(byte layerCapacity = 1)
         where TNode : INode, INodeAutoRegistration<TNode>

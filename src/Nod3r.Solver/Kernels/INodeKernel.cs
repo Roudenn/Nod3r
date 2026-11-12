@@ -1,8 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
 using Nod3r.Collections;
+using Nod3r.Solver.Storages;
 using Numos.Maths;
 
-namespace Nod3r.Solver;
+namespace Nod3r.Solver.Kernels;
 
 /// <summary>
 /// Represents a basic node kernel, which is a system for solving a specific <see cref="INode"/>
@@ -59,7 +60,7 @@ internal interface INodeKernel
 }
 
 /// <summary>
-/// Interface to interact with a node kernel that controls a specific node type <see cref="T"/>.
+/// Interface to interact with a node kernel that controls a specific node type T.
 /// </summary>
 /// <typeparam name="T">Type of node this node kernel controls.</typeparam>
 internal interface INodeKernel<T> : INodeKernel where T : INode
@@ -91,7 +92,7 @@ internal interface INodeKernel<T> : INodeKernel where T : INode
 
 /// <summary>
 /// Interface to interact with a node kernel that controls
-/// a specific node network type <see cref="TNet"/>.
+/// a specific node network type TNet.
 /// </summary>
 /// <typeparam name="TNet">Type of node network this node kernel controls.</typeparam>
 internal interface INodeNetKernel<TNet> : INodeKernel where TNet : INodeNet

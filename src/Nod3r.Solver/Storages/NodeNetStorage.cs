@@ -1,6 +1,6 @@
 using Nod3r.Collections;
 
-namespace Nod3r.Solver;
+namespace Nod3r.Solver.Storages;
 
 internal abstract class NodeNetStorage;
 

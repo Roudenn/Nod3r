@@ -1,8 +1,9 @@
 using Nod3r.Collections;
+using Nod3r.Solver.Storages;
 using Numos.Collections;
 using Numos.Maths;
 
-namespace Nod3r.Solver;
+namespace Nod3r.Solver.Chunks;
 
 /// <summary>
 /// Stores references to nodes in the local storage of a node kernel as 3D chunks.
@@ -58,9 +59,9 @@ internal sealed class NodeChunk
     /// <summary>
     ///     Converts local voxel coordinates to an index into the chunk's flat arrays.
     /// </summary>
-    /// <param name="x">The local x coordinate, from zero through <see cref="Width" /> minus one.</param>
-    /// <param name="y">The local y coordinate, from zero through <see cref="Height" /> minus one.</param>
-    /// <param name="z">The local z coordinate, from zero through <see cref="Depth" /> minus one.</param>
+    /// <param name="x">The local x coordinate, from zero through Width minus one.</param>
+    /// <param name="y">The local y coordinate, from zero through Height minus one.</param>
+    /// <param name="z">The local z coordinate, from zero through Depth minus one.</param>
     /// <returns>The flat voxel index.</returns>
     public ushort GetIndex(int x, int y, int z)
     {

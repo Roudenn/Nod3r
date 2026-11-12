@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Numos.Maths;
 
-namespace Nod3r.Solver;
+namespace Nod3r.Solver.Kernels;
 
 internal sealed partial class NodeKernel<TNode, TNet>
 {

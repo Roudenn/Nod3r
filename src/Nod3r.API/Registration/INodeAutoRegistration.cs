@@ -11,5 +11,8 @@ namespace Nod3r.API.Registration;
 /// </typeparam>
 public interface INodeAutoRegistration<T> where T : INode
 {
+    /// <summary>
+    /// A connection rule for the node to be automatically applied on registration.
+    /// </summary>
     abstract static NodeRule<T> ConnectionRule { get; }
 }

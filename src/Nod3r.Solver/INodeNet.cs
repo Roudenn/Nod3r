@@ -6,8 +6,8 @@ namespace Nod3r.Solver;
 /// Represents a network of connected nodes.
 /// </summary>
 /// <para>
-/// Node networks are the final result of produced by the <see cref="INodeSimulation"/>.
-/// They contain references to all nodes that are connected between each other according to the specified <see cref="INodeRule"/>s.
+/// Node networks are the final result of produced by connecting multiple <see cref="INode"/>s of the same type or ID together.
+/// They contain references to all nodes that are connected between each other according to the specified <see cref="NodeRule"/>s.
 /// Each network's data is shared between all nodes.
 /// </para>
 /// <para>
@@ -57,7 +57,7 @@ public interface INodeNet<TNode, TSelf> : INodeNet where TNode : INode where TSe
 
     /// <summary>
     /// Called on a newly created node network after its initialization
-    /// that was split from the <see cref="parent"/> network.
+    /// that was split from the parent network.
     /// </summary>
     void Split(TSelf parent);
 }

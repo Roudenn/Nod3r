@@ -31,7 +31,7 @@ public sealed class NodeVoxelSelectionBuilder
     }
     
     /// <summary>
-    /// Includes a span of specified relative positions to this selection.
+    /// Includes a <see cref="ReadOnlySpan{Int3}"/> of specified relative positions to this selection.
     /// </summary>
     [Pure, PublicAPI]
     public NodeVoxelSelectionBuilder Select(params ReadOnlySpan<Int3> selections)
@@ -44,10 +44,13 @@ public sealed class NodeVoxelSelectionBuilder
         return this;
     }
     
+    /// <summary>
+    /// Includes a <see cref="ReadOnlySpan{short}"/> of specified relative layers to this selection.
+    /// </summary>
     [Pure, PublicAPI]
-    public NodeVoxelSelectionBuilder AddLayers(params ReadOnlySpan<short> layers)
+    public NodeVoxelSelectionBuilder AddLayers(params ReadOnlySpan<short> relativeLayers)
     {
-        foreach (var layer in layers)
+        foreach (var layer in relativeLayers)
         {
             _layers.Add(layer);
         }
@@ -55,13 +58,16 @@ public sealed class NodeVoxelSelectionBuilder
         return this;
     }
     
+    /// <summary>
+    /// Sets a <see cref="ReadOnlySpan{short}"/> of specified relative layers to this selection.
+    /// </summary>
     [Pure, PublicAPI]
-    public NodeVoxelSelectionBuilder SetLayers(params ReadOnlySpan<short> layers)
+    public NodeVoxelSelectionBuilder SetLayers(params ReadOnlySpan<short> relativeLayers)
     {
-        ArgumentOutOfRangeException.ThrowIfZero(layers.Length, nameof(layers));
+        ArgumentOutOfRangeException.ThrowIfZero(relativeLayers.Length, nameof(relativeLayers));
         
         _layers.Clear();
-        foreach (var layer in layers)
+        foreach (var layer in relativeLayers)
         {
             _layers.Add(layer);
         }
@@ -88,6 +94,10 @@ public sealed class NodeVoxelSelectionBuilder
         return new NodeRule<T>(selections, layers, rule);
     }
 
+    /// <summary>
+    /// Compiles this selection builder into an ID <see cref="NodeRule"/>.
+    /// </summary>
+    /// <returns>The compiled ID node connection rule.</returns>
     [Pure, PublicAPI]
     public NodeRule Compile()
     {

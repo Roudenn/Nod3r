@@ -1,6 +1,7 @@
+using Nod3r.Solver.Factories;
 using Numos.Maths;
 
-namespace Nod3r.Solver;
+namespace Nod3r.Solver.Kernels;
 
 internal sealed class NodeKernelFactory<TNode, TNet>(NodeRule<TNode> rule) : INodeKernelFactory
     where TNode : INode

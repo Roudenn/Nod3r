@@ -1,4 +1,4 @@
-namespace Nod3r.Solver;
+namespace Nod3r.Solver.Factories;
 
 /// <summary>
 /// Interface for node networks that allows to statically create new instances of the same type.

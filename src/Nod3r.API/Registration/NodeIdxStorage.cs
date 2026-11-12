@@ -23,7 +23,7 @@ public static class NodeIdxStorage
     /// if it was already registered in the program before.
     /// </summary>
     /// <typeparam name="TNode">Type of node.</typeparam>
-    /// <typeparam name="TNet">Type of network that controls <see cref="TNode"/>.</typeparam>
+    /// <typeparam name="TNet">Type of network that controls TNode.</typeparam>
     internal static void Register<TNode, TNet>(out NodeIdx typeIdx)
         where TNode : INode
         where TNet : INodeNet<TNode, TNet>
