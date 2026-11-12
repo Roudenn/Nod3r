@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 
@@ -315,9 +316,14 @@ public sealed class FixedSpaceArray<T>
 }
 
 /// <summary>
+/// <para>
 /// A list wrapper for a <see cref="Span{T}"/> allocated inside a <see cref="FixedSpaceArray{T}"/>.
+/// </para>
+/// <para>
+/// When disposed, automatically frees referenced allocation in the <see cref="FixedSpaceArray{T}"/>.
+/// </para>
 /// </summary>
-public readonly struct SpanList<T> : IDisposable
+public readonly struct SpanList<T> : IEnumerable<T>, IDisposable
 {
     private readonly FixedSpaceArray<T> _owner;
     private readonly GenId _id;
@@ -458,24 +464,54 @@ public readonly struct SpanList<T> : IDisposable
         return Span.BinarySearch(item, comparer);
     }
     
+    /// <summary>
+    /// Gets an enumerator for this collection.
+    /// </summary>
     public Enumerator GetEnumerator()
     {
         return new Enumerator(this);
     }
 
-    public ref struct Enumerator(SpanList<T> owner)
+    IEnumerator<T> IEnumerable<T>.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+    
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    /// <summary>
+    /// An enumerator for <see cref="SpanList{T}"/>.
+    /// </summary>
+    public struct Enumerator(SpanList<T> owner) : IEnumerator<T>
     {
         private readonly SpanList<T> _owner = owner;
         private int _count = -1;
         
-        public ref T Current => ref _owner.Span[_count];
+        /// <inheritdoc/>
+        public T Current => _owner.Span[_count];
         
+        object? IEnumerator.Current => Current;
+        
+        /// <inheritdoc/>
         public bool MoveNext()
         {
             return _count++ < _owner.Count - 1;
         }
+        
+        /// <inheritdoc/>
+        public void Reset() { }
+
+        /// <inheritdoc/>
+        public void Dispose() { }
     }
 
+    /// <summary>
+    /// Frees the corresponding allocated span
+    /// in the <see cref="FixedSpaceArray{T}"/>.
+    /// </summary>
     public void Dispose()
     {
         _owner.Free(_id);

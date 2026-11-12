@@ -17,7 +17,7 @@ public sealed class Graph<T>(int capacity = 16) : IReadOnlyGraph<T>
     private readonly FixedSpaceArray<GenId> _edges = new(capacity);
 
     /// <summary>
-    /// Adds a new node of type <see cref="T"/> to the graph and connects to other specified nodes.
+    /// Adds a new node of type T to the graph and connects to other specified nodes.
     /// </summary>
     /// <param name="data"></param>
     /// <param name="connections"></param>

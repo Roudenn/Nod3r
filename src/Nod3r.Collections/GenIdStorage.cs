@@ -25,7 +25,7 @@ namespace Nod3r.Collections;
 /// </para>
 /// </remarks>
 /// <typeparam name="T">The type of data to store.</typeparam>
-public sealed class GenIdStorage<T>
+public class GenIdStorage<T>
 {
     /// <summary>
     /// Index of the next free slot.
@@ -36,7 +36,7 @@ public sealed class GenIdStorage<T>
     /// <summary>
     /// Data stored in every slot.
     /// </summary>
-    private T[] _data;
+    internal T[] Data;
     
     /// <summary>
     /// Next link on the free list for each slot. if int.MaxValue then this is the tail.
@@ -59,7 +59,7 @@ public sealed class GenIdStorage<T>
     /// Pointer to a position in a dense index array.
     /// Allows for O(Count) iteration instead of O(Length).
     /// </summary>
-    private int[] _dense;
+    internal int[] Dense;
 
     /// <summary>
     /// Total amount of stored objects.
@@ -71,15 +71,19 @@ public sealed class GenIdStorage<T>
     /// </summary>
     public int Length { get; private set; }
 
+    /// <summary>
+    /// Creates a new <see cref="GenIdStorage{T}"/> instance.
+    /// </summary>
+    /// <param name="capacity">Initial capacity of the backing array.</param>
     public GenIdStorage(int capacity = 16)
     {
         Length = capacity;
         
-        _data = new T[capacity];
+        Data = new T[capacity];
         _nextSlots = new int[capacity];
         _generations = new uint[capacity];
         _denseIndex = new int[capacity];
-        _dense = new int[capacity];
+        Dense = new int[capacity];
         
         for (int i = 0; i < capacity; i++)
         {
@@ -90,67 +94,97 @@ public sealed class GenIdStorage<T>
         }
     }
     
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="id"><see cref="GenId"/> for an element in the storage.</param>
     public ref T this[GenId id]
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            if ((uint)id.Index >= (uint)_data.Length)
+            if ((uint)id.Index >= (uint)Data.Length)
                 ThrowKeyNotFound();
    
             if (_generations[id.Index] != id.Generation)
                 ThrowKeyNotFound();
 
-            return ref _data[id.Index];
+            return ref Data[id.Index];
         }
     }
 
+    /// <summary>
+    /// Checks whether a <see cref="GenId"/> is contained in the storage.
+    /// </summary>
+    /// <returns>True if <see cref="GenId"/> points to a valid element.</returns>
     public bool IsValid(GenId id)
     {
-        if ((uint)id.Index >= (uint)_data.Length)
+        if ((uint)id.Index >= (uint)Data.Length)
             return false;
    
         return _generations[id.Index] == id.Generation;
     }
     
-    public void Add(T value, out GenId id)
+    /// <summary>
+    /// Adds an item to the <see cref="GenIdStorage{T}"/>
+    /// </summary>
+    /// <param name="item">An item to add to the storage.</param>
+    /// <param name="id">A <see cref="GenId"/> handle for the item.</param>
+    public void Add(T item, out GenId id)
     {
-        Allocate(out id) = value;
+        Allocate(out id) = item;
     }
     
+    /// <summary>
+    /// Allocates space for an item in a <see cref="GenIdStorage{T}"/>.
+    /// </summary>
+    /// <param name="id">A <see cref="GenId"/> handle for the item.</param>
+    /// <returns>A reference to the element in the internal array.</returns>
     public ref T Allocate(out GenId id)
     {
-        if ((uint)_nextFree >= (uint)_data.Length)
+        if ((uint)_nextFree >= (uint)Data.Length)
             ReAllocate();
 
         var idx = _nextFree;
         
-        _dense[Count] = idx;
+        Dense[Count] = idx;
         _denseIndex[idx] = Count;
         Count += 1;
         _nextFree = _nextSlots[idx];
         _nextSlots[idx] = -1; // Means filled
 
         id = new GenId(idx, _generations[idx]);
-        return ref _data[idx];
+        return ref Data[idx];
     }
 
-    public GenId Add(T value)
+    /// <summary>
+    /// Adds an item to the <see cref="GenIdStorage{T}"/>
+    /// </summary>
+    /// <param name="item">An item to add to the storage.</param>
+    /// <returns>A <see cref="GenId"/> handle for the item.</returns>
+    public GenId Add(T item)
     {
-        Add(value, out var id);
+        Add(item, out var id);
         return id;
     }
 
+    /// <summary>
+    /// Marks a <see cref="GenId"/> handle as free,
+    /// making the space available for new allocations.
+    /// </summary>
+    /// <param name="id">A <see cref="GenId"/> handle for the item.</param>
+    /// <exception cref="KeyNotFoundException">
+    /// <see cref="GenId"/> handle was already free or invalid.
+    /// </exception>
     public void Free(GenId id)
     {
-        if ((uint)id.Index >= (uint)_data.Length)
+        if ((uint)id.Index >= (uint)Data.Length)
             ThrowKeyNotFound();
         
         if (_generations[id.Index] != id.Generation || _nextSlots[id.Index] >= 0)
             ThrowKeyNotFound();
 
         if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
-            _data[id.Index] = default!;
+            Data[id.Index] = default!;
 
         int removedDenseIdx = _denseIndex[id.Index];
         int lastDenseIdx = Count - 1;
@@ -158,8 +192,8 @@ public sealed class GenIdStorage<T>
         // Swap-and-pop inside dense array only if it's not the last element
         if (removedDenseIdx != lastDenseIdx)
         {
-            int lastSlotIdx = _dense[lastDenseIdx];
-            _dense[removedDenseIdx] = lastSlotIdx;
+            int lastSlotIdx = Dense[lastDenseIdx];
+            Dense[removedDenseIdx] = lastSlotIdx;
             _denseIndex[lastSlotIdx] = removedDenseIdx;
         }
         
@@ -169,6 +203,15 @@ public sealed class GenIdStorage<T>
         _nextFree = id.Index;
     }
 
+    /// <summary>
+    /// Marks a <see cref="GenId"/> handle as free,
+    /// making the space available for new allocations.
+    /// </summary>
+    /// <param name="id">A <see cref="GenId"/> handle for the item.</param>
+    /// <returns>
+    /// True if the item slot was freed successfully,
+    /// False if <see cref="GenId"/> handle was already free or invalid.
+    /// </returns>
     public bool TryFree(GenId id)
     {
         if (!IsValid(id))
@@ -178,6 +221,15 @@ public sealed class GenIdStorage<T>
         return true;
     }
 
+    /// <summary>
+    /// Tries to get an element from the storage.
+    /// </summary>
+    /// <param name="key">A <see cref="GenId"/> handle for the item.</param>
+    /// <param name="value">The found item.</param>
+    /// <returns>
+    /// True if the item was found successfully,
+    /// False if <see cref="GenId"/> handle was already free or invalid.
+    /// </returns>
     public bool TryGetValue(GenId key, [MaybeNullWhen(false)] out T value)
     {
         value = default;
@@ -203,10 +255,9 @@ public sealed class GenIdStorage<T>
         return capacity;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     private void ReAllocate()
     {
-        int oldLength = _data.Length;
+        int oldLength = Data.Length;
         int newLength = Math.Max(oldLength, 2) * 2;
 
         ReAllocateTo(newLength);
@@ -219,11 +270,11 @@ public sealed class GenIdStorage<T>
         
         Length = newSize;
         
-        Array.Resize(ref _data, newSize);
+        Array.Resize(ref Data, newSize);
         Array.Resize(ref _nextSlots, newSize);
         Array.Resize(ref _generations, newSize);
         Array.Resize(ref _denseIndex, newSize);
-        Array.Resize(ref _dense, newSize);
+        Array.Resize(ref Dense, newSize);
 
         for (int i = oldLength; i < newSize; i++)
         {
@@ -236,45 +287,8 @@ public sealed class GenIdStorage<T>
         _nextFree = oldLength;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ThrowKeyNotFound()
     {
         throw new KeyNotFoundException();
-    }
-    
-    public Enumerator GetEnumerator()
-    {
-        return new Enumerator(this);
-    }
-    
-    /// <summary>
-    /// A custom enumerator that returns direct references to stored objects.
-    /// </summary>
-    public ref struct Enumerator(GenIdStorage<T> owner)
-    {
-        private readonly T[] _data = owner._data;
-        private readonly int[] _dense = owner._dense;
-        private readonly int _count = owner.Count;
-        private int _index = -1;
-
-        public bool MoveNext()
-        {
-            _index++;
-            return _index < _count;
-        }
-            
-        public ref T Current => ref _data[_dense[_index]];
-    }
-}
-
-public readonly record struct GenId(int Index, uint Generation)
-{
-    public readonly static GenId Invalid = new(0, 0);
-    
-    public bool IsValid => Generation > 0;
-    
-    public override string ToString()
-    {
-        return $"{Index} (G{Generation})";
     }
 }

@@ -1,5 +1,8 @@
 namespace Nod3r.Collections;
 
+/// <summary>
+/// Helpers for array manipulation.
+/// </summary>
 public static class ArrayHelpers
 {
     /// <summary>
@@ -22,7 +25,7 @@ public static class ArrayHelpers
     /// <summary>
     /// Ensures that an array has a specified capacity.
     /// If the length of the array is less than capacity,
-    /// it's resized to fit that capacity, and all new slots are set to <see cref="defaultValue"/>.
+    /// it's resized to fit that capacity, and all new slots are set to defaultValue.
     /// </summary>
     /// <param name="array">The target array.</param>
     /// <param name="capacity">Minimal capacity to ensure for this array.</param>

@@ -88,6 +88,11 @@ public sealed class Gen2DStorage<T>
     /// </summary>
     public int LayerCapacity { get; private set; }
 
+    /// <summary>
+    /// Creates a new <see cref="Gen2DStorage{T}"/> instance.
+    /// </summary>
+    /// <param name="capacity">Initial capacity of the internal array.</param>
+    /// <param name="layerCapacity"></param>
     public Gen2DStorage(int capacity = 16, byte layerCapacity = 1)
     {
         ColumnCount = 0;
@@ -129,7 +134,6 @@ public sealed class Gen2DStorage<T>
     /// </summary>
     public T this[LayerId id]
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             if ((uint)id.Index >= (uint)_data.Length)
@@ -150,8 +154,8 @@ public sealed class Gen2DStorage<T>
     /// <summary>
     /// Allocates an entire new column in the storage and adds the first element.
     /// </summary>
-    /// <param name="value">The value to add into the new slot at <see cref="startLayer"/>.</param>
-    /// <param name="id">ID of the element at the <see cref="startLayer"/>.</param>
+    /// <param name="value">The value to add into the new slot at startLayer.</param>
+    /// <param name="id">ID of the element at the startLayer.</param>
     /// <param name="startLayer">The layer to allocate the first element on.</param>
     /// <returns>A reference to the element at a specified layer (first by default).</returns>
     public void AddColumn(T value, out LayerId id, int startLayer = 0)
@@ -475,25 +479,42 @@ public sealed class Gen2DStorage<T>
 }
 
 /// <summary>
-/// A generational identifier that uniquely references a specific element in the storage.
+/// A generational identifier that uniquely references
+/// a specific element in the <see cref="Gen2DStorage{T}"/>.
 /// </summary>
 public readonly record struct LayerId(int Index, int Layer, int Generation, int ColumnGeneration)
 {
+    /// <summary>
+    /// An invalid index.
+    /// </summary>
     public static readonly LayerId Invalid = new(-1, -1, 0, 0);
 
+    /// <summary>
+    /// Gets a <see cref="ColumnHandle"/> for this layer ID.
+    /// </summary>
     public ColumnHandle ColumnHandle => new(Index);
     
+    /// <summary>
+    /// Checks whether a specified <see cref="GenId"/> is valid.
+    /// </summary>
     public bool IsValid => Generation > 0 && ColumnGeneration > 0 && Index >= 0 && Layer >= 0;
 
+    /// <inheritdoc/>
     public override string ToString() => $"[Col: {Index}, Layer: {Layer}, Gen: {Generation}, ColGen: {ColumnGeneration}]";
 }
 
 /// <summary>
-/// Represents a reference to a specific column.
+/// Represents a reference to a specific column in <see cref="Gen2DStorage{T}"/>.
 /// </summary>
 public readonly record struct ColumnHandle(int Index)
 {
+    /// <summary>
+    /// An invalid index.
+    /// </summary>
     public static readonly ColumnHandle Invalid = new(-1);
     
+    /// <summary>
+    /// Checks whether a specified <see cref="ColumnHandle"/> is valid.
+    /// </summary>
     public bool IsValid => Index >= 0;
 }
