@@ -105,7 +105,6 @@ public static class PipeDirectionExtensions
     }
 }
 
-[AutoNodeNetwork]
 public struct PipeNodeNetwork() : INodeNet<PipeNode, PipeNodeNetwork>, INodeNetCreator<PipeNodeNetwork>
 {
     /// <summary>

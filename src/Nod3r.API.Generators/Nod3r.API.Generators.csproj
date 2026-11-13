@@ -20,7 +20,6 @@
         <PublishTrimmed>false</PublishTrimmed>
         <SelfContained>false</SelfContained>
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
 
     <!-- 
