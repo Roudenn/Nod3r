@@ -68,6 +68,8 @@ public sealed class NodeExampleTests
     {
         public float TotalCapacity = 0f;
 
+        public GenId Id { get; }
+        
         public HashSet<LayerId> Nodes { get; } = new();
 
         public void Initialize()
@@ -78,7 +80,7 @@ public sealed class NodeExampleTests
         {
         }
 
-        public void Merge(IReadOnlySet<AdjacentNodeNet> nets)
+        public void Merge(IReadOnlyList<AdjacentNodeNet> nets)
         {
         }
 

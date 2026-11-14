@@ -1,4 +1,5 @@
 using Nod3r.Solver.Chunks;
+using Nod3r.Solver.Storages;
 using Numos.Maths;
 
 namespace Nod3r.Solver.Kernels;
@@ -156,7 +157,7 @@ internal sealed partial class NodeKernel<TNode, TNet>
     public void GetChunkData(Int3 handle, List<(TNode Data, Int3 Pos)> set, out Int3 dimensions)
     {
         var chunk = GetChunk(handle);
-        var cache = new List<TNode>(NodeStorage.LayerCapacity);
+        var cache = new List<NodeData<TNode>>(NodeStorage.LayerCapacity);
         dimensions = chunk.Dimensions;
         for (int z = 0; z < chunk.Dimensions.Z; z++)
         {
@@ -172,7 +173,7 @@ internal sealed partial class NodeKernel<TNode, TNet>
                     NodeStorage.GetColumnData(column, cache);
                     foreach (var data in cache)
                     {
-                        set.Add((data, pos));
+                        set.Add((data.Data, pos));
                     }
                 }
             }

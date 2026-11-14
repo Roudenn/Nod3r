@@ -97,7 +97,7 @@ internal interface INodeKernel<T> : INodeKernel where T : INode
 /// a specific node network type TNet.
 /// </summary>
 /// <typeparam name="TNet">Type of node network this node kernel controls.</typeparam>
-internal interface INodeNetKernel<TNet> : INodeKernel where TNet : INodeNet
+internal interface INodeNetKernel<TNet> : INodeKernel where TNet : INodeNet<TNet>
 {
     /// <summary>
     /// All currently living networks.

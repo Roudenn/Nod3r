@@ -16,7 +16,7 @@ public sealed partial class NodeSimulation
     /// </remarks>
     /// <typeparam name="T">Type of the node network to get.</typeparam>
     /// <returns>A collection of <see cref="NodeNetSnapshot{T}"/>s for every active network.</returns>
-    public NodeNetSnapshot<T>[] GetNetworksSnapshot<T>() where T : INodeNet
+    public NodeNetSnapshot<T>[] GetNetworksSnapshot<T>() where T : INodeNet<T>
     {
         var kernel = GetKernelNet<T>();
         var handles = kernel.Nets;
@@ -38,7 +38,7 @@ public sealed partial class NodeSimulation
     /// <typeparam name="T">Type of the network registered.</typeparam>
     /// <returns>A collection of <see cref="NodeNetSnapshot{T}"/>s for every active network.</returns>
     [PublicAPI]
-    public NodeNetSnapshot<T>[] GetNetworksSnapshot<T>(int id) where T : INodeNet
+    public NodeNetSnapshot<T>[] GetNetworksSnapshot<T>(int id) where T : INodeNet<T>
     {
         var kernel = GetIDKernelNet<T>(id);
         var handles = kernel.Nets;

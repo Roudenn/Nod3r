@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Nod3r.Solver.Storages;
 using Numos.Maths;
 
 namespace Nod3r.Solver.Kernels;
@@ -8,6 +9,17 @@ internal sealed partial class NodeKernel<TNode, TNet>
     public bool TryGetNode(VoxelHandle handle, [NotNullWhen(true)] out TNode? node)
     {
         node = default;
+        var genId = GetId(handle.ChunkPos, handle.VoxelIndex);
+        if (!genId.IsValid)
+            return false;
+        
+        node = NodeStorage.GetData(genId, handle.Layer);
+        return true;
+    }
+    
+    public bool TryGetNodeMeta(VoxelHandle handle, [NotNullWhen(true)] out NodeData<TNode>? node)
+    {
+        node = null;
         var genId = GetId(handle.ChunkPos, handle.VoxelIndex);
         if (!genId.IsValid)
             return false;

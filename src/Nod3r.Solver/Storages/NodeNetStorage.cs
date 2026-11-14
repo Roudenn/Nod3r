@@ -8,7 +8,7 @@ internal abstract class NodeNetStorage;
 /// Kernel-specific storage for all <see cref="INodeNet"/> types.
 /// </summary>
 /// <typeparam name="T">Type of node net.</typeparam>
-internal sealed class NodeNetStorage<T> : NodeNetStorage where T : INodeNet
+internal sealed class NodeNetStorage<T> : NodeNetStorage where T : INodeNet<T>
 {
     private readonly GenIdStorage<T> _storage = new();
     

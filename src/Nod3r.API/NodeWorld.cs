@@ -143,7 +143,7 @@ public sealed class NodeWorld : INodeRegistration
     /// <inheritdoc/>
     [PublicAPI]
     public void RegisterID<TNet>(NodeRule rule, int id)
-        where TNet : INodeNet, INodeNetCreator<TNet>
+        where TNet : INodeNet<TNet>, INodeNetCreator<TNet>
     {
         lock(_lock)
         {

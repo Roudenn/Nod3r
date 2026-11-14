@@ -18,6 +18,11 @@ namespace Nod3r.Solver;
 public interface INodeNet
 {
     /// <summary>
+    /// ID of the node net in the internal storage.
+    /// </summary>
+    GenId Id { get; }
+    
+    /// <summary>
     /// A set of all nodes controlled by this node network.
     /// Depending on the current node connection rule, this may contain nodes of different types.
     /// </summary>
@@ -43,9 +48,8 @@ public interface INodeNet
 /// This is a version of the <see cref="INodeNet"/> that is also specified to support querying all networks of this type,
 /// and also merging and splitting with other network of the same type.
 /// </remarks>
-/// <typeparam name="TNode">Type of node controlled by this network.</typeparam>
 /// <typeparam name="TSelf">Type of the network itself.</typeparam>
-public interface INodeNet<TNode, TSelf> : INodeNet where TNode : INode where TSelf : INodeNet<TNode, TSelf>
+public interface INodeNet<TSelf> : INodeNet where TSelf : INodeNet<TSelf>
 {
     /// <summary>
     /// Merges a set of node networks into this network.
@@ -53,7 +57,7 @@ public interface INodeNet<TNode, TSelf> : INodeNet where TNode : INode where TSe
     /// This method is called right before Shutdown and release of every network in the set.
     /// </para>
     /// </summary>
-    void Merge(IReadOnlySet<TSelf> nets);
+    void Merge(IReadOnlyList<TSelf> nets);
 
     /// <summary>
     /// Called on a newly created node network after its initialization
@@ -61,3 +65,10 @@ public interface INodeNet<TNode, TSelf> : INodeNet where TNode : INode where TSe
     /// </summary>
     void Split(TSelf parent);
 }
+
+/// <summary>
+/// Represents a network of connected <see cref="INode"/>s.
+/// </summary>
+/// <typeparam name="TNode">Type of node controlled by this network.</typeparam>
+/// <typeparam name="TSelf">Type of the network itself.</typeparam>
+public interface INodeNet<TNode, TSelf> : INodeNet<TSelf> where TNode : INode where TSelf : INodeNet<TNode, TSelf>;

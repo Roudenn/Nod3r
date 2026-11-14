@@ -12,7 +12,7 @@ namespace Nod3r.Solver.Kernels;
 /// </summary>
 internal sealed class NodeIDKernel<TNet>
     (int id, NodeRule rule, Int3 dimensions) : INodeIDKernel, INodeNetKernel<TNet>
-    where TNet : INodeNet, INodeNetCreator<TNet>
+    where TNet : INodeNet<TNet>, INodeNetCreator<TNet>
 {
     internal readonly int ID = id;
     

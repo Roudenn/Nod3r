@@ -96,13 +96,13 @@ public sealed partial class NodeSimulation
         => (INodeKernel<T>) _kernels[_idxes[NodeIdxStorage.Get<T>().Value]];
 
     private INodeNetKernel<T> GetKernelNet<T>()
-        where T : INodeNet
+        where T : INodeNet<T>
         => (INodeNetKernel<T>) _kernels[_idxes[NodeIdxStorage.GetNet<T>().Value]];
     
     private INodeIDKernel GetIDKernel(int id)
         => (INodeIDKernel) _kernels[_idxes[NodeIdxStorage.Get(id).Value]];
     
     private INodeNetKernel<T> GetIDKernelNet<T>(int id)
-        where T : INodeNet
+        where T : INodeNet<T>
         => (INodeNetKernel<T>) _kernels[_idxes[NodeIdxStorage.Get(id).Value]];
 }

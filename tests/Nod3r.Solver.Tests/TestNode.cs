@@ -7,6 +7,7 @@ namespace Nod3r.Solver.Tests;
 
 public struct DummyNodeNet<T>() : INodeNet<T, DummyNodeNet<T>>, INodeNetCreator<DummyNodeNet<T>> where T : INode
 {
+    public GenId Id { get; }
     public HashSet<LayerId> Nodes { get; } = new();
         
     public void Initialize()
@@ -17,7 +18,7 @@ public struct DummyNodeNet<T>() : INodeNet<T, DummyNodeNet<T>>, INodeNetCreator<
     {
     }
 
-    public void Merge(IReadOnlySet<DummyNodeNet<T>> nets)
+    public void Merge(IReadOnlyList<DummyNodeNet<T>> nets)
     {
     }
 

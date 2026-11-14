@@ -12,7 +12,7 @@ namespace Nod3r.Solver.Kernels;
 /// </summary>
 internal sealed partial class NodeKernel<TNode, TNet>(NodeRule<TNode> rule, Int3 dimensions) : IDisposable, INodeKernel<TNode>, INodeNetKernel<TNet>
     where TNode : INode
-    where TNet : INodeNet, INodeNetCreator<TNet>
+    where TNet : INodeNet<TNet>, INodeNetCreator<TNet>
 {
     public NodeStorage<TNode> NodeStorage { get; set; } = new();
     

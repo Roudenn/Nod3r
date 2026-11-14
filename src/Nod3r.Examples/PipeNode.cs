@@ -111,7 +111,10 @@ public struct PipeNodeNetwork() : INodeNet<PipeNode, PipeNodeNetwork>, INodeNetC
     /// Total capacity of all nodes in the network.
     /// </summary>
     public float TotalCapacity = 0f;
-
+    
+    /// <inheritdoc/>
+    public GenId Id { get; }
+    
     /// <inheritdoc/>
     public HashSet<LayerId> Nodes { get; } = new();
 
@@ -126,7 +129,7 @@ public struct PipeNodeNetwork() : INodeNet<PipeNode, PipeNodeNetwork>, INodeNetC
     }
 
     /// <inheritdoc/>
-    public void Merge(IReadOnlySet<PipeNodeNetwork> nets)
+    public void Merge(IReadOnlyList<PipeNodeNetwork> nets)
     {
     }
 

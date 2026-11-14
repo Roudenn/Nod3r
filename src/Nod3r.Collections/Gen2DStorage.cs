@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace Nod3r.Collections;
@@ -364,6 +365,30 @@ public sealed class Gen2DStorage<T>
             if (id == -1)
                 list.Add(this[GetLayerId(idx, layer)]);
         }
+    }
+
+    /// <summary>
+    /// Tries to get a value out of this storage.
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public bool TryGetValue(LayerId id, [MaybeNullWhen(false)] out T value)
+    {
+        value = default;
+        if ((uint)id.Index >= (uint)_data.Length)
+            return false;
+            
+        if ((uint)id.Layer >= (uint)_layerCapacities[id.Index])
+            return false;
+
+        if (_columnGenerations[id.Index] != id.ColumnGeneration
+            || _generations[id.Index][id.Layer] != id.Generation
+            || _nextSlotLayers[id.Index][id.Layer] >= 0)
+            return false;
+
+        value = _data[id.Index][id.Layer];
+        return true;
     }
     
     /// <summary>

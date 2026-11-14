@@ -5,7 +5,7 @@ namespace Nod3r.Solver.Kernels;
 
 internal sealed class NodeKernelFactory<TNode, TNet>(NodeRule<TNode> rule) : INodeKernelFactory
     where TNode : INode
-    where TNet : INodeNet, INodeNetCreator<TNet>
+    where TNet : INodeNet<TNet>, INodeNetCreator<TNet>
 {
     public INodeKernel Create(Int3 dimensions)
     {

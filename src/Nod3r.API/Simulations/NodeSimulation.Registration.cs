@@ -22,7 +22,7 @@ public sealed partial class NodeSimulation
     }
 
     internal void RegisterID<TNet>(int id, NodeRule rule, NodeIdx typeIdx)
-        where TNet : INodeNet, INodeNetCreator<TNet>
+        where TNet : INodeNet<TNet>, INodeNetCreator<TNet>
     {
         ArrayHelpers.EnsureCapacity(ref _kernels, RegistrationCount);
         ArrayHelpers.EnsureCapacity(ref _idxes, NodeIdxStorage.Count, NodeIdx.Invalid.Value);
