@@ -21,7 +21,9 @@ internal sealed partial class NodeKernel<TNode, TNet>
         var cache = new List<VoxelHandle>();
         foreach (var start in _newNodes)
         {
-            traversed.Clear();
+            if (traversed.Contains(start))
+                continue; // This node was already included to a network
+            
             stack.Push(start);
             
             while (stack.Count > 0)
