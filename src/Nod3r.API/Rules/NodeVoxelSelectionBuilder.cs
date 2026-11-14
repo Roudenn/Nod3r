@@ -45,7 +45,7 @@ public sealed class NodeVoxelSelectionBuilder
     }
     
     /// <summary>
-    /// Includes a <see cref="ReadOnlySpan{short}"/> of specified relative layers to this selection.
+    /// Includes a <see cref="ReadOnlySpan{T}"/> of specified relative layers to this selection.
     /// </summary>
     [Pure, PublicAPI]
     public NodeVoxelSelectionBuilder AddLayers(params ReadOnlySpan<short> relativeLayers)
@@ -59,7 +59,7 @@ public sealed class NodeVoxelSelectionBuilder
     }
     
     /// <summary>
-    /// Sets a <see cref="ReadOnlySpan{short}"/> of specified relative layers to this selection.
+    /// Sets a <see cref="ReadOnlySpan{T}"/> of specified relative layers to this selection.
     /// </summary>
     [Pure, PublicAPI]
     public NodeVoxelSelectionBuilder SetLayers(params ReadOnlySpan<short> relativeLayers)

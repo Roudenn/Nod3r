@@ -16,6 +16,8 @@ namespace Nod3r.API;
 /// </summary>
 public sealed class NodeWorld : INodeRegistration
 {
+    private readonly object _lock = new();
+    
     private readonly EnumerableIdStorage<NodeSimulation> _simulations = new();
 
     private readonly Dictionary<NodeIdx, INodeKernelFactory> _typeKernelFactories = new();
@@ -55,8 +57,11 @@ public sealed class NodeWorld : INodeRegistration
         int chunkHeight = ChunkConstants.DefaultHeight,
         int chunkDepth = ChunkConstants.DefaultDepth)
     {
-        var simulation = new NodeSimulation(this, chunkWidth, chunkHeight, chunkDepth);
-        return simulation;
+        lock (_lock)
+        {
+            var simulation = new NodeSimulation(this, chunkWidth, chunkHeight, chunkDepth);
+            return simulation;
+        }
     }
     
     /// <summary>
@@ -65,7 +70,10 @@ public sealed class NodeWorld : INodeRegistration
     [PublicAPI]
     public bool TryGetSimulation(SimulationId id, out NodeSimulation? simulation)
     {
-        return _simulations.TryGetValue(id.GenId, out simulation);
+        lock (_lock)
+        {
+            return _simulations.TryGetValue(id.GenId, out simulation);
+        }
     }
     
     /// <summary>
@@ -74,7 +82,10 @@ public sealed class NodeWorld : INodeRegistration
     [PublicAPI]
     public bool DestroySimulation(NodeSimulation simulation)
     {
-        return _simulations.TryFree(simulation.Id.GenId);
+        lock(_lock)
+        {
+            return _simulations.TryFree(simulation.Id.GenId);
+        }
     }
 
     /// <summary>
@@ -82,18 +93,21 @@ public sealed class NodeWorld : INodeRegistration
     /// </summary>
     internal SimulationId RegisterSimulation(NodeSimulation simulation)
     {
-        foreach (var (typeIdx, factory) in _idKernelFactories)
+        lock(_lock)
         {
-            simulation.Register(factory.ID, factory, typeIdx);
+            foreach (var (typeIdx, factory) in _idKernelFactories)
+            {
+                simulation.Register(factory, typeIdx);
+            }
+
+            foreach (var (typeIdx, factory) in _typeKernelFactories)
+            {
+                simulation.Register(factory, typeIdx);
+            }
+
+            _simulations.Add(simulation, out var genId);
+            return new SimulationId(genId);
         }
-        
-        foreach (var (typeIdx, factory) in _typeKernelFactories)
-        {
-            simulation.Register(factory, typeIdx);
-        }
-        
-        _simulations.Add(simulation, out var genId);
-        return new SimulationId(genId);
     }
     
     /// <inheritdoc/>
@@ -102,25 +116,28 @@ public sealed class NodeWorld : INodeRegistration
         where TNode : INode
         where TNet : INodeNet<TNode, TNet>, INodeNetCreator<TNet>
     {
-        if (_registeredNodeTypes.Contains(typeof(TNode)))
-            throw new ArgumentException($"{nameof(INode)} {typeof(TNode).Name} has already been registered in the {nameof(NodeWorld)}!");
-            
-        if (_registeredNodeNetTypes.Contains(typeof(TNet)))
-            throw new ArgumentException($"{nameof(INodeNet)} {typeof(TNet).Name} has already been registered in the {nameof(NodeWorld)}!");
-        
-        NodeIdxStorage.Register<TNode, TNet>(out var typeIdx);
-        if (!_registeredIdxs.Add(typeIdx))
-            return;
-        
-        foreach (var simulation in _simulations)
+        lock(_lock)
         {
-            simulation.Register<TNode, TNet>(rule, typeIdx, layerCapacity);
+            if (_registeredNodeTypes.Contains(typeof(TNode)))
+                throw new ArgumentException($"{nameof(INode)} {typeof(TNode).Name} has already been registered in the {nameof(NodeWorld)}!");
+            
+            if (_registeredNodeNetTypes.Contains(typeof(TNet)))
+                throw new ArgumentException($"{nameof(INodeNet)} {typeof(TNet).Name} has already been registered in the {nameof(NodeWorld)}!");
+        
+            NodeIdxStorage.Register<TNode, TNet>(out var typeIdx);
+            if (!_registeredIdxs.Add(typeIdx))
+                return;
+
+            foreach (var simulation in _simulations)
+            {
+                simulation.Register<TNode, TNet>(rule, typeIdx, layerCapacity);
+            }
+
+            _registeredNodeTypes.Add(typeof(TNode));
+            _registeredNodeNetTypes.Add(typeof(TNet));
+
+            _typeKernelFactories.Add(typeIdx, new NodeKernelFactory<TNode, TNet>(rule));
         }
-        
-        _registeredNodeTypes.Add(typeof(TNode));
-        _registeredNodeNetTypes.Add(typeof(TNet));
-        
-        _typeKernelFactories.Add(typeIdx, new NodeKernelFactory<TNode, TNet>(rule));
     }
     
     /// <inheritdoc/>
@@ -128,15 +145,18 @@ public sealed class NodeWorld : INodeRegistration
     public void RegisterID<TNet>(NodeRule rule, int id)
         where TNet : INodeNet, INodeNetCreator<TNet>
     {
-        NodeIdxStorage.Register(id, out var typeIdx);
-        if (!_registeredIdxs.Add(typeIdx))
-            return;
-        
-        foreach (var simulation in _simulations)
+        lock(_lock)
         {
-            simulation.RegisterID<TNet>(id, rule, typeIdx);
+            NodeIdxStorage.Register(id, out var typeIdx);
+            if (!_registeredIdxs.Add(typeIdx))
+                return;
+            
+            foreach (var simulation in _simulations)
+            {
+                simulation.RegisterID<TNet>(id, rule, typeIdx);
+            }
+
+            _idKernelFactories.Add(typeIdx, new NodeIDKernelFactory<TNet>(id, rule));
         }
-        
-        _idKernelFactories.Add(typeIdx, new NodeIDKernelFactory<TNet>(id, rule));
     }
 }

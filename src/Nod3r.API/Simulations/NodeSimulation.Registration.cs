@@ -44,7 +44,7 @@ public sealed partial class NodeSimulation
         RegistrationCount++;
     }
     
-    internal void Register(int id, INodeIDKernelFactory factory, NodeIdx typeIdx)
+    internal void Register(INodeIDKernelFactory factory, NodeIdx typeIdx)
     {
         ArrayHelpers.EnsureCapacity(ref _kernels, RegistrationCount);
         ArrayHelpers.EnsureCapacity(ref _idxes, NodeIdxStorage.Count);

@@ -6,7 +6,7 @@ namespace Nod3r.API.Registration;
 /// <summary>
 /// Shared storage for all registered <see cref="NodeIdx"/>es.
 /// </summary>
-public static class NodeIdxStorage
+internal static class NodeIdxStorage
 {
     /// <summary>
     /// Amount of nodes registered in the program.
