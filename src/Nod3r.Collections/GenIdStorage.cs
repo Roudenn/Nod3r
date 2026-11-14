@@ -25,7 +25,7 @@ namespace Nod3r.Collections;
 /// </para>
 /// </remarks>
 /// <typeparam name="T">The type of data to store.</typeparam>
-public class GenIdStorage<T>
+public class GenIdStorage<T> : IGenStorage<T>
 {
     /// <summary>
     /// Index of the next free slot.
@@ -98,18 +98,33 @@ public class GenIdStorage<T>
     /// 
     /// </summary>
     /// <param name="id"><see cref="GenId"/> for an element in the storage.</param>
-    public ref T this[GenId id]
-    {
-        get
-        {
-            if ((uint)id.Index >= (uint)Data.Length)
-                ThrowKeyNotFound();
-   
-            if (_generations[id.Index] != id.Generation)
-                ThrowKeyNotFound();
+    public T this[GenId id] => Get(id);
 
-            return ref Data[id.Index];
-        }
+    public T Get(GenId id)
+    {
+        if ((uint)id.Index >= (uint)Data.Length)
+            ThrowKeyNotFound();
+   
+        if (_generations[id.Index] != id.Generation)
+            ThrowKeyNotFound();
+
+        return Data[id.Index];
+    }
+
+    public StorageHandle<T> GetUsing(GenId id)
+    {
+        return new StorageHandle<T>(Get(id), id, this);
+    }
+
+    public void Set(GenId id, T value)
+    {
+        if ((uint)id.Index >= (uint)Data.Length)
+            ThrowKeyNotFound();
+   
+        if (_generations[id.Index] != id.Generation)
+            ThrowKeyNotFound();
+        
+        Data[id.Index] = value;
     }
 
     /// <summary>
@@ -290,5 +305,19 @@ public class GenIdStorage<T>
     private static void ThrowKeyNotFound()
     {
         throw new KeyNotFoundException();
+    }
+}
+
+public sealed class StorageHandle<T>(T data, GenId id, IGenStorage<T> storage) : IDisposable
+{
+    /// <summary>
+    /// Mutable data that will be set after the wrapper is disposed.
+    /// </summary>
+    public T Data = data;
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        storage.Set(id, Data);
     }
 }

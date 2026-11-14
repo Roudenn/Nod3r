@@ -5,9 +5,15 @@ namespace Nod3r.Collections.Tests;
 public sealed class GenIdStorageTests
 {
     [Test]
-    public void TestIteration()
+    public void GetUsing_Test()
     {
         var storage = new GenIdStorage<TestStruct>();
+        storage.Add(new TestStruct(), out var id);
+        using (var handle = storage.GetUsing(id))
+        {
+            handle.Data.Foo1 = 1;
+        }
+        Assert.That(storage[id].Foo1, Is.EqualTo(1));
     }
 
     private struct TestStruct

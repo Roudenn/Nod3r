@@ -73,9 +73,10 @@ public sealed class Graph<T>(int capacity = 16)
         int depth = 0;
         while (curNodes.Count > 0)
         {
-            var curNode = curNodes.Pop();
-            var curVertex = _storage[curNode].VerticesId;
-            _storage[curNode].Depth = depth;
+            var curNodeId = curNodes.Pop();
+            var curNode = _storage[curNodeId];
+            var curVertex = curNode.VerticesId;
+            _storage.Set(curNodeId, curNode with { Depth = depth } );
             var vertices = GetConnections(curVertex);
             foreach (var vertex in vertices)
             {

@@ -21,11 +21,6 @@ internal sealed class NodeNetStorage<T> : NodeNetStorage where T : INodeNet
     {
         return _storage[id];
     }
-    
-    public ref T GetRef(GenId id)
-    {
-        return ref _storage[id];
-    }
 
     public void Free(GenId id)
     {
