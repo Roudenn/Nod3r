@@ -25,7 +25,6 @@ public sealed partial class NodeSimulation
         return GetKernel(voxel).HasNode(voxel.Handle);
     }
     
-    
     public bool TryGetRelative(VoxelRef voxel, Int3 offset, byte layer, out VoxelRef relative)
     {
         var success = GetKernel(voxel).TryGetRelative(voxel.Handle, offset, layer, out var relativeHandle);

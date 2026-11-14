@@ -1,4 +1,3 @@
-using Nod3r.API;
 using Nod3r.API.Registration;
 using Nod3r.API.Rules;
 using Nod3r.Collections;
@@ -6,11 +5,22 @@ using Nod3r.Solver;
 using Nod3r.Solver.Factories;
 using Numos.Maths;
 
-namespace Nod3r.Examples.Tests;
+namespace Nod3r.API.Tests;
 
 [TestFixture]
 public sealed class NodeExampleTests
 {
+    private static readonly Int3[] SimpleNet = [
+        new(0, 0, 0),
+        new(1, 0, 0),
+        new(2, 0, 0),
+        new(0, 1, 0),
+        new(0, 2, 0),
+        new(1, 2, 0),
+        new(2, 1, 0),
+        new(2, 2, 0),
+    ];
+    
     [Test]
     public void TestAdjacentNode()
     {
@@ -18,23 +28,24 @@ public sealed class NodeExampleTests
         {
             reg.Register<AdjacentNode, AdjacentNodeNet>();
         });
+        
         var solver = world.CreateSimulation();
-
         var chunk = solver.EnsureChunk<AdjacentNode>(default);
         
         var node = new AdjacentNode();
-        
-        solver.SetNode(node, chunk, new Int3(0, 0, 0));
-        solver.SetNode(node, chunk, new Int3(1, 0, 0));
-        solver.SetNode(node, chunk, new Int3(2, 0, 0));
-        solver.SetNode(node, chunk, new Int3(0, 1, 0));
-        solver.SetNode(node, chunk, new Int3(0, 2, 0));
-        solver.SetNode(node, chunk, new Int3(1, 2, 0));
-        solver.SetNode(node, chunk, new Int3(2, 1, 0));
-        solver.SetNode(node, chunk, new Int3(2, 2, 0));
+        var refs = new List<VoxelRef>(SimpleNet.Length);
+        foreach (var pos in SimpleNet)
+        {
+            refs.Add(solver.SetNode(node, chunk, pos));
+        }
         
         solver.Rebuild();
 
+        foreach (var pos in refs)
+        {
+            Assert.That(solver.HasNode<AdjacentNode>(pos), Is.True);
+        }
+        
         //var nets = solver.GetNetworksSnapshot<AdjacentNodeNet>();
         //Assert.That(nets, Has.Length.EqualTo(1));
     }

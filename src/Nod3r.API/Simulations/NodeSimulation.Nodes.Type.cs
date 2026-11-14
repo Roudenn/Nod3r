@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
+using Nod3r.API.Registration;
 using Nod3r.Solver;
 using Numos.Maths;
 
@@ -20,10 +21,12 @@ public sealed partial class NodeSimulation
     }
     
     [PublicAPI]
-    public void SetNode<T>(T node, NodeChunkHandle chunk, Int3 voxelPos, byte layer = 0) where T : INode
+    public VoxelRef SetNode<T>(T node, NodeChunkHandle chunk, Int3 voxelPos, byte layer = 0) where T : INode
     {
-        ushort flatIndex = (ushort) FlatArrayHelpers.GetIndex(Dimensions, voxelPos);
-        GetKernel<T>().SetNode(node, new VoxelHandle(chunk, flatIndex, layer));
+        var flatIndex = (ushort) FlatArrayHelpers.GetIndex(Dimensions, voxelPos);
+        var handle = new VoxelHandle(chunk, flatIndex, layer);
+        GetKernel<T>().SetNode(node, handle);
+        return new VoxelRef(handle, Id, NodeIdxStorage.Get<T>());
     }
 
     [PublicAPI]
