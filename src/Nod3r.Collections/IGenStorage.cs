@@ -1,5 +1,8 @@
 namespace Nod3r.Collections;
 
+/// <summary>
+/// TODO
+/// </summary>
 public interface IGenStorage<T>
 {
     /// <summary>

@@ -41,11 +41,11 @@ public sealed class UsingIdStorage<T> : GenIdStorage<T>
         private readonly ObjectPool<StorageHandle<T>> _handlePool = owner.HandlePool;
         private readonly int _count = owner.Count;
         private int _index = -1;
-        
+
         /// <summary>
         /// RHandle for the current element.
         /// </summary>
-        public StorageHandle<T> Current { get; private set; }
+        public StorageHandle<T> Current { get; private set; } = default!;
         
         // Oh my god, what is this?
         private StorageHandle<T> Next => _handlePool.Get().With(_data[_dense[_index]], new GenId(_dense[_index], _generations[_dense[_index]]));

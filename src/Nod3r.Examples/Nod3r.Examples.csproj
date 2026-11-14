@@ -11,7 +11,7 @@
         <Title>Nod3r Examples</Title>
         <Description>Example types for Nod3r.</Description>
         <PackageTags>graph;example;voxel;nativeaot</PackageTags>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <!--<GenerateDocumentationFile>true</GenerateDocumentationFile> Disabled until finished -->
     </PropertyGroup>
     
     <ItemGroup>

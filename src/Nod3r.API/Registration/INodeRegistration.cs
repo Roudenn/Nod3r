@@ -19,13 +19,13 @@ public interface INodeRegistration
     /// See <see cref="NodeRuleBuilder"/> for more details.
     /// </param>
     /// <param name="layerCapacity">
-    /// Default layer capacity for node type <see cref="TNode"/>.
+    /// Default layer capacity for node type <typeparamref name="TNode"/>.
     /// If multiple nodes are going to be placed frequently in a single voxel,
     /// it's recommended to set this value to the most common and large amount of nodes
     /// that a single voxel may have to avoid automatic array resizes.
     /// </param>
     /// <typeparam name="TNode">Type of the registered node.</typeparam>
-    /// <typeparam name="TNet">Type of the registered node network that control type <see cref="TNode"/>.</typeparam>
+    /// <typeparam name="TNet">Type of the registered node network that control type <typeparamref name="TNode"/>.</typeparam>
     /// <seealso cref="NodeRuleBuilder"/>
     void Register<TNode, TNet>(NodeRule<TNode> rule, byte layerCapacity = 1)
         where TNode : INode

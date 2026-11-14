@@ -8,18 +8,40 @@ namespace Nod3r.API.Simulations;
 
 public sealed partial class NodeSimulation
 {
+    /// <summary>
+    /// Adds a node on the first available layer at a specific chunk and position.
+    /// </summary>
+    /// <param name="node">Node data to set.</param>
+    /// <param name="chunk">Target chunk handle.</param>
+    /// <param name="voxelPos">Voxel position inside the chunk.</param>
+    /// <typeparam name="T">Type of the node data.</typeparam>
     [PublicAPI]
-    public void AddNode<T>(T node, NodeChunkHandle chunk, Int3 pos) where T : INode
+    public void AddNode<T>(T node, NodeChunkHandle chunk, Int3 voxelPos) where T : INode
     {
-        GetKernel<T>().AddNode(node, chunk, pos);
+        GetKernel<T>().AddNode(node, chunk, voxelPos);
     }
     
+    /// <summary>
+    /// Adds a node on the first available layer at a specific chunk and position.
+    /// </summary>
+    /// <param name="node">Node data to set.</param>
+    /// <param name="voxel">Voxel reference to set the node to.</param>
+    /// <typeparam name="T">Type of the node data.</typeparam>
     [PublicAPI]
     public void SetNode<T>(T node, VoxelRef voxel) where T : INode
     {
         GetKernel<T>().SetNode(node, voxel.Handle);
     }
     
+    /// <summary>
+    /// Sets a node at a specific chunk and position.
+    /// </summary>
+    /// <param name="node">Node data to set.</param>
+    /// <param name="chunk">Target chunk handle.</param>
+    /// <param name="voxelPos">Voxel position inside the chunk.</param>
+    /// <param name="layer"></param>
+    /// <typeparam name="T">Type of the node data.</typeparam>
+    /// <returns>A voxel reference to the target node.</returns>
     [PublicAPI]
     public VoxelRef SetNode<T>(T node, NodeChunkHandle chunk, Int3 voxelPos, byte layer = 0) where T : INode
     {
@@ -29,25 +51,52 @@ public sealed partial class NodeSimulation
         return new VoxelRef(handle, Id, NodeIdxStorage.Get<T>());
     }
 
+    /// <summary>
+    /// Removes a node at a specific voxel reference.
+    /// </summary>
+    /// <param name="voxel">The voxel reference of the node.</param>
+    /// <typeparam name="T">Type of the node data.</typeparam>
+    /// <returns>True if the node existed at the specified position; otherwise false.</returns>
     [PublicAPI]
     public bool RemoveNode<T>(VoxelRef voxel) where T : INode
     {
         return GetKernel<T>().RemoveNode(voxel.Handle);
     }
     
+    /// <summary>
+    /// Checks whether a node exists at a voxel reference.
+    /// </summary>
+    /// <param name="voxel">The voxel reference of the node.</param>
+    /// <typeparam name="T">Type of the node data.</typeparam>
+    /// <returns>True if the node exists at the specified position; otherwise false.</returns>
     [PublicAPI]
     public bool HasNode<T>(VoxelRef voxel) where T : INode
     {
         return GetKernel<T>().HasNode(voxel.Handle);
     }
 
-    /// <inheritdoc cref="INodeSimulation.TryGetNode{T}(VoxelHandle, out T?)" />
+    /// <summary>
+    /// Attempts to get a node at a specified voxel.
+    /// </summary>
+    /// <param name="voxel"></param>
+    /// <param name="node">The found node.</param>
+    /// <typeparam name="T">Type of the node.</typeparam>
+    /// <returns>True if the node was found.</returns>
     [PublicAPI]
     public bool TryGetNode<T>(VoxelRef voxel, [NotNullWhen(true)] out T? node) where T : INode
     {
         return GetKernel<T>().TryGetNode(voxel.Handle, out node);
     }
 
+    /// <summary>
+    /// Gets a node voxel of a certain type that is relative
+    /// to another voxel on the specified layer, and ensures that it exists.
+    /// </summary>
+    /// <param name="voxel">The origin node.</param>
+    /// <param name="offset">Offset relative to the origin voxel to check for the target.</param>
+    /// <param name="layer">Target layer to search the node in.</param>
+    /// <param name="relative">The node that was found at that position.</param>
+    /// <returns>True if the node was found on a relative position.</returns>
     [PublicAPI]
     public bool TryGetRelative<T>(VoxelRef voxel, Int3 offset, byte layer, out VoxelRef relative) where T : INode
     {
@@ -56,6 +105,14 @@ public sealed partial class NodeSimulation
         return success;
     }
 
+    /// <summary>
+    /// Gets a node voxel of a certain type that is relative
+    /// to another voxel on the same layer as the origin, and ensures that it exists.
+    /// </summary>
+    /// <param name="voxel">The origin node.</param>
+    /// <param name="offset">Offset relative to the origin voxel to check for the target.</param>
+    /// <param name="relative">The node that was found at that position.</param>
+    /// <returns>True if the node was found on a relative position.</returns>
     [PublicAPI]
     public bool TryGetRelative<T>(VoxelRef voxel, Int3 offset, out VoxelRef relative) where T : INode
     {
@@ -64,6 +121,11 @@ public sealed partial class NodeSimulation
         return success;
     }
     
+    /// <summary>
+    /// Marks the target voxel as dirty, which means it itself or one of its neighbors were changed.
+    /// </summary>
+    /// <param name="voxel">The target voxel to mark as dirty.</param>
+    /// <returns>True if the voxel existed and marked as dirty, false if the voxel doesn't exist.</returns>
     [PublicAPI]
     public bool DirtyVoxel<T>(VoxelRef voxel) where T : INode
     {

@@ -25,6 +25,16 @@ public sealed partial class NodeSimulation
         return GetKernel(voxel).HasNode(voxel.Handle);
     }
     
+    /// <summary>
+    /// Gets a node voxel of a certain type that is relative
+    /// to another voxel on the specified layer, and ensures that it exists.
+    /// </summary>
+    /// <param name="voxel">The origin node.</param>
+    /// <param name="offset">Offset relative to the origin voxel to check for the target.</param>
+    /// <param name="layer">Target layer to search the node in.</param>
+    /// <param name="relative">The node that was found at that position.</param>
+    /// <returns>True if the node was found on a relative position.</returns>
+    [PublicAPI]
     public bool TryGetRelative(VoxelRef voxel, Int3 offset, byte layer, out VoxelRef relative)
     {
         var success = GetKernel(voxel).TryGetRelative(voxel.Handle, offset, layer, out var relativeHandle);
@@ -32,7 +42,15 @@ public sealed partial class NodeSimulation
         return success;
     }
     
-    
+    /// <summary>
+    /// Gets a node voxel of a certain type that is relative
+    /// to another voxel on the same layer as the origin, and ensures that it exists.
+    /// </summary>
+    /// <param name="voxel">The origin node.</param>
+    /// <param name="offset">Offset relative to the origin voxel to check for the target.</param>
+    /// <param name="relative">The node that was found at that position.</param>
+    /// <returns>True if the node was found on a relative position.</returns>
+    [PublicAPI]
     public bool TryGetRelative(VoxelRef voxel, Int3 offset, out VoxelRef relative)
     {
         var success = GetKernel(voxel).TryGetRelative(voxel.Handle, offset, out var relativeHandle);

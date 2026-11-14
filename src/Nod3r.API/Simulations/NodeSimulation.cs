@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using JetBrains.Annotations;
 using Nod3r.API.Registration;
 using Nod3r.Solver;
@@ -22,10 +23,6 @@ namespace Nod3r.API.Simulations;
 /// </para>
 public sealed partial class NodeSimulation
 {
-    private INodeKernel[] _kernels = [];
-
-    private readonly SortedSet<NodeChunkHandle> _registeredChunks = new();
-
     /// <summary>
     /// Registered amount of node types in this solver instance.
     /// </summary>
@@ -54,6 +51,31 @@ public sealed partial class NodeSimulation
     /// </summary>
     [PublicAPI]
     public Int3 Dimensions { get; }
+    
+    /// <summary>
+    /// All kernels in a sequence controlled by this simulation.
+    /// </summary>
+    private INodeKernel[] _kernels = [];
+
+    /// <summary>
+    /// All chunks that were registered at least in a single kernel.
+    /// </summary>
+    private readonly SortedSet<NodeChunkHandle> _registeredChunks = new();
+    
+    /// <summary>
+    /// Nodes added since the last solve.
+    /// </summary>
+    private readonly ConcurrentBag<VoxelRef> _newNodes = new();
+
+    /// <summary>
+    /// Nodes that changed their connection conditions and have to rebuild their group.
+    /// </summary>
+    private readonly ConcurrentBag<VoxelRef> _changedNodes = new();
+    
+    /// <summary>
+    /// Chunks that got modified since the last solve.
+    /// </summary>
+    private readonly ConcurrentQueue<NodeChunkHandle> _changedChunks = new();
     
     /// <summary>
     /// Creates a new node simulation instance, registering it in a world.

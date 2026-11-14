@@ -16,12 +16,19 @@ public sealed partial class NodeSimulation
     public NodeChunkHandle EnsureChunk<T>(Int3 position) where T : INode
     {
         var kernel = GetKernel<T>();
-        if (!kernel.HasChunk(new NodeChunkHandle(position)))
-            kernel.CreateChunk(position);
+        var handle = new NodeChunkHandle(position);
         
-        return new NodeChunkHandle(position);
+        if (kernel.HasChunk(handle))
+            return handle;
+        
+        kernel.CreateChunk(position);
+        _registeredChunks.Add(handle);
+        return handle;
     }
     
+    /// <summary>
+    /// Ensures a chunk in all kernels controlled by this simulation.
+    /// </summary>
     [PublicAPI]
     public NodeChunkHandle EnsureChunk(Int3 position)
     {

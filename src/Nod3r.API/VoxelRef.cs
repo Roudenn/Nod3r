@@ -5,15 +5,17 @@ using Numos.Maths;
 namespace Nod3r.API;
 
 /// <summary>
-///     Stably identifies one voxel within some holder simulation.
+/// Stably identifies one voxel within some holder simulation.
 /// </summary>
 /// <param name="Simulation">The owning simulation registration.</param>
+/// <param name="Type">Registered integer ID of the node type.</param>
 /// <param name="Chunk">The owning chunk.</param>
 /// <param name="LocalVoxelIndex">The flat local voxel index within the chunk.</param>
+/// <param name="Layer">The layer of a voxel. 0 for all ID nodes.</param>
 /// <remarks>
-///     The value contains no object references and is suitable for deterministic ordering, snapshots, and replay data.
-///     It does not prove that the simulation, chunk, or voxel still exists; mutation methods validate the complete
-///     address against the receiving world.
+/// The value contains no object references and is suitable for deterministic ordering and snapshots.
+/// It does not prove that the simulation, chunk, or voxel still exists; mutation methods validate the complete
+/// address against the receiving world.
 /// </remarks>
 public readonly record struct VoxelRef(
     SimulationId Simulation,
@@ -23,12 +25,12 @@ public readonly record struct VoxelRef(
     byte Layer) : IComparable<VoxelRef>
 {
     /// <summary>
-    ///     Compares the complete stable address in simulation, chunk-coordinate, and voxel order.
+    /// Compares the complete stable address in simulation, chunk-coordinate, and voxel order.
     /// </summary>
     /// <param name="other">The cell reference to compare.</param>
     /// <returns>
-    ///     A negative value when this address sorts first, zero when the addresses match, or a positive value when
-    ///     <paramref name="other" /> sorts first.
+    /// A negative value when this address sorts first, zero when the addresses match, or a positive value when
+    /// <paramref name="other" /> sorts first.
     /// </returns>
     public int CompareTo(VoxelRef other)
     {

@@ -12,7 +12,7 @@ public readonly record struct GenId(int Index, uint Generation)
     /// <summary>
     /// An invalid index.
     /// </summary>
-    public readonly static GenId Invalid = new(0, 0);
+    public static readonly GenId Invalid = new(0, 0);
     
     /// <summary>
     /// Checks whether a specified <see cref="GenId"/> is valid.
