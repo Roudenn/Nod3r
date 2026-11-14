@@ -34,7 +34,7 @@ internal sealed partial class NodeKernel<TNode, TNet>
             handle = newId.ColumnHandle;
         }
         
-        chunk.Handles[chunkPos] = handle;
+        chunk.Handles[voxelIndex] = handle;
     }
 
     public bool RemoveNode(VoxelHandle handle)
