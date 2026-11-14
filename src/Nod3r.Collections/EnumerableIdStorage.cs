@@ -4,7 +4,7 @@ namespace Nod3r.Collections;
 
 /// <summary>
 /// A version of <see cref="GenIdStorage{T}"/> that implements <see cref="IEnumerable{T}"/>
-/// and allows to iterate through its elements.
+/// and allows to iterate through its elements directly.
 /// </summary>
 public sealed class EnumerableIdStorage<T> : GenIdStorage<T>, IEnumerable<T>
 {

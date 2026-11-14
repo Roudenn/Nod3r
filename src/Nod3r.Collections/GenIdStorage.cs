@@ -48,7 +48,7 @@ public class GenIdStorage<T> : IGenStorage<T>
     /// Current generation for each slot.
     /// Allows for instant deletion by incrementing the generation by 1.
     /// </summary>
-    private uint[] _generations;
+    internal uint[] Generations;
     
     /// <summary>
     /// Dense index of every slot.
@@ -71,6 +71,8 @@ public class GenIdStorage<T> : IGenStorage<T>
     /// </summary>
     public int Length { get; private set; }
 
+    internal readonly ObjectPool<StorageHandle<T>> HandlePool;
+
     /// <summary>
     /// Creates a new <see cref="GenIdStorage{T}"/> instance.
     /// </summary>
@@ -81,8 +83,9 @@ public class GenIdStorage<T> : IGenStorage<T>
         
         Data = new T[capacity];
         _nextSlots = new int[capacity];
-        _generations = new uint[capacity];
+        Generations = new uint[capacity];
         _denseIndex = new int[capacity];
+        HandlePool = new ObjectPool<StorageHandle<T>>(() => new StorageHandle<T>(this), 1);
         Dense = new int[capacity];
         
         for (int i = 0; i < capacity; i++)
@@ -90,41 +93,61 @@ public class GenIdStorage<T> : IGenStorage<T>
             // Build linked list chain for newly allocated segment.
             _nextSlots[i] = i == capacity - 1 ? int.MaxValue : i + 1;
             // Every slot starts at generation 1.
-            _generations[i] = 1;
+            Generations[i] = 1;
         }
     }
     
     /// <summary>
-    /// 
+    /// Gets an element from the storage.
     /// </summary>
     /// <param name="id"><see cref="GenId"/> for an element in the storage.</param>
     public T this[GenId id] => Get(id);
 
+    /// <summary>
+    /// Gets an element from the storage.
+    /// </summary>
+    /// <param name="id"><see cref="GenId"/> for an element in the storage.</param>
     public T Get(GenId id)
     {
         if ((uint)id.Index >= (uint)Data.Length)
             ThrowKeyNotFound();
    
-        if (_generations[id.Index] != id.Generation)
+        if (Generations[id.Index] != id.Generation)
             ThrowKeyNotFound();
 
         return Data[id.Index];
     }
 
+    /// <summary>
+    /// Gets a disposable handle to the element in the storage.
+    /// Mutate the <see cref="StorageHandle{T}.Data"/>, then dispose the handle
+    /// to set the value back to the storage.
+    /// </summary>
+    /// <remarks>
+    /// This is a compromise that exists because of ILVerify compatibility,
+    /// since ref returns can't be checked.
+    /// </remarks>
+    /// <param name="id"><see cref="GenId"/> for an element in the storage.</param>
     public StorageHandle<T> GetUsing(GenId id)
     {
-        return new StorageHandle<T>(Get(id), id, this);
+        return HandlePool.Get().With(Get(id), id);
     }
 
+    /// <inheritdoc/>
     public void Set(GenId id, T value)
     {
         if ((uint)id.Index >= (uint)Data.Length)
             ThrowKeyNotFound();
    
-        if (_generations[id.Index] != id.Generation)
+        if (Generations[id.Index] != id.Generation)
             ThrowKeyNotFound();
         
         Data[id.Index] = value;
+    }
+
+    void IGenStorage<T>.ReturnHandle(StorageHandle<T> handle)
+    {
+        HandlePool.Return(handle);
     }
 
     /// <summary>
@@ -136,7 +159,7 @@ public class GenIdStorage<T> : IGenStorage<T>
         if ((uint)id.Index >= (uint)Data.Length)
             return false;
    
-        return _generations[id.Index] == id.Generation;
+        return Generations[id.Index] == id.Generation;
     }
     
     /// <summary>
@@ -145,16 +168,6 @@ public class GenIdStorage<T> : IGenStorage<T>
     /// <param name="item">An item to add to the storage.</param>
     /// <param name="id">A <see cref="GenId"/> handle for the item.</param>
     public void Add(T item, out GenId id)
-    {
-        Allocate(out id) = item;
-    }
-    
-    /// <summary>
-    /// Allocates space for an item in a <see cref="GenIdStorage{T}"/>.
-    /// </summary>
-    /// <param name="id">A <see cref="GenId"/> handle for the item.</param>
-    /// <returns>A reference to the element in the internal array.</returns>
-    public ref T Allocate(out GenId id)
     {
         if ((uint)_nextFree >= (uint)Data.Length)
             ReAllocate();
@@ -167,8 +180,8 @@ public class GenIdStorage<T> : IGenStorage<T>
         _nextFree = _nextSlots[idx];
         _nextSlots[idx] = -1; // Means filled
 
-        id = new GenId(idx, _generations[idx]);
-        return ref Data[idx];
+        id = new GenId(idx, Generations[idx]);
+        Data[idx] = item;
     }
 
     /// <summary>
@@ -195,7 +208,7 @@ public class GenIdStorage<T> : IGenStorage<T>
         if ((uint)id.Index >= (uint)Data.Length)
             ThrowKeyNotFound();
         
-        if (_generations[id.Index] != id.Generation || _nextSlots[id.Index] >= 0)
+        if (Generations[id.Index] != id.Generation || _nextSlots[id.Index] >= 0)
             ThrowKeyNotFound();
 
         if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
@@ -213,7 +226,7 @@ public class GenIdStorage<T> : IGenStorage<T>
         }
         
         Count -= 1;
-        _generations[id.Index] += 1;
+        Generations[id.Index] += 1;
         _nextSlots[id.Index] = _nextFree;
         _nextFree = id.Index;
     }
@@ -287,7 +300,7 @@ public class GenIdStorage<T> : IGenStorage<T>
         
         Array.Resize(ref Data, newSize);
         Array.Resize(ref _nextSlots, newSize);
-        Array.Resize(ref _generations, newSize);
+        Array.Resize(ref Generations, newSize);
         Array.Resize(ref _denseIndex, newSize);
         Array.Resize(ref Dense, newSize);
 
@@ -296,7 +309,7 @@ public class GenIdStorage<T> : IGenStorage<T>
             // Build linked list chain for newly allocated segment.
             _nextSlots[i] = i == newSize - 1 ? _nextFree : i + 1;
             // Every slot starts at generation 1.
-            _generations[i] = 1;
+            Generations[i] = 1;
         }
 
         _nextFree = oldLength;
@@ -308,16 +321,41 @@ public class GenIdStorage<T> : IGenStorage<T>
     }
 }
 
-public sealed class StorageHandle<T>(T data, GenId id, IGenStorage<T> storage) : IDisposable
+/// <summary>
+/// A handle for a data structure implementing <see cref="IGenStorage{T}"/>
+/// that allows to directly mutate an element, and then set the value back
+/// to the storage automatically after the handle is disposed.
+/// </summary>
+public sealed class StorageHandle<T> : IDisposable
 {
     /// <summary>
     /// Mutable data that will be set after the wrapper is disposed.
     /// </summary>
-    public T Data = data;
+    public T Data = default!;
+    
+    /// <summary>
+    /// <see cref="GenId"/> of the data that will be set to after the handle is disposed.
+    /// </summary>
+    public GenId Id { get; private set; }
 
+    private readonly IGenStorage<T> _storage;
+    
+    internal StorageHandle(IGenStorage<T> storage)
+    {
+        _storage = storage;
+    }
+    
+    internal StorageHandle<T> With(T data, GenId id)
+    {
+        Data = data;
+        Id = id;
+        return this;
+    }
+    
     /// <inheritdoc/>
     public void Dispose()
     {
-        storage.Set(id, Data);
+        _storage.Set(Id, Data);
+        _storage.ReturnHandle(this);
     }
 }
