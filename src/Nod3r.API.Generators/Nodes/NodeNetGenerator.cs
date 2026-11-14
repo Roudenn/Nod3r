@@ -36,11 +36,12 @@ public sealed class NodeNetGenerator : IIncrementalGenerator
 
     private static NodeNetModel CreateModel(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var type = (INamedTypeSymbol)context.TargetSymbol;
+        return new NodeNetModel(PartialTypeModel.From(type), type);
     }
 
     private static GeneratorOutput<NodeNetModel> Analyze(ImmutableArray<NodeNetModel> nodes)
     {
-        throw new NotImplementedException();
+        return GeneratorOutput<NodeNetModel>.Empty;
     }
 }

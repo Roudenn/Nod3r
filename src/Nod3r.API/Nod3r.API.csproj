@@ -13,13 +13,37 @@
         <PackageTags>graph;solver;voxel;nativeaot</PackageTags>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="JetBrains.Annotations" Version="2026.2.0" />
+    </ItemGroup>
     
     <ItemGroup>
         <ProjectReference Include="..\Nod3r.Solver\Nod3r.Solver.csproj" />
+        <!-- Built here so pack can ship it under analyzers/; it isn't a dependency of the package. It also runs on
+            this project, which declares generated snapshots and serializable types of its own. -->
+        <ProjectReference Include="..\Nod3r.API.Generators\Nod3r.API.Generators.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false"
+                          PrivateAssets="all"
+                          GlobalPropertiesToRemove="PublishAot;PublishTrimmed;RuntimeIdentifier;SelfContained"/>
     </ItemGroup>
+
+    <PropertyGroup>
+        <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_PackNod3rApiGenerators</TargetsForTfmSpecificContentInPackage>
+    </PropertyGroup>
     
-    <ItemGroup>
-      <PackageReference Include="JetBrains.Annotations" Version="2026.2.0" />
-    </ItemGroup>
+    <!-- Pack calls this with TargetFramework set globally, so strip it before asking the netstandard2.0 generator
+     project where its output is. -->
+    <Target Name="_PackNod3rApiGenerators">
+        <MSBuild Projects="..\Nod3r.API.Generators\Nod3r.API.Generators.csproj"
+                 Targets="GetTargetPath"
+                 RemoveProperties="TargetFramework;RuntimeIdentifier;PublishAot;PublishTrimmed;SelfContained">
+            <Output TaskParameter="TargetOutputs" ItemName="_Nod3rApiGeneratorAssembly"/>
+        </MSBuild>
+        <ItemGroup>
+            <TfmSpecificPackageFile Include="@(_Nod3rApiGeneratorAssembly)" PackagePath="analyzers/dotnet/cs"/>
+        </ItemGroup>
+    </Target>
 
 </Project>
