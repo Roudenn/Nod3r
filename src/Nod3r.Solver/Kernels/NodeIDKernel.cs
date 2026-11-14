@@ -110,6 +110,11 @@ internal sealed class NodeIDKernel<TNet>
         return false;
     }
 
+    public void Rebuild()
+    {
+        throw new NotImplementedException();
+    }
+
     #endregion
     
     private NodeIDChunk GetChunk(Int3 chunk) => _chunkMap[chunk];

@@ -14,11 +14,11 @@ public sealed class NodeRule<T>(
     short[] layers,
     Func<NodeSelectionArgs<T>, bool> rule) where T : INode
 {
-    private readonly Int3[] _selections = selections;
+    internal readonly Int3[] Selections = selections;
 
-    private readonly short[] _layers = layers;
+    internal readonly short[] Layers = layers;
     
-    private readonly Func<NodeSelectionArgs<T>, bool> _rule = rule;
+    internal readonly Func<NodeSelectionArgs<T>, bool> Rule = rule;
 }
 
 /// <summary>

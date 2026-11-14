@@ -10,7 +10,7 @@ namespace Nod3r.Solver.Kernels;
 /// <summary>
 /// Kernel implementation for specific <see cref="INode"/> types.
 /// </summary>
-internal sealed partial class NodeKernel<TNode, TNet>(Int3 dimensions) : IDisposable, INodeKernel<TNode>, INodeNetKernel<TNet>
+internal sealed partial class NodeKernel<TNode, TNet>(NodeRule<TNode> rule, Int3 dimensions) : IDisposable, INodeKernel<TNode>, INodeNetKernel<TNet>
     where TNode : INode
     where TNet : INodeNet, INodeNetCreator<TNet>
 {
@@ -21,6 +21,8 @@ internal sealed partial class NodeKernel<TNode, TNet>(Int3 dimensions) : IDispos
     private readonly ConcurrentDictionary<Int3, NodeChunk> _chunkMap = new();
     
     internal readonly Int3 Dimensions = dimensions;
+
+    internal readonly NodeRule<TNode> Rule = rule;
     
     public List<GenId> Nets { get; set; } = new();
     
@@ -37,6 +39,21 @@ internal sealed partial class NodeKernel<TNode, TNet>(Int3 dimensions) : IDispos
     /// </summary>
     /// <remarks>The count includes both awake and sleeping chunks.</remarks>
     public int ChunkCount => _chunkMap.Count;
+    
+    /// <summary>
+    /// Nodes that changed their connection conditions and have to rebuild their group.
+    /// </summary>
+    private readonly HashSet<VoxelHandle> _newNodes = new();
+    
+    /// <summary>
+    /// Nodes that changed their connection conditions and have to rebuild their group.
+    /// </summary>
+    private readonly HashSet<VoxelHandle> _changedNodes = new();
+    
+    /// <summary>
+    /// Chunks that got modified since the last solve.
+    /// </summary>
+    private readonly HashSet<Int3> _changedChunks = new();
     
     /// <summary>
     /// Gets the <see cref="ColumnHandle"/> for <see cref="NodeStorage{T}"/>

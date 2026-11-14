@@ -57,6 +57,8 @@ internal interface INodeKernel
     bool TryGetRelative(VoxelHandle node, Int3 offset, byte layer, out VoxelHandle relative);
     
     bool TryGetRelative(VoxelHandle node, Int3 offset, out VoxelHandle relative);
+
+    void Rebuild();
 }
 
 /// <summary>
@@ -83,7 +85,7 @@ internal interface INodeKernel<T> : INodeKernel where T : INode
     /// <param name="node">The node data to write into a position.</param>
     /// <param name="chunk">The target chunk.</param>
     /// <param name="pos">The target position in the chunk.</param>
-    void AddNode(T node, Int3 chunk, Int3 pos);
+    VoxelHandle AddNode(T node, Int3 chunk, Int3 pos);
 
     bool TryGetNode(VoxelHandle voxel, [NotNullWhen(true)] out T? node);
     

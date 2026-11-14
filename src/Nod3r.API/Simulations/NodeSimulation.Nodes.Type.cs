@@ -16,9 +16,10 @@ public sealed partial class NodeSimulation
     /// <param name="voxelPos">Voxel position inside the chunk.</param>
     /// <typeparam name="T">Type of the node data.</typeparam>
     [PublicAPI]
-    public void AddNode<T>(T node, NodeChunkHandle chunk, Int3 voxelPos) where T : INode
+    public VoxelRef AddNode<T>(T node, NodeChunkHandle chunk, Int3 voxelPos) where T : INode
     {
-        GetKernel<T>().AddNode(node, chunk, voxelPos);
+        var handle = GetKernel<T>().AddNode(node, chunk, voxelPos);
+        return new VoxelRef(handle, Id, NodeIdxStorage.Get<T>());
     }
     
     /// <summary>
@@ -73,6 +74,26 @@ public sealed partial class NodeSimulation
     public bool HasNode<T>(VoxelRef voxel) where T : INode
     {
         return GetKernel<T>().HasNode(voxel.Handle);
+    }
+    
+    internal bool HasNode<T>(VoxelHandle handle) where T : INode
+    {
+        return GetKernel<T>().HasNode(handle);
+    }
+    
+    /// <summary>
+    /// Checks whether a node exists at a chunk, voxel position and layer.
+    /// </summary>
+    /// <param name="chunk">Chunk handle of the voxel.</param>
+    /// <param name="voxelPos">Voxel position inside the chunk.</param>
+    /// <param name="layer">Layer of the voxel.</param>
+    /// <typeparam name="T">Type of the node data.</typeparam>
+    /// <returns>True if the node exists at the specified position; otherwise false.</returns>
+    [PublicAPI]
+    public bool HasNode<T>(NodeChunkHandle chunk, Int3 voxelPos, byte layer) where T : INode
+    {
+        var flatIndex = (ushort) FlatArrayHelpers.GetIndex(Dimensions, voxelPos);
+        return GetKernel<T>().HasNode(new VoxelHandle(chunk.Position, flatIndex, layer));
     }
 
     /// <summary>
@@ -129,7 +150,12 @@ public sealed partial class NodeSimulation
     [PublicAPI]
     public bool DirtyVoxel<T>(VoxelRef voxel) where T : INode
     {
-        if (!HasNode<T>(voxel))
+        return DirtyVoxel<T>(voxel.Handle);
+    }
+    
+    internal bool DirtyVoxel<T>(VoxelHandle handle) where T : INode
+    {
+        if (!HasNode<T>(handle))
             return false;
         
         // TODO

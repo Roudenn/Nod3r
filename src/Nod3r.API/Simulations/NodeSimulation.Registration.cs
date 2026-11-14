@@ -15,7 +15,7 @@ public sealed partial class NodeSimulation
         ArrayHelpers.EnsureCapacity(ref _kernels, RegistrationCount);
         ArrayHelpers.EnsureCapacity(ref _idxes, NodeIdxStorage.Count);
 
-        _kernels[RegistrationCount] = new NodeKernel<TNode, TNet>(Dimensions);
+        _kernels[RegistrationCount] = new NodeKernel<TNode, TNet>(rule, Dimensions);
         _idxes[typeIdx.Value] = RegistrationCount;
         
         RegistrationCount++;

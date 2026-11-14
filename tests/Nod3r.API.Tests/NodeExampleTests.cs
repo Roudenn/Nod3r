@@ -21,8 +21,12 @@ public sealed class NodeExampleTests
         new(2, 2, 0),
     ];
     
+    /// <summary>
+    /// Places a simple graph of nodes in a single chunk and checks
+    /// that it properly makes a single network after the rebuild.
+    /// </summary>
     [Test]
-    public void TestAdjacentNode()
+    public void SimpleNet_CreatesNetwork()
     {
         var world = new NodeWorld(reg =>
         {
@@ -46,8 +50,8 @@ public sealed class NodeExampleTests
             Assert.That(solver.HasNode<AdjacentNode>(pos), Is.True);
         }
         
-        //var nets = solver.GetNetworksSnapshot<AdjacentNodeNet>();
-        //Assert.That(nets, Has.Length.EqualTo(1));
+        var nets = solver.GetNetworksSnapshot<AdjacentNodeNet>();
+        Assert.That(nets, Has.Length.EqualTo(1));
     }
     
     private record struct AdjacentNode() : INode, INodeAutoRegistration<AdjacentNode>

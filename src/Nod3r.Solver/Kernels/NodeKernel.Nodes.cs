@@ -5,11 +5,12 @@ namespace Nod3r.Solver.Kernels;
 
 internal sealed partial class NodeKernel<TNode, TNet>
 {
-    public void AddNode(TNode node, Int3 chunk, Int3 pos)
+    public VoxelHandle AddNode(TNode node, Int3 chunk, Int3 pos)
     {
-        ushort flatIndex = (ushort) FlatArrayHelpers.GetIndex(Dimensions, pos);
+        var flatIndex = (ushort) FlatArrayHelpers.GetIndex(Dimensions, pos);
         byte layer = NodeStorage.GetFreeLayer(GetId(chunk, flatIndex));
         SetNode(node, chunk, flatIndex, layer);
+        return new  VoxelHandle(chunk, flatIndex, layer);
     }
 
     public void SetNode(TNode node, VoxelHandle handle)
@@ -35,6 +36,7 @@ internal sealed partial class NodeKernel<TNode, TNet>
         }
         
         chunk.Handles[voxelIndex] = handle;
+        _newNodes.Add(new VoxelHandle(chunkPos, voxelIndex, layer));
     }
 
     public bool RemoveNode(VoxelHandle handle)
@@ -42,11 +44,12 @@ internal sealed partial class NodeKernel<TNode, TNet>
         if (!TryGetId(handle, out var id))
             return false;
         
-        if (!TryGetNode(handle, out var node))
+        if (!HasNode(handle))
             return false;
         
         NodeStorage.Free(id, handle.Layer);
         GetChunk(handle.ChunkPos).Handles[handle.VoxelIndex] = ColumnHandle.Invalid;
+        _newNodes.Remove(handle); // In case if the node was added and removed before the rebuild.
         return true;
     }
 
