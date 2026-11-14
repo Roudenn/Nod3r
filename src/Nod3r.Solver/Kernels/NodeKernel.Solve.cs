@@ -38,6 +38,7 @@ internal sealed partial class NodeKernel<TNode, TNet>
 
             if (traversedNets.Count == 0)
             {
+                // All nodes are new in this group, create a new network for them
                 var net = TNet.CreateNet();
                 foreach (var handle in traversed)
                 {
@@ -101,22 +102,24 @@ internal sealed partial class NodeKernel<TNode, TNet>
 
                 var relPos = FlatArrayHelpers.GetPosition(Dimensions, relative.VoxelIndex)
                              - FlatArrayHelpers.GetPosition(Dimensions, handle.VoxelIndex); // TODO interchunk traversal
-                
-                if (!rule.Rule.Invoke(new NodeSelectionArgs<TNode>(
-                        current.Value.Data,
-                        neighbor.Value.Data,
-                        relPos,
-                        handle.Layer,
-                        relative.Layer)))
+
+                var args = new NodeSelectionArgs<TNode>(
+                    current.Value.Data,
+                    neighbor.Value.Data,
+                    relPos,
+                    handle.Layer,
+                    relative.Layer);
+                if (!rule.Rule.Invoke(args))
                     continue;
 
                 if (traversed != null && traversed.Contains(relative))
                     continue;
                 
+                // If it's a part of a network then this branch should be stopped.
                 if (traversedNets != null && neighbor.Value.NetId != GenId.Invalid)
                     traversedNets.Add(neighbor.Value.NetId);
-                    
-                result.Add(relative);
+                else
+                    result.Add(relative);
             }
         }
     }

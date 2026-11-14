@@ -1,8 +1,4 @@
-using Nod3r.API.Registration;
-using Nod3r.API.Rules;
-using Nod3r.Collections;
-using Nod3r.Solver;
-using Nod3r.Solver.Factories;
+using Nod3r.Examples;
 using Numos.Maths;
 
 namespace Nod3r.API.Tests;
@@ -52,45 +48,39 @@ public sealed class NodeExampleTests
         
         var nets = solver.GetNetworksSnapshot<AdjacentNodeNet>();
         Assert.That(nets, Has.Length.EqualTo(1));
+        Assert.That(nets[0].Nodes, Has.Count.EqualTo(8));
     }
+
+    private const int Dimensions = 16;
     
-    private record struct AdjacentNode() : INode, INodeAutoRegistration<AdjacentNode>
+    /// <summary>
+    /// Fills a chunk with adjacent nodes and checks that it makes a single network.
+    /// Used for a benchmark.
+    /// </summary>
+    [Test]
+    public void Fill_Rebuild_AdjacentNode()
     {
-        public float Capacity = 1f;
+        var world = new NodeWorld(reg =>
+        {
+            reg.Register<AdjacentNode, AdjacentNodeNet>();
+        });
+        var simulation = world.CreateSimulation(Dimensions, Dimensions, Dimensions);
+        var handle = simulation.EnsureChunk<AdjacentNode>(Int3Helpers.Zero);
+        for (int z = 0; z < Dimensions; z++)
+        {
+            for (int y = 0; y < Dimensions; y++)
+            {
+                for (int x = 0; x < Dimensions; x++)
+                {
+                    simulation.SetNode(new AdjacentNode(), handle, new Int3(y, x, z));
+                }
+            }
+        }
         
-        public static NodeRule<AdjacentNode> ConnectionRule =>
-            NodeRuleBuilder.Create()
-            .IncludeCartesian()
-            .Compile<AdjacentNode>();
-    }
-    
-    private struct AdjacentNodeNet() : INodeNet<AdjacentNode, AdjacentNodeNet>, INodeNetCreator<AdjacentNodeNet>
-    {
-        public float TotalCapacity = 0f;
-
-        public GenId Id { get; }
+        simulation.Rebuild();
         
-        public HashSet<LayerId> Nodes { get; } = new();
-
-        public void Initialize()
-        {
-        }
-
-        public void Shutdown()
-        {
-        }
-
-        public void Merge(IReadOnlyList<AdjacentNodeNet> nets)
-        {
-        }
-
-        public void Split(AdjacentNodeNet parent)
-        {
-        }
-
-        public static AdjacentNodeNet CreateNet()
-        {
-            return new AdjacentNodeNet();
-        }
+        var nets = simulation.GetNetworksSnapshot<AdjacentNodeNet>();
+        Assert.That(nets, Has.Length.EqualTo(1));
+        Assert.That(nets[0].Nodes, Has.Count.EqualTo(Dimensions *  Dimensions * Dimensions));
     }
 }
