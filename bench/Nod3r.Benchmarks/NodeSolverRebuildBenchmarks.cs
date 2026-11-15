@@ -36,4 +36,28 @@ public class NodeSolverRebuildBenchmarks
         
         simulation.Rebuild();
     }
+
+    [Benchmark]
+    public void Lines_Rebuild_AdjacentNode()
+    {
+        var world = new NodeWorld(reg => { reg.Register<AdjacentNode, AdjacentNodeNet>(); });
+        var simulation = world.CreateSimulation(Dimensions, Dimensions, Dimensions);
+        var handle = simulation.EnsureChunk<AdjacentNode>(Int3Helpers.Zero);
+        for (int z = 0; z < Dimensions; z++)
+        {
+            if (z % 2 != 0)
+                continue;
+
+            for (int y = 0; y < Dimensions; y++)
+            {
+                if (y % 2 != 0)
+                    continue;
+
+                for (int x = 0; x < Dimensions; x++)
+                {
+                    simulation.SetNode(new AdjacentNode(), handle, new Int3(y, x, z));
+                }
+            }
+        }
+    }
 }
