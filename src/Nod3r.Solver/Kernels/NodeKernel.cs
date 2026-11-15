@@ -89,4 +89,9 @@ internal sealed partial class NodeKernel<TNode, TNet>(NodeRule<TNode> rule, Int3
     {
         return NodeStorage.GetLayerId(column, layer);
     }
+
+    public LayerId GetLayerId(VoxelHandle handle)
+    {
+        return GetLayerId(GetId(handle), handle.Layer);
+    }
 }

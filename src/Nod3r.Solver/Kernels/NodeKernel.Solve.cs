@@ -4,6 +4,8 @@ namespace Nod3r.Solver.Kernels;
 
 internal sealed partial class NodeKernel<TNode, TNet>
 {
+    private readonly Dictionary<GenId, TNet> _netsCache = new();
+    
     public void Rebuild()
     {
         BuildNetworks();
@@ -15,26 +17,42 @@ internal sealed partial class NodeKernel<TNode, TNet>
     /// </summary>
     private void BuildNetworks()
     {
-        var traversed = new HashSet<VoxelHandle>(_newNodes.Count);
+        var visited = new HashSet<VoxelHandle>(_newNodes.Count);
         var traversedNets = new HashSet<GenId>();
         var stack = new Stack<VoxelHandle>(_newNodes.Count);
-        var cache = new List<VoxelHandle>();
+        var cache = new List<Candidate>();
+        var netNodeIds = new HashSet<LayerId>();
         foreach (var start in _newNodes)
         {
-            if (traversed.Contains(start))
+            if (visited.Contains(start))
                 continue; // This node was already included to a network
             
             stack.Push(start);
+
+            traversedNets.Clear();
             
             while (stack.Count > 0)
             {
                 var handle = stack.Pop();
-                traversed.Add(handle);
                 cache.Clear();
-                FindNeighbours(handle, Rule, cache, traversed, traversedNets);
+                FindNeighbours(handle, Rule, cache);
                 foreach (var found in cache)
                 {
-                    stack.Push(found);
+                    if (traversedNets.Contains(found.NetId))
+                        continue;
+                
+                    if (!visited.Add(found.Handle))
+                        continue; // Already visited
+                    
+                    // If it's a part of a network then this branch should be stopped.
+                    if (found.NetId != GenId.Invalid)
+                    {
+                        traversedNets.Add(found.NetId);
+                        continue;
+                    }
+                    
+                    stack.Push(found.Handle);
+                    netNodeIds.Add(GetLayerId(found.Handle));
                 }
             }
 
@@ -42,12 +60,9 @@ internal sealed partial class NodeKernel<TNode, TNet>
             {
                 // All nodes are new in this group, create a new network for them
                 var net = TNet.CreateNet();
-                foreach (var handle in traversed)
-                {
-                    net.Nodes.Add(GetLayerId(GetId(handle), handle.Layer));
-                }
-            
+                net.Nodes.UnionWith(netNodeIds);
                 net.Initialize();
+                
                 var id = NodeNetStorage.Add(net);
                 foreach (var layerId in net.Nodes)
                 {
@@ -57,13 +72,14 @@ internal sealed partial class NodeKernel<TNode, TNet>
             }
             else
             {
-                var nets = new List<TNet>();
+                _netsCache.Clear();
+                _netsCache.EnsureCapacity(traversedNets.Count);
                 var biggestId = GenId.Invalid;
                 var biggestCount = 0;
                 foreach (var id in traversedNets)
                 {
                     var net = NodeNetStorage.Get(id);
-                    nets.Add(net);
+                    _netsCache.Add(id, net);
                     if (net.Nodes.Count < biggestCount)
                         continue;
                     
@@ -72,10 +88,11 @@ internal sealed partial class NodeKernel<TNode, TNet>
                 }
                 
                 var mainNet = NodeNetStorage.Get(biggestId);
-                nets.Remove(mainNet); // TODO default equality here is evil
-                mainNet.Merge(nets);
+                _netsCache.Remove(biggestId);
+                mainNet.Merge(_netsCache.Values.ToList());
+                mainNet.Nodes.UnionWith(netNodeIds);
 
-                foreach (var net in nets)
+                foreach (var net in _netsCache.Values)
                 {
                     net.Shutdown();
                 }
@@ -86,10 +103,13 @@ internal sealed partial class NodeKernel<TNode, TNet>
     private void FindNeighbours(
         VoxelHandle handle,
         NodeRule<TNode> rule,
-        List<VoxelHandle> result,
-        HashSet<VoxelHandle>? traversed = null,
-        HashSet<GenId>? traversedNets = null)
+        List<Candidate> result)
     {
+        var curPosition = FlatArrayHelpers.GetPosition(Dimensions, handle.VoxelIndex);
+        
+        if (!TryGetNodeMeta(handle, out var current))
+            return;
+        
         foreach (var selection in rule.Selections)
         {
             foreach (var relLayer in rule.Layers)
@@ -98,12 +118,11 @@ internal sealed partial class NodeKernel<TNode, TNet>
                 if (!TryGetRelative(handle, selection, layer, out var relative))
                     continue;
             
-                if (!TryGetNodeMeta(handle, out var current)
-                    || !TryGetNodeMeta(relative, out var neighbor))
+                if (!TryGetNodeMeta(relative, out var neighbor))
                     continue;
 
-                var relPos = FlatArrayHelpers.GetPosition(Dimensions, relative.VoxelIndex)
-                             - FlatArrayHelpers.GetPosition(Dimensions, handle.VoxelIndex); // TODO interchunk traversal
+                // TODO interchunk traversal
+                var relPos = FlatArrayHelpers.GetPosition(Dimensions, relative.VoxelIndex) - curPosition;
 
                 var args = new NodeSelectionArgs<TNode>(
                     current.Value.Data,
@@ -111,18 +130,14 @@ internal sealed partial class NodeKernel<TNode, TNet>
                     relPos,
                     handle.Layer,
                     relative.Layer);
+                
                 if (!rule.Rule.Invoke(args))
                     continue;
-
-                if (traversed != null && traversed.Contains(relative))
-                    continue;
                 
-                // If it's a part of a network then this branch should be stopped.
-                if (traversedNets != null && neighbor.Value.NetId != GenId.Invalid)
-                    traversedNets.Add(neighbor.Value.NetId);
-                else
-                    result.Add(relative);
+                result.Add(new Candidate(relative, neighbor.Value.NetId));
             }
         }
     }
+    
+    private record struct Candidate(VoxelHandle Handle, GenId NetId);
 }
