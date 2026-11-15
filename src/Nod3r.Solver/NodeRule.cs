@@ -7,7 +7,10 @@ namespace Nod3r.Solver;
 /// </summary>
 /// <param name="selections">Relative positions to check around the nodes position.</param>
 /// <param name="layers">Relative layers to check around the current node's layer.</param>
-/// <param name="rule">A condition that checks whether the current node can connect to the other one.</param>
+/// <param name="rule">
+/// A condition that checks whether the current node can connect to the other one.
+/// Must be thread safe if parallel processing is enabled.
+/// </param>
 /// <typeparam name="T">Type of the node.</typeparam>
 public sealed class NodeRule<T>(
     Int3[] selections,

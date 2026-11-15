@@ -80,7 +80,14 @@ public sealed class NodeVoxelSelectionBuilder
     /// It can check whether the two nodes should be connected
     /// by comparing their internal data by providing a delegate.
     /// </summary>
-    /// <param name="rule">The delegate that checks whether the 2 nodes can connect or not.</param>
+    /// <remarks>
+    /// WARNING: If parallel processing for nodes is enabled,
+    /// <paramref name="rule"/> MUST be thread-safe.
+    /// </remarks>
+    /// <param name="rule">
+    /// The delegate that checks whether the 2 nodes can connect or not.
+    /// Must be thread safe if parallel processing is enabled.
+    /// </param>
     /// <typeparam name="T">Type of node this rule controls.</typeparam>
     /// <returns>A new <see cref="NodeRule{T}"/> instance.</returns>
     [Pure, PublicAPI]

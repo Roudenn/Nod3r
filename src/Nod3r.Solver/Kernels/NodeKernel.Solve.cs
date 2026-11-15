@@ -4,6 +4,8 @@ namespace Nod3r.Solver.Kernels;
 
 internal sealed partial class NodeKernel<TNode, TNet>
 {
+    private readonly ObjectPool<HashSet<VoxelHandle>> _traversedPool = new(() => new());
+    
     private readonly Dictionary<GenId, TNet> _netsCache = new();
     
     public void Rebuild()

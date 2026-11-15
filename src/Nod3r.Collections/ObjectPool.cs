@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+
 namespace Nod3r.Collections;
 
 /// <summary>
@@ -6,7 +8,7 @@ namespace Nod3r.Collections;
 /// </summary>
 public sealed class ObjectPool<T>
 {
-    private readonly Stack<T> _data;
+    private readonly ConcurrentStack<T> _data;
 
     private readonly Func<T> _factory;
 
@@ -17,7 +19,7 @@ public sealed class ObjectPool<T>
     /// <param name="capacity">Starting capacity of the object pool.</param>
     public ObjectPool(Func<T> factory, int capacity = 4)
     {
-        _data = new Stack<T>(capacity);
+        _data = new ConcurrentStack<T>();
         _factory = factory;
         for (int i = 0; i < capacity; i++)
         {
