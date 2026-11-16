@@ -1,4 +1,5 @@
 using JetBrains.Annotations;
+using Nod3r.API.Attributes;
 using Nod3r.API.Registration;
 using Nod3r.API.Simulations;
 using Nod3r.Collections;
@@ -33,15 +34,28 @@ public sealed class NodeWorld : INodeRegistration
 
     /// <summary>
     /// Creates a new <see cref="NodeWorld"/> instance and
-    /// automatically does a registration if provided.
+    /// automatically executes a registration for all <see cref="INode"/>s
+    /// with <see cref="RegisterNodeAttribute"/>.
+    /// </summary>
+    /// <param name="autoRegistration">
+    /// If false, doesn't register anything, and instead returns an empty world
+    /// </param>
+    public NodeWorld(bool autoRegistration = true)
+    {
+        // TODO SOURCE GEN
+    }
+    
+    /// <summary>
+    /// Creates a new <see cref="NodeWorld"/> instance and
+    /// automatically executes a registration.
     /// </summary>
     /// <param name="registration">
     /// An optional registration delegate that registers
     /// the types available for this <see cref="NodeWorld"/>.
     /// </param>
-    public NodeWorld(Action<INodeRegistration>? registration = null)
+    public NodeWorld(Action<INodeRegistration> registration)
     {
-        registration?.Invoke(this);
+        registration.Invoke(this);
     }
 
     /// <summary>
