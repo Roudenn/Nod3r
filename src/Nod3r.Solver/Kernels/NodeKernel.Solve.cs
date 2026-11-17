@@ -4,13 +4,17 @@ namespace Nod3r.Solver.Kernels;
 
 internal sealed partial class NodeKernel<TNode, TNet>
 {
-    private readonly ObjectPool<HashSet<VoxelHandle>> _traversedPool = new(() => new());
-    
     private readonly Dictionary<GenId, TNet> _netsCache = new();
+    private readonly HashSet<VoxelHandle> _visited = new();
+    private readonly HashSet<GenId> _traversedNets = new();
+    private readonly Stack<VoxelHandle> _stack = new();
+    private readonly List<Candidate> _cache = new();
+    private readonly HashSet<LayerId> _netNodeIds = new();
     
     public void Rebuild()
     {
         BuildNetworks();
+        _newNodes.Clear();
     }
 
     /// <summary>
@@ -19,50 +23,53 @@ internal sealed partial class NodeKernel<TNode, TNet>
     /// </summary>
     private void BuildNetworks()
     {
-        var visited = new HashSet<VoxelHandle>(_newNodes.Count);
-        var traversedNets = new HashSet<GenId>();
-        var stack = new Stack<VoxelHandle>(_newNodes.Count);
-        var cache = new List<Candidate>();
-        var netNodeIds = new HashSet<LayerId>();
+        _visited.Clear();
+        _visited.EnsureCapacity(_newNodes.Count);
+        _traversedNets.Clear();
+        _stack.Clear();
+        _stack.EnsureCapacity(_newNodes.Count);
+        _cache.Clear();
+        _netNodeIds.Clear();
         foreach (var start in _newNodes)
         {
-            if (visited.Contains(start))
+            if (_visited.Contains(start))
                 continue; // This node was already included to a network
             
-            stack.Push(start);
+            _stack.Push(start);
+            _netNodeIds.Add(GetLayerId(start));
 
-            traversedNets.Clear();
+            _traversedNets.Clear();
             
-            while (stack.Count > 0)
+            while (_stack.Count > 0)
             {
-                var handle = stack.Pop();
-                cache.Clear();
-                FindNeighbours(handle, Rule, cache);
-                foreach (var found in cache)
+                var handle = _stack.Pop();
+                _cache.Clear();
+                FindNeighbours(handle, Rule, _cache);
+                foreach (var found in _cache)
                 {
-                    if (traversedNets.Contains(found.NetId))
+                    if (_traversedNets.Contains(found.NetId))
                         continue;
                 
-                    if (!visited.Add(found.Handle))
+                    if (!_visited.Add(found.Handle))
                         continue; // Already visited
                     
                     // If it's a part of a network then this branch should be stopped.
                     if (found.NetId != GenId.Invalid)
                     {
-                        traversedNets.Add(found.NetId);
+                        _traversedNets.Add(found.NetId);
                         continue;
                     }
                     
-                    stack.Push(found.Handle);
-                    netNodeIds.Add(GetLayerId(found.Handle));
+                    _stack.Push(found.Handle);
+                    _netNodeIds.Add(GetLayerId(found.Handle));
                 }
             }
 
-            if (traversedNets.Count == 0)
+            if (_traversedNets.Count == 0)
             {
                 // All nodes are new in this group, create a new network for them
                 var net = TNet.CreateNet();
-                net.Nodes.UnionWith(netNodeIds);
+                net.Nodes.UnionWith(_netNodeIds);
                 net.Initialize();
                 
                 var id = NodeNetStorage.Add(net);
@@ -75,10 +82,10 @@ internal sealed partial class NodeKernel<TNode, TNet>
             else
             {
                 _netsCache.Clear();
-                _netsCache.EnsureCapacity(traversedNets.Count);
+                _netsCache.EnsureCapacity(_traversedNets.Count);
                 var biggestId = GenId.Invalid;
                 var biggestCount = 0;
-                foreach (var id in traversedNets)
+                foreach (var id in _traversedNets)
                 {
                     var net = NodeNetStorage.Get(id);
                     _netsCache.Add(id, net);
@@ -92,7 +99,7 @@ internal sealed partial class NodeKernel<TNode, TNet>
                 var mainNet = NodeNetStorage.Get(biggestId);
                 _netsCache.Remove(biggestId);
                 mainNet.Merge(_netsCache.Values.ToList());
-                mainNet.Nodes.UnionWith(netNodeIds);
+                mainNet.Nodes.UnionWith(_netNodeIds);
 
                 foreach (var net in _netsCache.Values)
                 {
