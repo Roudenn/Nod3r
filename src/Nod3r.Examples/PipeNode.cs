@@ -129,7 +129,7 @@ public struct PipeNodeNetwork() : INodeNet<PipeNode, PipeNodeNetwork>, INodeNetC
     }
 
     /// <inheritdoc/>
-    public void Merge(IReadOnlyList<PipeNodeNetwork> nets)
+    public void Merge(ReadOnlySpan<PipeNodeNetwork> nets)
     {
     }
 

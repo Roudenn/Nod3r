@@ -18,7 +18,7 @@ public struct DummyNodeNet<T>() : INodeNet<T, DummyNodeNet<T>>, INodeNetCreator<
     {
     }
 
-    public void Merge(IReadOnlyList<DummyNodeNet<T>> nets)
+    public void Merge(ReadOnlySpan<DummyNodeNet<T>> nets)
     {
     }
 

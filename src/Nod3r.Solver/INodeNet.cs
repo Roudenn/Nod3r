@@ -57,7 +57,7 @@ public interface INodeNet<TSelf> : INodeNet where TSelf : INodeNet<TSelf>
     /// This method is called right before Shutdown and release of every network in the set.
     /// </para>
     /// </summary>
-    void Merge(IReadOnlyList<TSelf> nets);
+    void Merge(ReadOnlySpan<TSelf> nets);
 
     /// <summary>
     /// Called on a newly created node network after its initialization

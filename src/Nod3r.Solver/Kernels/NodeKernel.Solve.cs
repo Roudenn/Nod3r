@@ -4,12 +4,13 @@ namespace Nod3r.Solver.Kernels;
 
 internal sealed partial class NodeKernel<TNode, TNet>
 {
+    private readonly ObjectPool<Group> _groupPool = new(() => new Group());
+    private readonly List<Group> _groupCache = new();
     private readonly Dictionary<GenId, TNet> _netsCache = new();
     private readonly HashSet<VoxelHandle> _visited = new();
-    private readonly HashSet<GenId> _traversedNets = new();
     private readonly Stack<VoxelHandle> _stack = new();
     private readonly List<Candidate> _cache = new();
-    private readonly HashSet<LayerId> _netNodeIds = new();
+    private TNet[] _netsArrayCache = [];
     
     public void Rebuild()
     {
@@ -25,20 +26,19 @@ internal sealed partial class NodeKernel<TNode, TNet>
     {
         _visited.Clear();
         _visited.EnsureCapacity(_newNodes.Count);
-        _traversedNets.Clear();
         _stack.Clear();
         _stack.EnsureCapacity(_newNodes.Count);
         _cache.Clear();
-        _netNodeIds.Clear();
+        
         foreach (var start in _newNodes)
         {
             if (_visited.Contains(start))
                 continue; // This node was already included to a network
-            
-            _stack.Push(start);
-            _netNodeIds.Add(GetLayerId(start));
 
-            _traversedNets.Clear();
+            var group = _groupPool.Get();
+            _stack.Push(start);
+            group.NetNodeIds.Add(GetLayerId(start).UnsafeId);
+            group.TraversedNets.Clear();
             
             while (_stack.Count > 0)
             {
@@ -47,7 +47,7 @@ internal sealed partial class NodeKernel<TNode, TNet>
                 FindNeighbours(handle, Rule, _cache);
                 foreach (var found in _cache)
                 {
-                    if (_traversedNets.Contains(found.NetId))
+                    if (group.TraversedNets.Contains(found.NetId))
                         continue;
                 
                     if (!_visited.Add(found.Handle))
@@ -56,36 +56,41 @@ internal sealed partial class NodeKernel<TNode, TNet>
                     // If it's a part of a network then this branch should be stopped.
                     if (found.NetId != GenId.Invalid)
                     {
-                        _traversedNets.Add(found.NetId);
+                        group.TraversedNets.Add(found.NetId);
                         continue;
                     }
                     
                     _stack.Push(found.Handle);
-                    _netNodeIds.Add(GetLayerId(found.Handle));
+                    group.NetNodeIds.Add(GetLayerId(found.Handle).UnsafeId);
                 }
             }
-
-            if (_traversedNets.Count == 0)
+            
+            _groupCache.Add(group);
+        }
+        
+        foreach (var group in _groupCache)
+        {
+            if (group.TraversedNets.Count == 0)
             {
                 // All nodes are new in this group, create a new network for them
                 var net = TNet.CreateNet();
-                net.Nodes.UnionWith(_netNodeIds);
                 net.Initialize();
                 
                 var id = NodeNetStorage.Add(net);
-                foreach (var layerId in net.Nodes)
+                foreach (var layerId in group.NetNodeIds)
                 {
-                    NodeStorage.Set(layerId, NodeStorage.Get(layerId) with { NetId = id });
+                    net.Nodes.Add(NodeStorage.ToSafeId(layerId));
+                    NodeStorage.SetUnsafe(layerId, NodeStorage.GetUnsafe(layerId) with { NetId = id });
                 }
                 Nets.Add(id);
             }
             else
             {
                 _netsCache.Clear();
-                _netsCache.EnsureCapacity(_traversedNets.Count);
+                _netsCache.EnsureCapacity(group.TraversedNets.Count);
                 var biggestId = GenId.Invalid;
                 var biggestCount = 0;
-                foreach (var id in _traversedNets)
+                foreach (var id in group.TraversedNets)
                 {
                     var net = NodeNetStorage.Get(id);
                     _netsCache.Add(id, net);
@@ -98,14 +103,25 @@ internal sealed partial class NodeKernel<TNode, TNet>
                 
                 var mainNet = NodeNetStorage.Get(biggestId);
                 _netsCache.Remove(biggestId);
-                mainNet.Merge(_netsCache.Values.ToList());
-                mainNet.Nodes.UnionWith(_netNodeIds);
+                
+                ArrayHelpers.EnsureCapacity(ref _netsArrayCache, _netsCache.Count);
+                _netsCache.Values.CopyTo(_netsArrayCache, 0);
+                mainNet.Merge(_netsArrayCache.AsSpan(0, _netsCache.Count));
+                
+                foreach (var id in group.NetNodeIds)
+                {
+                    mainNet.Nodes.Add(NodeStorage.ToSafeId(id));
+                }
 
                 foreach (var net in _netsCache.Values)
                 {
                     net.Shutdown();
                 }
             }
+            
+            group.NetNodeIds.Clear();
+            group.TraversedNets.Clear();
+            _groupPool.Return(group);
         }
     }
 
@@ -149,4 +165,10 @@ internal sealed partial class NodeKernel<TNode, TNet>
     }
     
     private record struct Candidate(VoxelHandle Handle, GenId NetId);
+
+    private readonly struct Group()
+    {
+        public readonly HashSet<UnsafeLayerId> NetNodeIds = new();
+        public readonly HashSet<GenId> TraversedNets = new();
+    }
 }

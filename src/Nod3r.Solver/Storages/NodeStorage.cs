@@ -32,6 +32,11 @@ internal sealed class NodeStorage<T> where T : INode
         return _storage[GetLayerId(id, layer)];
     }
     
+    public NodeData<T> GetUnsafe(UnsafeLayerId id)
+    {
+        return _storage[id];
+    }
+    
     public byte GetFreeLayer(ColumnHandle id)
     {
         return (byte) _storage.GetFreeLayer(id);
@@ -70,10 +75,28 @@ internal sealed class NodeStorage<T> where T : INode
     {
         _storage.Set(id, value);
     }
+    
+    public void SetUnsafe(UnsafeLayerId id, T value)
+    {
+        if (!_storage.TryGetValueUnsafe(id, out var data))
+            data = new NodeData<T>(value, GenId.Invalid);
+        
+        _storage.SetUnsafe(id, data);
+    }
+    
+    public void SetUnsafe(UnsafeLayerId id, NodeData<T> value)
+    {
+        _storage.SetUnsafe(id, value);
+    }
 
     public void Free(LayerId id)
     {
         _storage.Free(id);
+    }
+    
+    public void FreeUnsafe(UnsafeLayerId id)
+    {
+        _storage.FreeUnsafe(id);
     }
     
     public void Free(ColumnHandle id, int layer)
@@ -89,6 +112,11 @@ internal sealed class NodeStorage<T> where T : INode
     public void GetColumnData(ColumnHandle idx, List<NodeData<T>> list)
     {
         _storage.GetColumnData(idx, list);
+    }
+
+    public LayerId ToSafeId(UnsafeLayerId id)
+    {
+        return id.ToSafeId(_storage);
     }
 }
 
