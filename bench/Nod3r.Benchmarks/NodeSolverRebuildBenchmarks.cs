@@ -59,5 +59,7 @@ public class NodeSolverRebuildBenchmarks
                 }
             }
         }
+        
+        simulation.Rebuild();
     }
 }
