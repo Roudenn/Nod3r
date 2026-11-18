@@ -16,6 +16,7 @@
 
     <ItemGroup>
       <PackageReference Include="JetBrains.Annotations" Version="2026.2.0" />
+      <PackageReference Include="Numos.Maths" Version="0.1.0-alpha.2" />
     </ItemGroup>
     
 </Project>

@@ -1,16 +1,14 @@
-using Numos.Collections;
+using Nod3r.Collections;
 using Numos.Maths;
 
 namespace Nod3r.Solver.Chunks;
 
-// TODO Numos copy-paste
 /// <summary>
 /// Stores ID nodes of a node kernel as 3D chunks.
 /// </summary>
 internal sealed class NodeIDChunk
 {
-    // TODO implement byte weaving
-    public FlatArray<bool> Bytes;
+    public FlatByteArray Nodes;
 
     /// <summary>
     /// Dimensions of this chunk.
@@ -26,6 +24,6 @@ internal sealed class NodeIDChunk
     {
         Dimensions = dimensions;
         GridPosition = gridPosition;
-        Bytes = new FlatArray<bool>(new bool[Dimensions.X * Dimensions.Y * Dimensions.Z], Dimensions);
+        Nodes = new FlatByteArray(Dimensions);
     }
 }
