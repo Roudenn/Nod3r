@@ -28,7 +28,7 @@ public struct AdjacentNodeNet() : INodeNet<AdjacentNode, AdjacentNodeNet>, INode
     {
     }
 
-    public void Merge(ReadOnlySpan<AdjacentNodeNet> nets)
+    public void Merge(Span<AdjacentNodeNet> nets)
     {
     }
 
