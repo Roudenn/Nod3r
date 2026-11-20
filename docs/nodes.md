@@ -1,6 +1,10 @@
 # Nodes
 
-Nod3r supports 2 categories of nodes - typed nodes as C# structs that inherit from `INode` interface, and ID nodes which don't contain any data and are just flags.
+Nod3r supports 2 categories of nodes:
+- Typed nodes as C# structs that inherit from `INode` interface;
+- ID nodes which don't contain any data and either exist or don't at a certain spot.
+
+The guide below should help to choose which one is better to use in which scenarios.
 
 ## ID nodes
 
@@ -13,13 +17,11 @@ ID nodes are stored directly as bytes in a chunk, where each byte represents a s
 Type nodes are structs that contain specific data about a voxel in a node network they're in.
 This allows to do complex operations on the node network's graph, such as simulating atmospherics inside pipes, or simulating electricity and current resistance of a power grid, etc.
 
-Type nodes are not stored in chunks directly, instead they're referenced by the
-
-While allowing for much more flexibility, Type nodes have worse memory efficiency compared to ID nodes. If not accounting for metadata, Type nodes are referenced by a 32-bit index and have a minimal size of 8 bits.
-ID nodes on the other hand take up only 1 bit in memory, which is 40 times better.
+While allowing for much more flexibility, Type nodes have worse memory efficiency compared to ID nodes, because of the way node storage is implemented (see (storage guide)[storage.md]).
 
 ## Type nodes VS ID nodes
 
-Use ID nodes when each node doesn't have special properties compared to other nodes. Sometimes you may even be able to get away with very rare differences in nodes by storing these changes in the node network instead of each node.
+Use ID nodes when each node doesn't have special properties compared to other nodes, or the size of the data per every node is smaller than ~32 bits per every node.
+When node states are relatively similar to each other, it's likely more efficient to just store them in the node network instead of converting into Type nodes.
 
 Use Type nodes when you are making a complex system where each node may contain unique data. This includes complex simulations where each node can have a completely unique state.

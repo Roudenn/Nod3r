@@ -2,26 +2,18 @@
 
 ## Main types
 
-To actually do anything with the simulation, you must provide the storage with 3 main types in order to properly add nodes and create networks out of them.
+To make any operation with the provided solver, a pair of two types must be registered first - a Node and a Node network.
 
 ### Nodes (`INode` interface)
 
-Node is a simple voxel unit stored in the chunk space of the solver. It's a block that holds the data necessary for the parent node network and connection rules with other nodes.
+A node is a simple voxel unit stored in the chunk space of the solver. It's a block that holds some unique data for a specific position.
 
 ### Node networks (`INodeNet`)
 
-Node networks are structures that aren't positioned anywhere specifically, they are just graphs that contain all connected nodes. Node networks can store the shared data about a network, and also they can iterate through their elements in a sequence starting from a specific node and branching off when encountering a fork.
-
-Node networks also require to implement an `INodeNetCreator<TSelf>` interface, which just creates a new instance of the specified network. This is needed to prevent the usage of `Activator` class, since it causes a boxing allocation when creating struct instaces.
-
-### Node rules (`INodeRule`)
-
-Node rules only contain code (and maybe some buffers) that take in a node and finds all of its neighbors it can connect to. It can access the node kernel's API to get the relative nodes and their node data through the `INodeKernel` interface.
-
-Node rules also require to implement an `INodeRuleCreator<TSelf>` interface to create a new rule instance for every active solver thread.
+Node networks are structures that exist virtually in the kernel. They are formed when a node world/simulation is rebuilt out of an interconnected group of nodes, and then store shared data about that group.
 
 ## Registering a node
 
-To register a node in a `NodeSolver` instance, you must also choose an `INodeNet` type that will be created by this node type and the `INodeRule` type that will be used to find node connections.
+You can register a node/network pair in a `NodeWorld` either by passing an `Action<INodeRegistration>` in the constructor, or by calling the `Register()` method manually.
 
-After that, you can either register it in the registration delegate of `NodeConfig` that is passed to the `NodeSolver`, or register it in runtime using an API method (this may lead to lag spikes, so it's not recommended to do).
+After the node/net pair was registered, it can be used freely from `NodeSimulation`'s API.
