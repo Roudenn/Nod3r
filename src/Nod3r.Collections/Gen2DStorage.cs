@@ -7,545 +7,501 @@ namespace Nod3r.Collections;
 // GenIdStorage implementation taken and heavily modified from Space Station 14 under the MIT license
 
 /// <summary>
-/// A 2-dimensional implementation of a generational ID storage.
-/// Instead of storing only 1 element, each slot stores an entire array of elements (column),
-/// where each element sits on its own layer with an assigned generation.
-/// <para>
-/// The easiest way to think about this collection is that it's a <see cref="GenIdStorage{T}"/> nested twice,
-/// but with access methods adapted for more control over the data and less strict checks.
-/// </para>
+/// A two-dimensional generational storage backed by <see cref="FixedSpaceArray{T}"/>.
+/// Each column is one allocation in the contiguous backing array. Layer metadata
+/// (generations and the free-layer list) remains owned by this wrapper.
 /// </summary>
-/// <typeparam name="T">The type of data to store.</typeparam>
-/// <seealso cref="GenIdStorage{T}"/>
+/// <remarks>
+/// This type is not thread-safe. As with <see cref="FixedSpaceArray{T}"/>, do not
+/// retain spans obtained from the backing allocator across allocation or free operations.
+/// </remarks>
 public sealed class Gen2DStorage<T>
 {
-    /// <summary>
-    /// Index of the next free slot.
-    /// Equals to <see cref="int.MaxValue"/> when storage is full.
-    /// </summary>
+    private readonly FixedSpaceArray<T> _storage;
+
+    /// <summary>Head of the free-column list; int.MaxValue means there are no free columns.</summary>
     private int _nextFree;
-    
-    /// <summary>
-    /// Index of the next free slot in every layer.
-    /// </summary>
+
+    /// <summary>Next link in the free-column list. A negative value means occupied.</summary>
+    private int[] _nextSlots;
+
+    /// <summary>The allocation in FixedSpaceArray that currently stores each column.</summary>
+    private GenId[] _columnAllocations;
+
+    /// <summary>Head of the free-layer list for each column.</summary>
     private int[] _nextFreeLayers;
 
-    /// <summary>
-    /// Data stored in every slot.
-    /// </summary>
-    private T[][] _data;
-    
-    /// <summary>
-    /// Next link on the free list for each slot. if int.MaxValue then this is the tail.
-    /// If negative, this slot is occupied.
-    /// </summary>
-    private int[] _nextSlots;
-    
-    /// <summary>
-    /// Next link on the free list for each slot. if int.MaxValue then this is the tail.
-    /// If negative, this slot is occupied.
-    /// </summary>
+    /// <summary>Next link in each column's free-layer list. A negative value means occupied.</summary>
     private int[][] _nextSlotLayers;
-    
-    /// <summary>
-    /// Current generation for each slot.
-    /// Allows for instant deletion by incrementing the generation by 1.
-    /// </summary>
+
+    /// <summary>Current generation of each layer.</summary>
     internal int[][] Generations;
 
-    /// <summary>
-    /// Current capacity of each layer.
-    /// </summary>
+    /// <summary>Capacity of each column. Inactive columns retain their last capacity.</summary>
     private int[] _layerCapacities;
-    
-    /// <summary>
-    /// Generation of every column.
-    /// Allows for O(1) removal of entire columns by just increasing their generation.
-    /// </summary>
+
+    /// <summary>Generation of each column, used to invalidate all its old LayerIds at once.</summary>
     internal int[] ColumnGenerations;
-    
-    /// <summary>
-    /// Amount of living elements in each column.
-    /// </summary>
+
+    /// <summary>Number of allocated layers in each column.</summary>
     private int[] _columnCounts;
-    
-    /// <summary>
-    /// Total amount of active elements.
-    /// </summary>
+
+    /// <summary>Total number of allocated layers.</summary>
     public int Count { get; private set; }
-    
-    /// <summary>
-    /// Total amount of active columns.
-    /// </summary>
+
+    /// <summary>Total number of allocated columns.</summary>
     public int ColumnCount { get; private set; }
-    
-    /// <summary>
-    /// Current maximum length of the internal arrays in the storage.
-    /// </summary>
+
+    /// <summary>Current capacity of the column metadata arrays.</summary>
     public int Length { get; private set; }
-    
-    /// <summary>
-    /// Default array length for each layer.
-    /// </summary>
+
+    /// <summary>Default capacity assigned to newly created columns.</summary>
     public int LayerCapacity { get; private set; }
 
+    /// <summary>Current length of the contiguous backing array used for column data.</summary>
+    public int DataCapacity => _storage.Capacity;
+
+    /// <summary>Amount of the backing array that has been used at least once (including freed blocks).</summary>
+    public int UsedDataLength => _storage.UsedLength;
+
     /// <summary>
-    /// Creates a new <see cref="Gen2DStorage{T}"/> instance.
+    /// Creates a new storage.
     /// </summary>
-    /// <param name="capacity">Initial capacity of the internal array.</param>
-    /// <param name="layerCapacity"></param>
+    /// <param name="capacity">Initial number of columns.</param>
+    /// <param name="layerCapacity">Initial/default number of layers in a column.</param>
     public Gen2DStorage(int capacity = 16, byte layerCapacity = 1)
     {
-        ColumnCount = 0;
-        Count = 0;
+        ArgumentOutOfRangeException.ThrowIfNegative(capacity);
+
         Length = capacity;
         LayerCapacity = layerCapacity;
-        
-        ArrayHelpers.InitArray(capacity, layerCapacity, out _data);
-        ArrayHelpers.InitArray(capacity, layerCapacity, out Generations);
-        ArrayHelpers.InitArray(capacity, layerCapacity, out _nextSlotLayers);
-        
+        Count = 0;
+        ColumnCount = 0;
+        _nextFree = capacity == 0 ? int.MaxValue : 0;
+
         _nextSlots = new int[capacity];
+        _columnAllocations = new GenId[capacity];
         _nextFreeLayers = new int[capacity];
+        _nextSlotLayers = new int[capacity][];
+        Generations = new int[capacity][];
         _layerCapacities = new int[capacity];
         ColumnGenerations = new int[capacity];
         _columnCounts = new int[capacity];
-        
+
         for (int i = 0; i < capacity; i++)
         {
-            _layerCapacities[i] = layerCapacity;
             _nextSlots[i] = i == capacity - 1 ? int.MaxValue : i + 1;
             _nextFreeLayers[i] = 0;
+            _layerCapacities[i] = layerCapacity;
             ColumnGenerations[i] = 1;
-            _columnCounts[i] = 0;
-            
-            for (int j = 0; j < layerCapacity; j++)
-            {
-                _nextSlotLayers[i][j] = j == layerCapacity - 1 ? int.MaxValue : j + 1;
-                Generations[i][j] = 1;
-            }
         }
-        
-        _nextFree = 0;
+
+        // There can be at most 'capacity' live column allocations initially. The
+        // allocator grows its metadata and backing data automatically as required.
+        int initialDataCapacity = checked(capacity * layerCapacity);
+        _storage = layerCapacity == 0
+            ? new FixedSpaceArray<T>(initialDataCapacity, capacity)
+            : new FixedSpaceArray<T>(initialDataCapacity, capacity, layerCapacity);
     }
-    
-    /// <summary>
-    /// Returns the data stored at a specific <see cref="LayerId"/> -
-    /// specific column, layer, and with a specific generation.
-    /// </summary>
+
+    /// <summary>Gets an allocated value using a generation-checked layer ID.</summary>
     public T this[LayerId id]
     {
         get
         {
-            if ((uint)id.Index >= (uint)_data.Length)
-                ThrowKeyNotFound();
-            
-            if ((uint)id.Layer >= (uint)_layerCapacities[id.Index])
+            if (!IsAllocated(id))
                 ThrowKeyNotFound();
 
-            if (ColumnGenerations[id.Index] != id.ColumnGeneration
-                || Generations[id.Index][id.Layer] != id.Generation
-                || _nextSlotLayers[id.Index][id.Layer] >= 0)
-                ThrowKeyNotFound();
-
-            return _data[id.Index][id.Layer];
+            return GetColumnSpan(id.Index)[id.Layer];
         }
     }
-    
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="id"></param>
-    public T this[UnsafeLayerId id] => _data[id.Index][id.Layer];
 
     /// <summary>
-    /// Allocates an entire new column in the storage and adds the first element.
+    /// Gets a value without checking either generation or layer occupancy.
+    /// The column must still be allocated; the ID must not be retained across mutations.
     /// </summary>
-    /// <param name="value">The value to add into the new slot at startLayer.</param>
-    /// <param name="id">ID of the element at the startLayer.</param>
-    /// <param name="startLayer">The layer to allocate the first element on.</param>
-    /// <returns>A reference to the element at a specified layer (first by default).</returns>
+    public T this[UnsafeLayerId id] => GetColumnSpan(id.Index)[id.Layer];
+
+    /// <summary>
+    /// Allocates a new column and places its first value at <paramref name="startLayer"/>.
+    /// </summary>
     public void AddColumn(T value, out LayerId id, int startLayer = 0)
     {
-        if ((uint)_nextFree >= (uint)_data.Length)
+        ArgumentOutOfRangeException.ThrowIfNegative(startLayer);
+
+        if (_nextFree == int.MaxValue)
             ReAllocate();
 
-        var idx = _nextFree;
-        _nextFree = _nextSlots[idx];
-        _nextSlots[idx] = -1; 
-        
-        ColumnCount += 1;
-        Count += 1;
-        _columnCounts[idx] = 1;
-        
-        int cap = _layerCapacities[idx];
-        if (startLayer >= cap)
-        {
-            EnsureColumnLayerCapacity(idx, startLayer + 1);
-            cap = _layerCapacities[idx];
-        }
+        int columnIndex = _nextFree;
+        int capacity = Math.Max(_layerCapacities[columnIndex], LayerCapacity);
+        if (startLayer >= capacity)
+            capacity = checked(startLayer + 1);
 
-        _nextFreeLayers[idx] = 0;
-        for (int j = 0; j < cap; j++)
-        {
-            _nextSlotLayers[idx][j] = j == cap - 1 ? int.MaxValue : j + 1;
-            Generations[idx][j] = 1;
-            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
-                _data[idx][j] = default!;
-        }
+        EnsureLayerMetadataCapacity(columnIndex, capacity);
+        _storage.AddSupportedCapacity(capacity);
+        var column = _storage.AllocateSpan(capacity, out var allocationId);
 
-        int prev = -1;
-        int curr = _nextFreeLayers[idx];
-        while (curr != int.MaxValue && curr != startLayer)
-        {
-            prev = curr;
-            curr = _nextSlotLayers[idx][curr];
-        }
+        // Claim the stable Gen2D column index only after its backing allocation succeeds.
+        _nextFree = _nextSlots[columnIndex];
+        _nextSlots[columnIndex] = -1;
+        _columnAllocations[columnIndex] = allocationId;
 
-        if (curr == startLayer)
-        {
-            if (prev == -1) 
-                _nextFreeLayers[idx] = _nextSlotLayers[idx][curr];
-            else 
-                _nextSlotLayers[idx][prev] = _nextSlotLayers[idx][curr];
-        }
-        
-        _nextSlotLayers[idx][startLayer] = -1;
+        InitializeLayerFreeList(columnIndex, capacity);
+        RemoveLayerFromFreeList(columnIndex, startLayer);
+        _nextSlotLayers[columnIndex][startLayer] = -1;
 
-        id = new LayerId(idx, startLayer, Generations[idx][startLayer], ColumnGenerations[idx]);
-        _data[idx][startLayer] = value;
+        _columnCounts[columnIndex] = 1;
+        Count++;
+        ColumnCount++;
+
+        column[startLayer] = value;
+        id = new LayerId(
+            columnIndex,
+            startLayer,
+            Generations[columnIndex][startLayer],
+            ColumnGenerations[columnIndex]);
     }
 
-    /// <summary>
-    /// Adds an element on top of a specific index.
-    /// </summary>
-    /// <param name="value"></param>
-    /// <param name="index">Index of the column to allocate the element in.</param>
-    /// <param name="id"><see cref="LayerId"/> of the allocated element.</param>
-    /// <returns>The reference to the allocated element.</returns>
+    /// <summary>Adds a value to the first free layer in an existing column.</summary>
     public void Add(T value, ColumnHandle index, out LayerId id)
     {
-        var idx = index.Index;
-        if ((uint)idx >= (uint)_data.Length || _nextSlots[idx] >= 0)
+        int columnIndex = index.Index;
+        if ((uint)columnIndex >= (uint)Length || _nextSlots[columnIndex] >= 0)
             ThrowKeyNotFound();
 
-        int layer = _nextFreeLayers[idx];
+        int layer = _nextFreeLayers[columnIndex];
         if (layer == int.MaxValue)
         {
-            int newCap = Math.Max(_layerCapacities[idx], 2) * 2;
-            EnsureColumnLayerCapacity(idx, newCap);
-            layer = _nextFreeLayers[idx];
+            int newCapacity = checked(Math.Max(_layerCapacities[columnIndex], 2) * 2);
+            EnsureColumnLayerCapacity(columnIndex, newCapacity);
+            layer = _nextFreeLayers[columnIndex];
         }
 
-        _nextFreeLayers[idx] = _nextSlotLayers[idx][layer];
-        _nextSlotLayers[idx][layer] = -1;
+        _nextFreeLayers[columnIndex] = _nextSlotLayers[columnIndex][layer];
+        _nextSlotLayers[columnIndex][layer] = -1;
 
-        Count += 1;
-        _columnCounts[idx] += 1;
+        Count++;
+        _columnCounts[columnIndex]++;
 
-        id = new LayerId(idx, layer, Generations[idx][layer], ColumnGenerations[idx]);
-        _data[idx][layer] = value;
+        id = new LayerId(
+            columnIndex,
+            layer,
+            Generations[columnIndex][layer],
+            ColumnGenerations[columnIndex]);
+        GetColumnSpan(columnIndex)[layer] = value;
     }
 
-    /// <summary>
-    /// Sets an already allocated slot to a specific value.
-    /// </summary>
-    /// <remarks>
-    /// Doesn't change the generation of the slot on modification.
-    /// Setting values to unallocated <see cref="LayerId"/>s will result in an exception.
-    /// </remarks>
-    /// <param name="id">Layer index in the 2D storage.</param>
-    /// <param name="value">A new value that may overwrite the old one if it's already specified.</param>
+    /// <summary>Overwrites an allocated element without changing its generation.</summary>
     public void Set(LayerId id, T value)
     {
-        if ((uint)id.Index >= (uint)_data.Length)
+        if (!IsAllocated(id))
             ThrowKeyNotFound();
-        
-        if ((uint)id.Layer >= (uint)_layerCapacities[id.Index])
-            ThrowKeyNotFound();
-            
-        if (ColumnGenerations[id.Index] != id.ColumnGeneration
-            || Generations[id.Index][id.Layer] != id.Generation
-            || _nextSlots[id.Index] >= 0
-            || _nextSlotLayers[id.Index][id.Layer] >= 0)
-            ThrowKeyNotFound();
-        
-        _data[id.Index][id.Layer] = value;
+
+        GetColumnSpan(id.Index)[id.Layer] = value;
     }
 
-    /// <summary>
-    /// Sets an already allocated slot to a specific value.
-    /// Does absolutely no safety checks.
-    /// </summary>
-    /// <param name="id">Layer index in the 2D storage.</param>
-    /// <param name="value">A new value that may overwrite the old one if it's already specified.</param>
+    /// <summary>Overwrites an element without generation or occupancy checks.</summary>
     public void SetUnsafe(UnsafeLayerId id, T value)
     {
-        _data[id.Index][id.Layer] = value;
+        GetColumnSpan(id.Index)[id.Layer] = value;
     }
 
-    /// <summary>
-    /// Frees a specific element from its column, marking it as empty
-    /// and allowing it to be overwritten by another element.
-    /// </summary>
-    /// <param name="id">The target index to free from the storage.</param>
+    /// <summary>Frees one allocated layer.</summary>
     public void Free(LayerId id)
     {
-        if ((uint)id.Index >= (uint)_data.Length)
-            ThrowKeyNotFound();
-        
-        if ((uint)id.Layer >= (uint)_layerCapacities[id.Index])
-            ThrowKeyNotFound();
-            
-        if (ColumnGenerations[id.Index] != id.ColumnGeneration
-            || Generations[id.Index][id.Layer] != id.Generation
-            || _nextSlots[id.Index] >= 0
-            || _nextSlotLayers[id.Index][id.Layer] >= 0)
+        if (!IsAllocated(id))
             ThrowKeyNotFound();
 
-        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
-            _data[id.Index][id.Layer] = default!;
-        
-        Count -= 1;
-        _columnCounts[id.Index] -= 1;
-        Generations[id.Index][id.Layer] += 1;
-        
-        _nextSlotLayers[id.Index][id.Layer] = _nextFreeLayers[id.Index];
-        _nextFreeLayers[id.Index] = id.Layer;
+        FreeLayerCore(id.Index, id.Layer);
     }
-    
-    /// <summary>
-    /// Frees a specific element from its column, marking it as empty
-    /// and allowing it to be overwritten by another element.
-    /// Does no safety checks.
-    /// </summary>
-    /// <param name="id">The target index to free from the storage.</param>
+
+    /// <summary>Frees one layer without generation or occupancy checks.</summary>
     public void FreeUnsafe(UnsafeLayerId id)
     {
-        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
-            _data[id.Index][id.Layer] = default!;
-        
-        Count -= 1;
-        _columnCounts[id.Index] -= 1;
-        Generations[id.Index][id.Layer] += 1;
-        
-        _nextSlotLayers[id.Index][id.Layer] = _nextFreeLayers[id.Index];
-        _nextFreeLayers[id.Index] = id.Layer;
+        FreeLayerCore(id.Index, id.Layer);
     }
 
-    /// <summary>
-    /// Frees the entire column of elements.
-    /// </summary>
-    /// <param name="id">The index of the column to free from the storage.</param>
+    /// <summary>Frees an entire column and invalidates all LayerIds referring to it.</summary>
     public void Free(ColumnHandle id)
     {
-        if ((uint)id.Index >= (uint)_data.Length)
+        int columnIndex = id.Index;
+        if ((uint)columnIndex >= (uint)Length || _nextSlots[columnIndex] >= 0)
             ThrowKeyNotFound();
 
-        if (_nextSlots[id.Index] >= 0)
-            ThrowKeyNotFound();
+        if (!_storage.Free(_columnAllocations[columnIndex]))
+            throw new InvalidOperationException("The backing column allocation is no longer active.");
 
-        ColumnGenerations[id.Index] += 1;
-        Count -= _columnCounts[id.Index];
-        ColumnCount -= 1;
-        _columnCounts[id.Index] = 0;
+        ColumnGenerations[columnIndex]++;
+        Count -= _columnCounts[columnIndex];
+        ColumnCount--;
+        _columnCounts[columnIndex] = 0;
 
-        _nextSlots[id.Index] = _nextFree;
-        _nextFree = id.Index;
+        _nextSlots[columnIndex] = _nextFree;
+        _nextFree = columnIndex;
     }
 
     /// <summary>
-    /// Gets a proper generation ID of the element at a specific index and layer.
-    /// This allows to convert the unsafe pair of <see cref="ColumnHandle"/> and integer layer
-    /// to a safe <see cref="LayerId"/> that also includes the generation.
+    /// Creates a safe LayerId for a position in an allocated column.
+    /// The layer need not currently contain an element, matching the original API's behavior.
     /// </summary>
-    /// <param name="idx">Index of the column.</param>
-    /// <param name="layer">Layer of the element in the column.</param>
-    /// <returns>A safe reference to an element that is stored on the specified position.</returns>
     public LayerId GetLayerId(ColumnHandle idx, int layer)
     {
-        if (!idx.IsValid)
+        int columnIndex = idx.Index;
+        if (!idx.IsValid
+            || (uint)columnIndex >= (uint)Length
+            || _nextSlots[columnIndex] >= 0
+            || (uint)layer >= (uint)_layerCapacities[columnIndex])
+        {
             ThrowKeyNotFound();
-        
-        if ((uint)idx.Index >= (uint)_data.Length || _nextSlots[idx.Index] >= 0)
-            ThrowKeyNotFound();
-            
-        if ((uint)layer >= (uint)_layerCapacities[idx.Index])
-            ThrowKeyNotFound();
+        }
 
-        return new LayerId(idx.Index, layer, Generations[idx.Index][layer], ColumnGenerations[idx.Index]);
+        return new LayerId(
+            columnIndex,
+            layer,
+            Generations[columnIndex][layer],
+            ColumnGenerations[columnIndex]);
     }
 
-    /// <summary>
-    /// Returns the first free layer in a specified slot.
-    /// </summary>
+    /// <summary>Returns the first free layer, or int.MaxValue if the column is full.</summary>
     public int GetFreeLayer(ColumnHandle idx)
     {
-        if ((uint)idx.Index >= (uint)_data.Length || _nextSlots[idx.Index] >= 0)
+        int columnIndex = idx.Index;
+        if ((uint)columnIndex >= (uint)Length || _nextSlots[columnIndex] >= 0)
             ThrowKeyNotFound();
 
-        return _nextFreeLayers[idx.Index];
+        return _nextFreeLayers[columnIndex];
     }
-    
-    /// <summary>
-    /// Returns all data contained in a specific column.
-    /// </summary>
+
+    /// <summary>Appends all currently allocated values in a column to <paramref name="list"/>.</summary>
     public void GetColumnData(ColumnHandle idx, List<T> list)
     {
-        if ((uint)idx.Index >= (uint)_data.Length || _nextSlots[idx.Index] >= 0)
+        ArgumentNullException.ThrowIfNull(list);
+
+        int columnIndex = idx.Index;
+        if ((uint)columnIndex >= (uint)Length || _nextSlots[columnIndex] >= 0)
             ThrowKeyNotFound();
 
-        for (var layer = 0; layer < _nextSlotLayers[idx.Index].Length; layer++)
+        Span<T> column = GetColumnSpan(columnIndex);
+        for (int layer = 0; layer < _layerCapacities[columnIndex]; layer++)
         {
-            int id = _nextSlotLayers[idx.Index][layer];
-            if (id == -1)
-                list.Add(this[GetLayerId(idx, layer)]);
+            if (_nextSlotLayers[columnIndex][layer] == -1)
+                list.Add(column[layer]);
         }
     }
 
-    /// <summary>
-    /// Tries to get a value out of this storage.
-    /// </summary>
-    /// <param name="id"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
+    /// <summary>Tries to get a value using a generation-checked ID.</summary>
     public bool TryGetValue(LayerId id, [MaybeNullWhen(false)] out T value)
     {
-        value = default;
-        if ((uint)id.Index >= (uint)_data.Length)
+        if (!IsAllocated(id))
+        {
+            value = default;
             return false;
-            
-        if ((uint)id.Layer >= (uint)_layerCapacities[id.Index])
-            return false;
+        }
 
-        if (ColumnGenerations[id.Index] != id.ColumnGeneration
-            || Generations[id.Index][id.Layer] != id.Generation
-            || _nextSlotLayers[id.Index][id.Layer] >= 0)
-            return false;
-
-        value = _data[id.Index][id.Layer];
+        value = GetColumnSpan(id.Index)[id.Layer];
         return true;
     }
-    
+
     /// <summary>
-    /// Tries to get a value out of this storage.
+    /// Tries to get a value without checking the layer generation or occupancy.
+    /// Returns false if the column is no longer allocated or the coordinates are out of range.
     /// </summary>
     public bool TryGetValueUnsafe(UnsafeLayerId id, [MaybeNullWhen(false)] out T value)
     {
-        value = default;
-        if ((uint)id.Index >= (uint)_data.Length)
+        if ((uint)id.Index >= (uint)Length
+            || _nextSlots[id.Index] >= 0
+            || (uint)id.Layer >= (uint)_layerCapacities[id.Index])
+        {
+            value = default;
             return false;
-            
-        if ((uint)id.Layer >= (uint)_layerCapacities[id.Index])
-            return false;
+        }
 
-        value = _data[id.Index][id.Layer];
+        value = GetColumnSpan(id.Index)[id.Layer];
         return true;
     }
-    
-    /// <summary>
-    /// Ensures that the capacity of this storage is at least the specified <paramref name="capacity"/>.
-    /// If the current capacity is less than <paramref name="capacity"/>,
-    /// it is increased to at least the specified <paramref name="capacity"/>.
-    /// </summary>
-    /// <param name="capacity">The minimum column capacity to ensure.</param>
-    /// <returns>The new capacity of this storage.</returns>
+
+    /// <summary>Ensures that the column metadata capacity is at least <paramref name="capacity"/>.</summary>
+    /// <returns>The resulting column metadata capacity.</returns>
     public int EnsureCapacity(int capacity)
     {
-        if ((uint)capacity < (uint)Length)
+        ArgumentOutOfRangeException.ThrowIfNegative(capacity);
+        if (capacity <= Length)
             return Length;
-        
-        ReAllocateTo(Math.Max(Math.Max(Length, 2) * 2, capacity));
-        return capacity;
+
+        ReAllocateTo(Math.Max(checked(Math.Max(Length, 2) * 2), capacity));
+        return Length;
     }
 
-    /// <summary>
-    /// Ensures that the capacity of every column in the storage is at least the specified <paramref name="layerCapacity"/>.
-    /// If the current capacity is less than <paramref name="layerCapacity"/>,
-    /// it is increased to at least the specified <paramref name="layerCapacity"/>.
-    /// </summary>
-    /// <param name="layerCapacity">The minimum layer capacity to ensure on each column.</param>
+    /// <summary>Ensures that every column has at least the specified capacity.</summary>
     public void EnsureLayerCapacity(int layerCapacity)
     {
-        if (layerCapacity <= LayerCapacity) return;
+        ArgumentOutOfRangeException.ThrowIfNegative(layerCapacity);
+        if (layerCapacity <= LayerCapacity)
+            return;
 
         for (int i = 0; i < Length; i++)
         {
-            EnsureColumnLayerCapacity(i, layerCapacity);
+            if (_nextSlots[i] < 0)
+                EnsureColumnLayerCapacity(i, layerCapacity);
+            else
+                _layerCapacities[i] = Math.Max(_layerCapacities[i], layerCapacity);
         }
+
         LayerCapacity = layerCapacity;
     }
 
-    private void EnsureColumnLayerCapacity(int idx, int newCap)
+    private bool IsAllocated(LayerId id)
     {
-        int oldCap = _layerCapacities[idx];
-        if (newCap <= oldCap) return;
-
-        Array.Resize(ref _data[idx], newCap);
-        Array.Resize(ref Generations[idx], newCap);
-        Array.Resize(ref _nextSlotLayers[idx], newCap);
-
-        for (int j = oldCap; j < newCap; j++)
+        if ((uint)id.Index >= (uint)Length
+            || (uint)id.Layer >= (uint)_layerCapacities[id.Index])
         {
-            _nextSlotLayers[idx][j] = j == newCap - 1 ? _nextFreeLayers[idx] : j + 1;
-            Generations[idx][j] = 1;
+            return false;
         }
-        
-        _nextFreeLayers[idx] = oldCap;
-        _layerCapacities[idx] = newCap;
+
+        return _nextSlots[id.Index] < 0
+            && ColumnGenerations[id.Index] == id.ColumnGeneration
+            && Generations[id.Index][id.Layer] == id.Generation
+            && _nextSlotLayers[id.Index][id.Layer] == -1;
     }
 
-    /// <summary>
-    /// Extends this storage, reallocating it to a new place in memory.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.NoInlining)]
+    private Span<T> GetColumnSpan(int columnIndex)
+    {
+        return _storage.GetSpan(_columnAllocations[columnIndex]);
+    }
+
+    private void FreeLayerCore(int columnIndex, int layer)
+    {
+        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+            GetColumnSpan(columnIndex)[layer] = default!;
+
+        Count--;
+        _columnCounts[columnIndex]--;
+        Generations[columnIndex][layer]++;
+
+        _nextSlotLayers[columnIndex][layer] = _nextFreeLayers[columnIndex];
+        _nextFreeLayers[columnIndex] = layer;
+    }
+
+    private void EnsureLayerMetadataCapacity(int columnIndex, int newCapacity)
+    {
+        int currentCapacity = _layerCapacities[columnIndex];
+        int targetCapacity = Math.Max(currentCapacity, newCapacity);
+
+        if (Generations[columnIndex] is null)
+            Generations[columnIndex] = new int[targetCapacity];
+        else if (Generations[columnIndex].Length < targetCapacity)
+            Array.Resize(ref Generations[columnIndex], targetCapacity);
+
+        if (_nextSlotLayers[columnIndex] is null)
+            _nextSlotLayers[columnIndex] = new int[targetCapacity];
+        else if (_nextSlotLayers[columnIndex].Length < targetCapacity)
+            Array.Resize(ref _nextSlotLayers[columnIndex], targetCapacity);
+
+        _layerCapacities[columnIndex] = targetCapacity;
+    }
+
+    private void InitializeLayerFreeList(int columnIndex, int capacity)
+    {
+        for (int layer = 0; layer < capacity; layer++)
+        {
+            Generations[columnIndex][layer] = 1;
+            _nextSlotLayers[columnIndex][layer] =
+                layer == capacity - 1 ? int.MaxValue : layer + 1;
+        }
+
+        _nextFreeLayers[columnIndex] = 0;
+    }
+
+    private void RemoveLayerFromFreeList(int columnIndex, int targetLayer)
+    {
+        int previous = -1;
+        int current = _nextFreeLayers[columnIndex];
+
+        while (current != int.MaxValue && current != targetLayer)
+        {
+            previous = current;
+            current = _nextSlotLayers[columnIndex][current];
+        }
+
+        if (current != targetLayer)
+            throw new InvalidOperationException("The requested initial layer is not in the free-layer list.");
+
+        if (previous == -1)
+            _nextFreeLayers[columnIndex] = _nextSlotLayers[columnIndex][current];
+        else
+            _nextSlotLayers[columnIndex][previous] = _nextSlotLayers[columnIndex][current];
+    }
+
+    private void EnsureColumnLayerCapacity(int columnIndex, int newCapacity)
+    {
+        int oldCapacity = _layerCapacities[columnIndex];
+        if (newCapacity <= oldCapacity)
+            return;
+
+        _storage.AddSupportedCapacity(newCapacity);
+
+        var oldAllocationId = _columnAllocations[columnIndex];
+        var newColumn = _storage.AllocateSpan(newCapacity, out var newAllocationId);
+        // A reused block can contain stale value-type data. Array.Resize in the
+        // original implementation zero-initialized the new tail, so do that here too.
+        newColumn.Clear();
+        _storage.GetSpan(oldAllocationId).CopyTo(newColumn);
+
+        if (!_storage.Free(oldAllocationId))
+            throw new InvalidOperationException("The previous backing column allocation is no longer active.");
+
+        _columnAllocations[columnIndex] = newAllocationId;
+
+        Array.Resize(ref Generations[columnIndex], newCapacity);
+        Array.Resize(ref _nextSlotLayers[columnIndex], newCapacity);
+
+        for (int layer = oldCapacity; layer < newCapacity; layer++)
+        {
+            _nextSlotLayers[columnIndex][layer] =
+                layer == newCapacity - 1 ? _nextFreeLayers[columnIndex] : layer + 1;
+            Generations[columnIndex][layer] = 1;
+        }
+
+        _nextFreeLayers[columnIndex] = oldCapacity;
+        _layerCapacities[columnIndex] = newCapacity;
+    }
+
     private void ReAllocate()
     {
-        int oldLength = _data.Length;
-        int newLength = Math.Max(oldLength, 2) * 2;
-
+        int newLength = checked(Math.Max(Length, 2) * 2);
         ReAllocateTo(newLength);
     }
 
-    /// <summary>
-    /// Reallocates this storage and all of its internal arrays to a bigger size.
-    /// All new column arrays will have length of <see cref="LayerCapacity"/>.
-    /// </summary>
-    /// <param name="newSize">The new amount of columns.</param>
     private void ReAllocateTo(int newSize)
     {
         int oldLength = Length;
-        Debug.Assert(newSize >= oldLength, "Cannot shrink GenIdStorage");
-        if (newSize == oldLength) return;
-        
-        Length = newSize;
-        
-        ArrayHelpers.ResizeCapacity(ref _data, newSize, LayerCapacity);
-        ArrayHelpers.ResizeCapacity(ref Generations,  newSize, LayerCapacity);
-        ArrayHelpers.ResizeCapacity(ref _nextSlotLayers, newSize, LayerCapacity);
-        
+        Debug.Assert(newSize >= oldLength, "Cannot shrink Gen2DStorage.");
+        if (newSize == oldLength)
+            return;
+
+        int previousFreeHead = _nextFree;
+
         Array.Resize(ref _nextSlots, newSize);
+        Array.Resize(ref _columnAllocations, newSize);
         Array.Resize(ref _nextFreeLayers, newSize);
+        Array.Resize(ref _nextSlotLayers, newSize);
+        Array.Resize(ref Generations, newSize);
         Array.Resize(ref _layerCapacities, newSize);
         Array.Resize(ref ColumnGenerations, newSize);
         Array.Resize(ref _columnCounts, newSize);
 
+        int tail = oldLength == 0 ? int.MaxValue : previousFreeHead;
         for (int i = oldLength; i < newSize; i++)
         {
             _layerCapacities[i] = LayerCapacity;
-            _nextSlots[i] = i == newSize - 1 ? _nextFree : i + 1;
+            _nextSlots[i] = i == newSize - 1 ? tail : i + 1;
             _nextFreeLayers[i] = 0;
             ColumnGenerations[i] = 1;
             _columnCounts[i] = 0;
-            
-            for (int j = 0; j < LayerCapacity; j++)
-            {
-                _nextSlotLayers[i][j] = j == LayerCapacity - 1 ? int.MaxValue : j + 1;
-                Generations[i][j] = 1;
-            }
         }
 
         _nextFree = oldLength;
+        Length = newSize;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -588,7 +544,7 @@ public readonly record struct LayerId(int Index, int Layer, int Generation, int 
 /// <summary>
 /// A generational identifier that uniquely references
 /// a specific element in the <see cref="Gen2DStorage{T}"/>.
-/// Doesn't have any safety checks, and therefore it should never be used for longer than a single tick.
+/// Doesn't have any safety checks, and therefore it should never be used after the storage was mutated.
 /// </summary>
 public readonly record struct UnsafeLayerId(int Index, int Layer)
 {
@@ -611,11 +567,8 @@ public readonly record struct UnsafeLayerId(int Index, int Layer)
     public override string ToString() => $"[Col: {Index}, Layer: {Layer}]";
     
     /// <summary>
-    /// 
+    /// Converts this unsafe layer ID into a safe version.
     /// </summary>
-    /// <param name="storage"></param>
-    /// <typeparam name="T"></typeparam>
-    /// <returns></returns>
     public LayerId ToSafeId<T>(Gen2DStorage<T> storage) => new(Index, Layer, storage.Generations[Index][Layer], storage.ColumnGenerations[Layer]);
 }
 
