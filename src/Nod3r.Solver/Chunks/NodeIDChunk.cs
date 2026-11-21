@@ -1,4 +1,5 @@
 using Nod3r.Collections;
+using Numos.Collections;
 using Numos.Maths;
 
 namespace Nod3r.Solver.Chunks;
@@ -8,7 +9,17 @@ namespace Nod3r.Solver.Chunks;
 /// </summary>
 internal sealed class NodeIDChunk
 {
+    /// <summary>
+    /// Flags at every node position that specifies
+    /// whether a node is placed here or not.
+    /// </summary>
     public FlatByteArray Nodes;
+
+    /// <summary>
+    /// Data about the network of every node in the chunk.
+    /// </summary>
+    // TODO benchmark this and consider a 3D-voxel tree data structure to optimize for memory
+    public FlatArray<GenId> Networks;
 
     /// <summary>
     /// Dimensions of this chunk.
@@ -25,5 +36,6 @@ internal sealed class NodeIDChunk
         Dimensions = dimensions;
         GridPosition = gridPosition;
         Nodes = new FlatByteArray(Dimensions);
+        Networks = new FlatArray<GenId>(new GenId[Dimensions.X * Dimensions.Y * Dimensions.Z], Dimensions);
     }
 }

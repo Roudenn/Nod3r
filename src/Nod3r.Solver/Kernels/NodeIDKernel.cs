@@ -10,7 +10,7 @@ namespace Nod3r.Solver.Kernels;
 /// <summary>
 /// Kernel implementation for node IDs.
 /// </summary>
-internal sealed class NodeIDKernel<TNet>
+internal sealed partial class NodeIDKernel<TNet>
     (int id, NodeRule rule, Int3 dimensions) : INodeIDKernel, INodeNetKernel<TNet>
     where TNet : INodeNet<TNet>, INodeNetCreator<TNet>
 {
@@ -23,12 +23,15 @@ internal sealed class NodeIDKernel<TNet>
     private readonly ConcurrentDictionary<Int3, NodeIDChunk> _chunkMap = new();
     
     public List<GenId> Nets { get; set; } = new();
-    
+
     public NodeNetStorage<TNet> NodeNetStorage { get; set; } = new();
+
+    public readonly HashSet<VoxelHandle> _newNodes = new();
     
     public void SetNode(VoxelHandle voxel)
     {
         _chunkMap[voxel.ChunkPos].Nodes[voxel.VoxelIndex] = true;
+        _newNodes.Add(voxel);
     }
     
     public bool HasNode(VoxelHandle voxel)
@@ -40,6 +43,8 @@ internal sealed class NodeIDKernel<TNet>
     {
         var hadNode = HasNode(voxel);
         _chunkMap[voxel.ChunkPos].Nodes[voxel.VoxelIndex] = false;
+        if (hadNode)
+            _newNodes.Remove(voxel);
         return hadNode;
     }
 
@@ -93,7 +98,7 @@ internal sealed class NodeIDKernel<TNet>
         relative = default;
         return false;
     }
-    
+
     public bool TryGetRelative(VoxelHandle node, Int3 offset, out VoxelHandle relative)
     {
         var chunk = _chunkMap[node.ChunkPos];
@@ -101,7 +106,7 @@ internal sealed class NodeIDKernel<TNet>
         if (targetPos.IsWithin(default, chunk.Dimensions))
         {
             // Same chunk
-            relative = node with { VoxelIndex = (ushort) chunk.Nodes.GetIndex(targetPos) };
+            relative = node with { VoxelIndex = (ushort)chunk.Nodes.GetIndex(targetPos) };
             return true;
         }
 
@@ -110,12 +115,23 @@ internal sealed class NodeIDKernel<TNet>
         return false;
     }
 
-    public void Rebuild()
-    {
-        throw new NotImplementedException();
-    }
-
     #endregion
+
+    private bool TryGetRelativeCandidate(VoxelHandle node, Int3 offset, out Candidate candidate)
+    {
+        var chunk = _chunkMap[node.ChunkPos];
+        var targetPos = chunk.Nodes.GetPosition(node.VoxelIndex) + offset;
+        if (targetPos.IsWithin(default, chunk.Dimensions))
+        {
+            // Same chunk
+            candidate = new Candidate(node with { VoxelIndex = (ushort) chunk.Nodes.GetIndex(targetPos) }, chunk.Networks[targetPos]);
+            return true;
+        }
+
+        // TODO inter-chunk interactions
+        candidate = default;
+        return false;
+    }
     
     private NodeIDChunk GetChunk(Int3 chunk) => _chunkMap[chunk];
     

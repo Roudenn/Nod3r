@@ -30,7 +30,7 @@ public sealed class NodeRule<T>(
 /// <param name="selections">Relative positions to check around the nodes position.</param>
 public sealed class NodeRule(Int3[] selections)
 {
-    private readonly Int3[] _selections = selections;
+    internal readonly Int3[] Selections = selections;
 }
 
 /// <summary>
